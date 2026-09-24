@@ -31,7 +31,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.*;
 import java.util.*;
-import java.sql.Timestamp;
 import javax.crypto.SecretKey;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -128,7 +127,7 @@ public class BookMyShowApplication {
   Mac mac=Mac.getInstance("HmacSHA256");mac.init(new SecretKeySpec(razorSecret.getBytes(StandardCharsets.UTF_8),"HmacSHA256"));
   String expected=HexFormat.of().formatHex(mac.doFinal((x.get("razorpayOrderId")+"|"+x.get("razorpayPaymentId")).getBytes(StandardCharsets.UTF_8)));
   if(!MessageDigest.isEqual(expected.getBytes(StandardCharsets.UTF_8),x.get("razorpaySignature").getBytes(StandardCharsets.UTF_8)))throw new ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST,"Invalid payment signature");
-  Timestamp expires=(Timestamp)b.get("expires_at");if(expires.toInstant().isBefore(Instant.now()))throw new ResponseStatusException(org.springframework.http.HttpStatus.CONFLICT,"Seat hold expired");
+  if(db.queryForObject("select count(*) from bookings where id=? and expires_at>now() and status='PENDING'",Integer.class,b.get("id"))==0)throw new ResponseStatusException(org.springframework.http.HttpStatus.CONFLICT,"Seat hold expired");
   long id=((Number)b.get("id")).longValue();db.update("update bookings set status='CONFIRMED',razorpay_payment_id=? where id=?",x.get("razorpayPaymentId"),id);db.update("update show_seats set status='BOOKED',locked_by=null,locked_until=null where locked_by=?",id);db.update("update payments set razorpay_payment_id=?,status='SUCCESS',paid_at=now() where razorpay_order_id=?",x.get("razorpayPaymentId"),x.get("razorpayOrderId"));
   return Map.of("status","success");
  }
