@@ -1,0 +1,6 @@
+insert into cities(name) values('Hyderabad') on conflict(name) do nothing;
+insert into theatres(name,address,city_id) select 'BMS Cinemas','Hitech City, Hyderabad',id from cities where name='Hyderabad' and not exists(select 1 from theatres);
+insert into screens(name,total_seats,theatre_id) select 'Screen 1',60,id from theatres where name='BMS Cinemas' and not exists(select 1 from screens);
+insert into movies(title,description,poster_url,language,genre,duration_minutes,certificate,rating) select 'The Last Journey','Sample movie for the full-stack booking demo','https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&q=80','English','Drama',140,'UA',8.2 where not exists(select 1 from movies);
+insert into shows(movie_id,screen_id,show_date,start_time,end_time,price) select m.id,s.id,current_date+1,'18:30','20:50',220 from movies m cross join screens s where not exists(select 1 from shows);
+insert into show_seats(show_id,seat_number,seat_type) select sh.id,chr(65+floor((g-1)/10)::int)||((g-1)%10+1)::text,case when g<=20 then 'PREMIUM' else 'REGULAR' end from shows sh cross join generate_series(1,60) g where not exists(select 1 from show_seats ss where ss.show_id=sh.id);
