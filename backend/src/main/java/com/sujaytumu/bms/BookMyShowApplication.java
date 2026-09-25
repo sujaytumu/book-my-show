@@ -25,7 +25,36 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public class BookMyShowApplication {
 
     public static void main(String[] args) {
+        adaptRenderStyleDatabaseUrl();
         SpringApplication.run(BookMyShowApplication.class, args);
+    }
+
+    /**
+     * Render (like Heroku) injects DATABASE_URL as a URI such as
+     * "postgres://user:password@host:port/dbname", but the PostgreSQL JDBC
+     * driver requires "jdbc:postgresql://host:port/dbname" with the
+     * credentials passed separately. If DATABASE_URL is present and not
+     * already JDBC-formatted, parse it once at boot and translate it into
+     * spring.datasource.{url,username,password} — this avoids having to
+     * hardcode or separately store the database credentials anywhere.
+     */
+    private static void adaptRenderStyleDatabaseUrl() {
+        String raw = System.getenv("DATABASE_URL");
+        if (raw == null || raw.isBlank() || raw.startsWith("jdbc:")) {
+            return;
+        }
+        try {
+            java.net.URI uri = new java.net.URI(raw);
+            String[] userInfo = uri.getUserInfo().split(":", 2);
+            String jdbcUrl = "jdbc:postgresql://" + uri.getHost() + ":" + uri.getPort() + uri.getPath() + "?sslmode=require";
+            System.setProperty("spring.datasource.url", jdbcUrl);
+            System.setProperty("spring.datasource.username", userInfo[0]);
+            if (userInfo.length > 1) {
+                System.setProperty("spring.datasource.password", userInfo[1]);
+            }
+        } catch (Exception e) {
+            System.err.println("Could not parse DATABASE_URL, falling back to configured defaults: " + e.getMessage());
+        }
     }
 
     @Bean
