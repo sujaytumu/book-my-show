@@ -42,14 +42,28 @@ End-to-end movie ticket booking application built with:
 book-my-show/
   backend/
     pom.xml
-    src/main/java/com/sujaytumu/bms/BookMyShowApplication.java
+    src/main/java/com/sujaytumu/bms/
+      BookMyShowApplication.java   entry point + password/admin-seed beans
+      config/SecurityConfig.java   Spring Security filter chain + CORS
+      security/JwtService.java     JWT issuing/parsing
+      security/JwtAuthFilter.java  request-level auth from Authorization header
+      controller/                 AuthController, CatalogController, BookingController,
+                                   PaymentController, AdminController
+      service/                    UserService, BookingService (seat locking), PaymentService
+      scheduler/SeatExpiryScheduler.java  releases expired seat holds every minute
+      exception/ApiExceptionHandler.java  consistent {"message": ...} error responses
     src/main/resources/schema.sql
     src/main/resources/data.sql
     src/main/resources/application.properties
   frontend/
     package.json
-    src/main.jsx
-    src/styles.css
+    src/
+      main.jsx        mounts <App/> inside BrowserRouter
+      App.jsx          route table
+      api.js           axios instance + JWT header injection
+      components/Nav.jsx
+      pages/Auth.jsx, Home.jsx, Movie.jsx, Show.jsx, Bookings.jsx, Admin.jsx
+      styles.css
   render.yaml
   .github/workflows/backend.yml
 
@@ -89,6 +103,12 @@ RAZORPAY_KEY_ID=your_test_key
 RAZORPAY_KEY_SECRET=your_test_secret
 
 The frontend receives only the public key from the backend. The secret remains server-side.
+
+## Admin panel
+
+Log in with the demo admin account below, then open `/admin` in the frontend to
+add movies and schedule shows against existing screens — a UI for the
+`/api/admin/**` endpoints that previously had no frontend.
 
 ## Demo admin
 
