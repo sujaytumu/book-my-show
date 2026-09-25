@@ -39,6 +39,10 @@ public class PaymentService {
         this.razorpaySecret = razorpaySecret;
     }
 
+    public boolean isConfigured() {
+        return !razorpayKeyId.isBlank() && !razorpaySecret.isBlank();
+    }
+
     public Map<String, Object> createOrder(long bookingId, double amountRupees, String receipt) throws Exception {
         if (razorpayKeyId.isBlank() || razorpaySecret.isBlank()) {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Razorpay keys are not configured");
