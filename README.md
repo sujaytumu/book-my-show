@@ -104,6 +104,15 @@ RAZORPAY_KEY_SECRET=your_test_secret
 
 The frontend receives only the public key from the backend. The secret remains server-side.
 
+## Payments (v1: mocked)
+
+The checkout flow auto-detects whether `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET`
+are set (`GET /api/payments/mode`). Until you add real Razorpay keys, "Pay"
+confirms the booking directly (`POST /api/payments/mock-confirm/{id}`) so the
+full hold → pay → confirm → seat-marked-BOOKED flow works end-to-end without
+a live payment-gateway account. Add the two env vars later to switch to real
+Razorpay checkout with no frontend changes needed.
+
 ## Admin panel
 
 Log in with the demo admin account below, then open `/admin` in the frontend to

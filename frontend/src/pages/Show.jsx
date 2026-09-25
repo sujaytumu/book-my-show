@@ -39,6 +39,15 @@ export default function Show() {
     if (!localStorage.getItem("token")) return navigate("/login");
     try {
       const hold = await api.post("/bookings/hold", { showId: +id, seatNumbers: selected });
+      const mode = await api.get("/payments/mode");
+
+      if (mode.data.mode === "mock") {
+        await api.post("/payments/mock-confirm/" + hold.data.bookingId);
+        alert("Payment simulated (no live gateway configured yet) — booking confirmed!");
+        navigate("/bookings");
+        return;
+      }
+
       const order = await api.post("/payments/create-order/" + hold.data.bookingId);
       await loadRazorpayScript();
 
