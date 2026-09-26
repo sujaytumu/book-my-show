@@ -19,6 +19,22 @@ export default function Bookings() {
     }
   }
 
+  // A plain <a href> can't carry the Authorization header, so fetch the PDF
+  // as a blob via axios (which does attach it) and trigger the download manually.
+  async function downloadTicket(id, reference) {
+    try {
+      const res = await api.get("/bookings/" + id + "/ticket", { responseType: "blob" });
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: "application/pdf" }));
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = reference + ".pdf";
+      link.click();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert("Could not download ticket. Please try again.");
+    }
+  }
+
   return (
     <>
       <h1>My Bookings</h1>
@@ -34,11 +50,18 @@ export default function Bookings() {
           <b>
             ₹{b.amount} · {b.status}
           </b>
-          {b.status === "CONFIRMED" && (
-            <button className="ghost" onClick={() => cancel(b.id)}>
-              Cancel booking
-            </button>
-          )}
+          <div className="booking-actions">
+            {(b.status === "CONFIRMED" || b.status === "CANCELLED") && (
+              <button className="ghost" onClick={() => downloadTicket(b.id, b.reference)}>
+                Download ticket (PDF)
+              </button>
+            )}
+            {b.status === "CONFIRMED" && (
+              <button className="ghost" onClick={() => cancel(b.id)}>
+                Cancel booking
+              </button>
+            )}
+          </div>
         </div>
       ))}
     </>
