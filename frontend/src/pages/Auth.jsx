@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "../api";
 
 export default function Auth({ register = false }) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
   const [slow, setSlow] = useState(false);
+
+  const sessionExpired = searchParams.get("sessionExpired") === "1";
 
   // The API can take up to ~60-90s to respond if the free-tier backend has
   // spun down; after a few seconds let the user know that's what's
@@ -44,6 +47,9 @@ export default function Auth({ register = false }) {
   return (
     <div className="auth card">
       <h2>{register ? "Create account" : "Login"}</h2>
+      {sessionExpired && !register && (
+        <p className="notice">Your session has expired. Please log in again.</p>
+      )}
       <form onSubmit={submit}>
         {register && <input placeholder="Name" required onChange={update("name")} />}
         <input placeholder="Email" type="email" required onChange={update("email")} />
