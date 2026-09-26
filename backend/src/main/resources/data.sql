@@ -1,5 +1,6 @@
 insert into cities(name) values('Hyderabad') on conflict(name) do nothing;
-insert into theatres(name,address,city_id) select 'BMS Cinemas','Hitech City, Hyderabad',id from cities where name='Hyderabad' and not exists(select 1 from theatres);
+insert into theatres(name,address,city_id,latitude,longitude) select 'BMS Cinemas','Hitech City, Hyderabad',id,17.4435,78.3772 from cities where name='Hyderabad' and not exists(select 1 from theatres);
+update theatres set latitude=17.4435,longitude=78.3772 where name='BMS Cinemas' and latitude is null;
 insert into screens(name,total_seats,theatre_id) select 'Screen 1',60,id from theatres where name='BMS Cinemas' and not exists(select 1 from screens);
 insert into movies(title,description,poster_url,language,genre,duration_minutes,certificate,rating) select 'The Last Journey','Sample movie for the full-stack booking demo','https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&q=80','English','Drama',140,'UA',8.2 where not exists(select 1 from movies);
 insert into shows(movie_id,screen_id,show_date,start_time,end_time,price) select m.id,s.id,current_date+1,'18:30','20:50',220 from movies m cross join screens s where not exists(select 1 from shows);

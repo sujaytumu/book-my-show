@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../api";
+import TheatreMap, { haversineKm } from "../components/TheatreMap";
 
 const MAX_SEATS = 10;
 
@@ -18,14 +19,18 @@ function loadRazorpayScript() {
 export default function Show() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [show, setShow] = useState(null);
   const [seats, setSeats] = useState([]);
   const [selected, setSelected] = useState([]);
   const [mode, setMode] = useState(null); // "mock" | "razorpay" | null (unknown yet)
   const [loadError, setLoadError] = useState("");
   const [pending, setPending] = useState(false);
   const [slow, setSlow] = useState(false);
+  const [myLocation, setMyLocation] = useState(null);
+  const [locationError, setLocationError] = useState("");
 
   useEffect(() => {
+    api.get("/shows/" + id).then((res) => setShow(res.data));
     api
       .get("/shows/" + id + "/seats")
       .then((res) => setSeats(res.data))
@@ -41,6 +46,18 @@ export default function Show() {
     const timer = setTimeout(() => setSlow(true), 4000);
     return () => clearTimeout(timer);
   }, [pending]);
+
+  function findMe() {
+    setLocationError("");
+    if (!navigator.geolocation) {
+      setLocationError("Your browser doesn't support location.");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => setMyLocation({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+      () => setLocationError("Location permission denied — enable it in your browser to see distance.")
+    );
+  }
 
   function toggleSeat(seat) {
     if (seat.status !== "AVAILABLE") return;
@@ -60,7 +77,7 @@ export default function Show() {
 
       if (mode === "mock") {
         await api.post("/payments/mock-confirm/" + hold.data.bookingId);
-        alert("Payment simulated (no live gateway configured yet) — booking confirmed!");
+        alert("Payment simulated (no live gateway configured yet) — booking confirmed! Check your bookings to download the ticket.");
         navigate("/bookings");
         return;
       }
@@ -80,7 +97,7 @@ export default function Show() {
             razorpayPaymentId: response.razorpay_payment_id,
             razorpaySignature: response.razorpay_signature,
           });
-          alert("Payment successful!");
+          alert("Payment successful! Check your bookings to download the ticket.");
           navigate("/bookings");
         },
       }).open();
@@ -91,10 +108,24 @@ export default function Show() {
     }
   }
 
+  const distanceKm =
+    show?.latitude != null && myLocation
+      ? haversineKm(myLocation.lat, myLocation.lon, +show.latitude, +show.longitude).toFixed(1)
+      : null;
+
   return (
     <>
-      <h1>Select Seats</h1>
+      {show && (
+        <div className="show-header">
+          <h1>{show.movie_title}</h1>
+          <p>
+            {show.theatre_name} / {show.screen_name} · {show.show_date} · {show.start_time?.slice(0, 5)} · ₹{show.price}
+          </p>
+        </div>
+      )}
+
       {loadError && <p className="error">{loadError}</p>}
+
       <div className="screen">SCREEN</div>
       <div className="seats">
         {seats.map((seat) => (
@@ -107,17 +138,41 @@ export default function Show() {
           </button>
         ))}
       </div>
+
       {slow && (
         <p className="notice">
           Still working — the server may be waking up from idle, this can take up to a minute.
         </p>
       )}
+
       <div className="bar">
         <b>{selected.length} seats selected</b>
         <button disabled={!selected.length || pending} onClick={pay}>
           {pending ? "Please wait..." : mode === "razorpay" ? "Pay with Razorpay" : "Pay & Confirm (Test Mode)"}
         </button>
       </div>
+
+      {show?.latitude != null && (
+        <div className="theatre-location card">
+          <h2>Theatre location</h2>
+          {distanceKm ? (
+            <p>
+              <b>{distanceKm} km</b> away from your current location.
+            </p>
+          ) : (
+            <button className="ghost" onClick={findMe}>
+              Show distance from me
+            </button>
+          )}
+          {locationError && <p className="error">{locationError}</p>}
+          <TheatreMap
+            theatreLat={+show.latitude}
+            theatreLon={+show.longitude}
+            theatreName={show.theatre_name}
+            myLocation={myLocation}
+          />
+        </div>
+      )}
     </>
   );
 }

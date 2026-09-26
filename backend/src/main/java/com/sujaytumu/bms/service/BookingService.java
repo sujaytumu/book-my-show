@@ -129,14 +129,40 @@ public class BookingService {
                 """, email);
     }
 
+    /** Full detail for one booking (ticket PDF + confirmation email), scoped to its owner. */
+    public Map<String, Object> bookingDetail(String email, long bookingId) {
+        return db.queryForMap("""
+                select b.id, b.reference, b.status, b.amount, b.created_at, m.title,
+                       sh.show_date, sh.start_time, t.name theatre_name, u.email user_email, u.name user_name,
+                       string_agg(bs.seat_number, ', ' order by bs.seat_number) seats
+                from bookings b
+                join users u on u.id = b.user_id
+                join shows sh on sh.id = b.show_id
+                join movies m on m.id = sh.movie_id
+                join screens sc on sc.id = sh.screen_id
+                join theatres t on t.id = sc.theatre_id
+                join booking_seats bs on bs.booking_id = b.id
+                where b.id = ? and u.email = ?
+                group by b.id, m.title, sh.show_date, sh.start_time, t.name, u.email, u.name
+                """, bookingId, email);
+    }
+
+    @Transactional
     public void cancel(String email, long bookingId) {
         int updated = db.update(
                 "update bookings b set status='CANCELLED' " +
-                        "where b.id=? and b.user_id=(select id from users where email=?) and b.status='CONFIRMED'",
+                        "where b.id=? and b.user_id=(select id from users where email=?) and b.status='CONFIRMED' " +
+                        "and (select (sh.show_date + sh.start_time) from shows sh where sh.id=b.show_id) > now()",
                 bookingId, email);
         if (updated == 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Booking cannot be cancelled");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Booking cannot be cancelled (already cancelled, unpaid, or the show has started)");
         }
+        // Free the seats so they become bookable by anyone again.
+        db.update("update show_seats ss set status='AVAILABLE',locked_by=null,locked_until=null " +
+                        "from bookings b join booking_seats bs on bs.booking_id=b.id " +
+                        "where b.id=? and ss.show_id=b.show_id and ss.seat_number=bs.seat_number",
+                bookingId);
     }
 
     /** Releases seat holds and bookings whose 10-minute window has lapsed. Runs every minute. */
