@@ -61,7 +61,7 @@ and not exists(select 1 from screens sc where sc.theatre_id=t.id);
 -- so re-running this file never creates duplicates. "The Paradise" (this week's big
 -- release) plays widest, like a real BMS listing; the rest play at a smaller spread.
 insert into shows(movie_id,screen_id,show_date,start_time,end_time,price)
-select m.id,sc.id,current_date+1,v.start_time,v.end_time,v.price
+select m.id,sc.id,current_date+1,v.start_time::time,v.end_time::time,v.price
 from movies m join (values
   ('The Paradise','Arjun 70MM','20:30','23:24',180),
   ('The Paradise','Mallikarjuna 70mm A/C DTS','21:00','23:54',180),
