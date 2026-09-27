@@ -29,7 +29,8 @@ where not exists(select 1 from movies where title='Sathi Leelavathi');
 
 -- Real Hyderabad theatre network (single screens + multiplexes), concentrated around
 -- KPHB/JNTU/Kukatpally/Miyapur with a few farther ones for distance variety.
--- All distances are computed live from JNTU College metro station, not stored.
+-- Distance-from-me is computed live in the browser from the viewer's actual
+-- geolocation (see TheatreMap.haversineKm) - nothing here is a fixed reference point.
 insert into theatres(name,address,city_id,latitude,longitude)
 select v.name,v.address,c.id,v.lat,v.lon from cities c cross join (values
   ('Arjun 70MM','Kukatpally, Hyderabad',17.4855,78.4095),
