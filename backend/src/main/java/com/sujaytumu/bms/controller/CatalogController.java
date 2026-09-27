@@ -10,17 +10,6 @@ import java.util.Map;
 @RestController
 public class CatalogController {
 
-    // JNTU College metro station (Red Line, Hyderabad) - used as the fixed
-    // reference point for "distance from JNTU" shown per theatre, since this
-    // demo has no real per-user location tied to a specific city hub.
-    private static final double JNTU_LAT = 17.498653;
-    private static final double JNTU_LON = 78.388793;
-    // Spherical law of cosines - fine at this scale, no PostGIS/extension needed.
-    private static final String DISTANCE_FROM_JNTU_SQL =
-            "round((6371 * acos(least(1, greatest(-1, " +
-                    "cos(radians(" + JNTU_LAT + ")) * cos(radians(t.latitude)) * cos(radians(t.longitude) - radians(" + JNTU_LON + ")) " +
-                    "+ sin(radians(" + JNTU_LAT + ")) * sin(radians(t.latitude))))))::numeric, 2) distance_from_jntu_km";
-
     private final JdbcTemplate db;
 
     public CatalogController(JdbcTemplate db) {
@@ -50,22 +39,24 @@ public class CatalogController {
         return db.queryForMap("select * from movies where id=?", id);
     }
 
+    // Real (client-supplied) geolocation is used for "distance from me", computed
+    // in the browser via TheatreMap.haversineKm - no server-side fixed reference
+    // point. This just returns each theatre's lat/lng so the frontend can do that.
     @GetMapping("/api/shows")
     public List<Map<String, Object>> shows(@RequestParam long movieId, @RequestParam(required = false) String date) {
-        String sql = "select sh.*,t.name theatre_name,t.latitude,t.longitude," + DISTANCE_FROM_JNTU_SQL +
-                ",s.name screen_name from shows sh " +
+        String sql = "select sh.*,t.id theatre_id,t.name theatre_name,t.address theatre_address,t.latitude,t.longitude," +
+                "s.name screen_name from shows sh " +
                 "join screens s on s.id=sh.screen_id join theatres t on t.id=s.theatre_id where sh.movie_id=? ";
         if (date == null) {
-            return db.queryForList(sql + "order by distance_from_jntu_km,show_date,start_time", movieId);
+            return db.queryForList(sql + "order by t.name,show_date,start_time", movieId);
         }
-        return db.queryForList(sql + "and show_date=? order by distance_from_jntu_km,start_time", movieId, LocalDate.parse(date));
+        return db.queryForList(sql + "and show_date=? order by t.name,start_time", movieId, LocalDate.parse(date));
     }
 
     @GetMapping("/api/shows/{id}")
     public Map<String, Object> show(@PathVariable long id) {
         return db.queryForMap(
-                "select sh.*, m.title movie_title, t.name theatre_name, t.latitude, t.longitude, " + DISTANCE_FROM_JNTU_SQL +
-                        ", s.name screen_name " +
+                "select sh.*, m.title movie_title, t.name theatre_name, t.latitude, t.longitude, s.name screen_name " +
                         "from shows sh join movies m on m.id=sh.movie_id " +
                         "join screens s on s.id=sh.screen_id join theatres t on t.id=s.theatre_id " +
                         "where sh.id=?", id);
@@ -77,3 +68,4 @@ public class CatalogController {
                 "select id,seat_number,seat_type,status from show_seats where show_id=? order by seat_number", id);
     }
 }
+
