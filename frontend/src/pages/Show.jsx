@@ -121,6 +121,9 @@ export default function Show() {
           <p>
             {show.theatre_name} / {show.screen_name} · {show.show_date} · {show.start_time?.slice(0, 5)} · ₹{show.price}
           </p>
+          {show.distance_from_jntu_km != null && (
+            <p className="distance-tag">{show.distance_from_jntu_km} km from JNTU Metro</p>
+          )}
         </div>
       )}
 
