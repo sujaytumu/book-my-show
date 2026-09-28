@@ -30,7 +30,9 @@ public class BookingController {
         @SuppressWarnings("unchecked")
         List<String> seatNumbers = ((List<Object>) body.get("seatNumbers")).stream()
                 .map(Object::toString).toList();
-        return bookingService.holdSeats(auth.getName(), showId, seatNumbers);
+        String contactEmail = body.get("contactEmail") == null ? null : body.get("contactEmail").toString();
+        String contactPhone = body.get("contactPhone") == null ? null : body.get("contactPhone").toString();
+        return bookingService.holdSeats(auth.getName(), showId, seatNumbers, contactEmail, contactPhone);
     }
 
     @GetMapping("/me")

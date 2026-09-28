@@ -33,7 +33,8 @@ public class BookingService {
     }
 
     @Transactional
-    public Map<String, Object> holdSeats(String email, long showId, List<String> rawSeatNumbers) {
+    public Map<String, Object> holdSeats(String email, long showId, List<String> rawSeatNumbers,
+                                          String contactEmail, String contactPhone) {
         List<String> seatNumbers = rawSeatNumbers.stream().distinct().toList();
         if (seatNumbers.isEmpty() || seatNumbers.size() > MAX_SEATS_PER_BOOKING) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -62,15 +63,31 @@ public class BookingService {
             }
         }
 
-        long userId = ((Number) db.queryForMap("select id from users where email=?", email).get("id")).longValue();
+        Map<String, Object> user = db.queryForMap("select id,name,email from users where email=?", email);
+        long userId = ((Number) user.get("id")).longValue();
         double price = ((Number) db.queryForMap("select price from shows where id=?", showId).get("price")).doubleValue();
-        double amount = price * seatNumbers.size();
+
+        // Real ticketing platforms charge the seat price plus a convenience fee, with
+        // GST applied to that fee (not to the ticket price itself, which already has
+        // any entertainment tax baked in by the cinema). 3% is a representative rate.
+        double subtotal = round2(price * seatNumbers.size());
+        double convenienceFee = round2(subtotal * 0.03);
+        double gst = round2(convenienceFee * 0.18);
+        double total = round2(subtotal + convenienceFee + gst);
+
+        String finalContactEmail = (contactEmail == null || contactEmail.isBlank())
+                ? (String) user.get("email") : contactEmail.trim();
+        String finalContactPhone = (contactPhone == null || contactPhone.isBlank()) ? null : contactPhone.trim();
+
         Instant expiresAt = now.plusSeconds(HOLD_SECONDS);
         String reference = "BMS-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
 
         long bookingId = db.queryForObject(
-                "insert into bookings(user_id,show_id,reference,status,amount,expires_at) values(?,?,?,'PENDING',?,?) returning id",
-                Long.class, userId, showId, reference, amount, Timestamp.from(expiresAt));
+                "insert into bookings(user_id,show_id,reference,status,amount,ticket_subtotal,convenience_fee," +
+                        "gst_amount,contact_email,contact_phone,expires_at) " +
+                        "values(?,?,?,'PENDING',?,?,?,?,?,?,?) returning id",
+                Long.class, userId, showId, reference, total, subtotal, convenienceFee, gst,
+                finalContactEmail, finalContactPhone, Timestamp.from(expiresAt));
 
         for (String seatNumber : seatNumbers) {
             db.update("insert into booking_seats(booking_id,seat_number) values(?,?)", bookingId, seatNumber);
@@ -81,9 +98,16 @@ public class BookingService {
         return Map.of(
                 "bookingId", bookingId,
                 "reference", reference,
-                "amount", amount,
+                "ticketSubtotal", subtotal,
+                "convenienceFee", convenienceFee,
+                "gst", gst,
+                "amount", total,
                 "expiresAt", expiresAt.toString(),
                 "seats", seatNumbers);
+    }
+
+    private double round2(double value) {
+        return Math.round(value * 100.0) / 100.0;
     }
 
     public Map<String, Object> bookingForPayment(String email, long bookingId) {
@@ -132,7 +156,8 @@ public class BookingService {
     /** Full detail for one booking (ticket PDF + confirmation email), scoped to its owner. */
     public Map<String, Object> bookingDetail(String email, long bookingId) {
         return db.queryForMap("""
-                select b.id, b.reference, b.status, b.amount, b.created_at, m.title,
+                select b.id, b.reference, b.status, b.amount, b.ticket_subtotal, b.convenience_fee, b.gst_amount,
+                       b.contact_email, b.contact_phone, b.created_at, m.title,
                        sh.show_date, sh.start_time, t.name theatre_name, u.email user_email, u.name user_name,
                        string_agg(bs.seat_number, ', ' order by bs.seat_number) seats
                 from bookings b
