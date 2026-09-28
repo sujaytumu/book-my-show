@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { api } from "../api";
+import { api, currentUser } from "../api";
 import TheatreMap, { haversineKm } from "../components/TheatreMap";
 
 const MAX_SEATS = 10;
@@ -19,6 +19,7 @@ function loadRazorpayScript() {
 export default function Show() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const user = currentUser();
   const [show, setShow] = useState(null);
   const [seats, setSeats] = useState([]);
   const [selected, setSelected] = useState([]);
@@ -28,6 +29,9 @@ export default function Show() {
   const [slow, setSlow] = useState(false);
   const [myLocation, setMyLocation] = useState(null);
   const [locationError, setLocationError] = useState("");
+  const [contactEmail, setContactEmail] = useState(user?.email || "");
+  const [contactPhone, setContactPhone] = useState("");
+  const [hold, setHold] = useState(null); // { bookingId, reference, ticketSubtotal, convenienceFee, gst, amount }
 
   useEffect(() => {
     api.get("/shows/" + id).then((res) => setShow(res.data));
@@ -69,20 +73,41 @@ export default function Show() {
     });
   }
 
-  async function pay() {
+  // Step 1: lock the seats and get a real fare breakdown (ticket price + convenience fee + GST).
+  async function reviewBooking() {
     if (!localStorage.getItem("token")) return navigate("/login");
+    if (!contactEmail.trim()) {
+      alert("Please enter an email address for the ticket.");
+      return;
+    }
     setPending(true);
     try {
-      const hold = await api.post("/bookings/hold", { showId: +id, seatNumbers: selected });
+      const res = await api.post("/bookings/hold", {
+        showId: +id,
+        seatNumbers: selected,
+        contactEmail: contactEmail.trim(),
+        contactPhone: contactPhone.trim() || null,
+      });
+      setHold(res.data);
+    } catch (err) {
+      alert(err.response?.data?.message || err.message);
+    } finally {
+      setPending(false);
+    }
+  }
 
+  // Step 2: actually pay (mock or Razorpay) for the held booking.
+  async function confirmAndPay() {
+    setPending(true);
+    try {
       if (mode === "mock") {
-        await api.post("/payments/mock-confirm/" + hold.data.bookingId);
-        alert("Payment simulated (no live gateway configured yet) — booking confirmed! Check your bookings to download the ticket.");
+        await api.post("/payments/mock-confirm/" + hold.bookingId);
+        alert("Payment simulated (no live gateway configured yet) — ticket emailed to " + contactEmail);
         navigate("/bookings");
         return;
       }
 
-      const order = await api.post("/payments/create-order/" + hold.data.bookingId);
+      const order = await api.post("/payments/create-order/" + hold.bookingId);
       await loadRazorpayScript();
 
       new window.Razorpay({
@@ -91,13 +116,14 @@ export default function Show() {
         currency: order.data.currency,
         name: "Book My Show",
         order_id: order.data.orderId,
+        prefill: { email: contactEmail, contact: contactPhone },
         handler: async (response) => {
           await api.post("/payments/verify", {
             razorpayOrderId: response.razorpay_order_id,
             razorpayPaymentId: response.razorpay_payment_id,
             razorpaySignature: response.razorpay_signature,
           });
-          alert("Payment successful! Check your bookings to download the ticket.");
+          alert("Payment successful! Ticket emailed to " + contactEmail);
           navigate("/bookings");
         },
       }).open();
@@ -121,39 +147,99 @@ export default function Show() {
           <p>
             {show.theatre_name} / {show.screen_name} · {show.show_date} · {show.start_time?.slice(0, 5)} · ₹{show.price}
           </p>
-          {show.distance_from_jntu_km != null && (
-            <p className="distance-tag">{show.distance_from_jntu_km} km from JNTU Metro</p>
-          )}
         </div>
       )}
 
       {loadError && <p className="error">{loadError}</p>}
 
-      <div className="screen">SCREEN</div>
-      <div className="seats">
-        {seats.map((seat) => (
-          <button
-            className={selected.includes(seat.seat_number) ? "selected" : seat.status.toLowerCase()}
-            onClick={() => toggleSeat(seat)}
-            key={seat.id}
-          >
-            {seat.seat_number}
-          </button>
-        ))}
-      </div>
+      {!hold && (
+        <>
+          <div className="screen">SCREEN</div>
+          <div className="seats">
+            {seats.map((seat) => (
+              <button
+                className={selected.includes(seat.seat_number) ? "selected" : seat.status.toLowerCase()}
+                onClick={() => toggleSeat(seat)}
+                key={seat.id}
+              >
+                {seat.seat_number}
+              </button>
+            ))}
+          </div>
 
-      {slow && (
-        <p className="notice">
-          Still working — the server may be waking up from idle, this can take up to a minute.
-        </p>
+          {selected.length > 0 && (
+            <div className="card contact-details">
+              <h2>Booking details</h2>
+              <p className="hint">Your ticket (PDF) is emailed here automatically once payment is confirmed.</p>
+              <input
+                type="email"
+                placeholder="Email for ticket"
+                required
+                value={contactEmail}
+                onChange={(e) => setContactEmail(e.target.value)}
+              />
+              <input
+                type="tel"
+                placeholder="Phone number (optional)"
+                value={contactPhone}
+                onChange={(e) => setContactPhone(e.target.value)}
+              />
+            </div>
+          )}
+
+          {slow && (
+            <p className="notice">
+              Still working — the server may be waking up from idle, this can take up to a minute.
+            </p>
+          )}
+
+          <div className="bar">
+            <b>{selected.length} seats selected</b>
+            <button disabled={!selected.length || pending} onClick={reviewBooking}>
+              {pending ? "Please wait..." : "Review Booking"}
+            </button>
+          </div>
+        </>
       )}
 
-      <div className="bar">
-        <b>{selected.length} seats selected</b>
-        <button disabled={!selected.length || pending} onClick={pay}>
-          {pending ? "Please wait..." : mode === "razorpay" ? "Pay with Razorpay" : "Pay & Confirm (Test Mode)"}
-        </button>
-      </div>
+      {hold && (
+        <div className="card confirm-booking">
+          <h2>Confirm booking</h2>
+          <p>
+            {show?.movie_title} · Seats: <b>{selected.join(", ")}</b>
+          </p>
+          <div className="fare-row">
+            <span>Ticket Price</span>
+            <span>₹{hold.ticketSubtotal.toFixed(2)}</span>
+          </div>
+          <div className="fare-row">
+            <span>Convenience Fee</span>
+            <span>₹{hold.convenienceFee.toFixed(2)}</span>
+          </div>
+          <div className="fare-row">
+            <span>GST (18% on fee)</span>
+            <span>₹{hold.gst.toFixed(2)}</span>
+          </div>
+          <div className="fare-row fare-total">
+            <span>Total</span>
+            <span>₹{hold.amount.toFixed(2)}</span>
+          </div>
+          <p className="hint">Sending ticket to: {contactEmail}{contactPhone ? " · " + contactPhone : ""}</p>
+          {slow && (
+            <p className="notice">
+              Still working — the server may be waking up from idle, this can take up to a minute.
+            </p>
+          )}
+          <div className="bar">
+            <button className="ghost" disabled={pending} onClick={() => setHold(null)}>
+              Back
+            </button>
+            <button disabled={pending} onClick={confirmAndPay}>
+              {pending ? "Please wait..." : mode === "razorpay" ? "Pay with Razorpay" : "Pay & Confirm (Test Mode)"}
+            </button>
+          </div>
+        </div>
+      )}
 
       {show?.latitude != null && (
         <div className="theatre-location card">

@@ -89,13 +89,14 @@ public class PaymentController {
         try {
             Map<String, Object> detail = bookingService.bookingDetail(email, bookingId);
             byte[] pdf = ticketService.generateTicketPdf(detail);
+            String recipient = (String) detail.getOrDefault("contact_email", detail.get("user_email"));
             String html = "<p>Hi " + detail.get("user_name") + ",</p>" +
                     "<p>Your booking for <b>" + detail.get("title") + "</b> is confirmed.</p>" +
                     "<p>Reference: <b>" + detail.get("reference") + "</b><br>" +
                     "Seats: " + detail.get("seats") + "<br>" +
                     detail.get("show_date") + " at " + detail.get("start_time") + "</p>" +
                     "<p>Your ticket is attached as a PDF.</p>";
-            emailService.sendTicket((String) detail.get("user_email"), (String) detail.get("user_name"),
+            emailService.sendTicket(recipient, (String) detail.get("user_name"),
                     "Your Book My Show ticket - " + detail.get("reference"), html, pdf,
                     detail.get("reference") + ".pdf");
         } catch (Exception e) {
