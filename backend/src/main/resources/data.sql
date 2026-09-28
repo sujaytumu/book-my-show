@@ -113,11 +113,19 @@ insert into show_seats(show_id,seat_number,seat_type) select sh.id,chr(65+floor(
 -- ============================================================
 -- Real Hyderabad theatre network (30: 15 single screens + 15
 -- multiplexes), replacing the earlier approximated list. Kept
--- idempotent by (name,address) so this is safe to re-run against
--- the already-live database; existing bookings on the previous
--- placeholder theatres are preserved (never deleted), just hidden
--- from new browsing via the active flag.
+-- idempotent by name only (not name+address) so re-running this never
+-- creates a second row for a theatre that already exists under a
+-- slightly different address string; existing bookings on the
+-- previous placeholder theatres are preserved (never deleted), just
+-- hidden from new browsing via the active flag.
 -- ============================================================
+
+-- Correct + reactivate the rows that are actually these same real theatres,
+-- BEFORE the insert below, so its name-only NOT EXISTS check correctly
+-- treats them as already present instead of creating a duplicate.
+update theatres set active=true where name in ('Sudarshan 35MM','AMB Cinemas','Prasads Multiplex');
+update theatres set address='RTC X Roads, Hyderabad', latitude=17.3908, longitude=78.4972, active=true where name='Sandhya 70MM';
+
 insert into theatres(name,address,city_id,latitude,longitude)
 select v.name,v.address,c.id,v.lat,v.lon from cities c cross join (values
   ('Sandhya 70MM','RTC X Roads, Hyderabad',17.3908,78.4972),
@@ -135,7 +143,7 @@ select v.name,v.address,c.id,v.lat,v.lon from cities c cross join (values
   ('Viswanath 70MM','Kukatpally, Hyderabad',17.4862,78.411),
   ('Sensation Sunshine','Khairatabad, Hyderabad',17.411,78.463),
   ('Shanti Theatre','Narayanguda, Hyderabad',17.4021,78.4814),
-  ('AMB Cinemas','Kondapur / Gachibowli, Hyderabad',17.4479,78.3489),
+  ('AMB Cinemas','Gachibowli, Hyderabad',17.4479,78.3489),
   ('Prasads Multiplex','Khairtabad, Hyderabad',17.4128,78.4659),
   ('AAA Cinemas','Ameerpet, Hyderabad',17.4374,78.4487),
   ('Allu Cinemas','Kokapet, Hyderabad',17.4083,78.3339),
@@ -151,12 +159,7 @@ select v.name,v.address,c.id,v.lat,v.lon from cities c cross join (values
   ('INOX Ashoka One Mall','Kukatpally, Hyderabad',17.4925,78.404),
   ('Asian CineSquare Multiplex','Uppal, Hyderabad',17.4058,78.5591)
 ) as v(name,address,lat,lon)
-where c.name='Hyderabad' and not exists(select 1 from theatres t where t.name=v.name and t.address=v.address);
-
--- Reactivate + correct any pre-existing rows that are actually these same real theatres
-update theatres set active=true where name in ('Sudarshan 35MM','AMB Cinemas','Prasads Multiplex');
-update theatres set address='RTC X Roads, Hyderabad', latitude=17.3908, longitude=78.4972 where name='Sandhya 70MM';
-update theatres set active=true where name='Sandhya 70MM';
+where c.name='Hyderabad' and not exists(select 1 from theatres t where t.name=v.name);
 
 -- Retire theatres that were placeholders/approximations, now superseded by the real list above.
 -- Not deleted (existing bookings still reference their shows) - just hidden from new browsing.
