@@ -22,7 +22,7 @@ public class AdminController {
     public List<Map<String, Object>> theatres() {
         return db.queryForList(
                 "select t.id, t.name, t.address, t.latitude, t.longitude, c.name city_name from theatres t " +
-                        "join cities c on c.id = t.city_id order by c.name, t.name");
+                        "join cities c on c.id = t.city_id where t.active=true order by c.name, t.name");
     }
 
     @PostMapping("/cities")
@@ -55,7 +55,7 @@ public class AdminController {
     public List<Map<String, Object>> screens() {
         return db.queryForList(
                 "select s.id, s.name, s.total_seats, t.name theatre_name from screens s " +
-                        "join theatres t on t.id = s.theatre_id order by t.name, s.name");
+                        "join theatres t on t.id = s.theatre_id where t.active=true order by t.name, s.name");
     }
 
     @PostMapping("/movies")

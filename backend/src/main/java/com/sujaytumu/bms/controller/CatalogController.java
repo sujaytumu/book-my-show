@@ -46,7 +46,8 @@ public class CatalogController {
     public List<Map<String, Object>> shows(@RequestParam long movieId, @RequestParam(required = false) String date) {
         String sql = "select sh.*,t.id theatre_id,t.name theatre_name,t.address theatre_address,t.latitude,t.longitude," +
                 "s.name screen_name from shows sh " +
-                "join screens s on s.id=sh.screen_id join theatres t on t.id=s.theatre_id where sh.movie_id=? ";
+                "join screens s on s.id=sh.screen_id join theatres t on t.id=s.theatre_id " +
+                "where sh.movie_id=? and t.active=true ";
         if (date == null) {
             return db.queryForList(sql + "order by t.name,show_date,start_time", movieId);
         }
