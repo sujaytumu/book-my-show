@@ -9,5 +9,10 @@ create table if not exists shows(id bigserial primary key,movie_id bigint refere
 create table if not exists show_seats(id bigserial primary key,show_id bigint references shows(id) on delete cascade,seat_number varchar(10) not null,seat_type varchar(30) not null,status varchar(20) not null default 'AVAILABLE',locked_by bigint,locked_until timestamptz,unique(show_id,seat_number));
 create index if not exists idx_show_seats_show_status on show_seats(show_id,status);
 create table if not exists bookings(id bigserial primary key,user_id bigint references users(id),show_id bigint references shows(id),reference varchar(30) unique not null,status varchar(20) not null,amount numeric(10,2) not null,razorpay_order_id varchar(100),razorpay_payment_id varchar(100),expires_at timestamptz,created_at timestamptz default now());
+alter table bookings add column if not exists ticket_subtotal numeric(10,2);
+alter table bookings add column if not exists convenience_fee numeric(10,2) default 0;
+alter table bookings add column if not exists gst_amount numeric(10,2) default 0;
+alter table bookings add column if not exists contact_email varchar(160);
+alter table bookings add column if not exists contact_phone varchar(20);
 create table if not exists booking_seats(id bigserial primary key,booking_id bigint references bookings(id) on delete cascade,seat_number varchar(10) not null);
 create table if not exists payments(id bigserial primary key,booking_id bigint references bookings(id),razorpay_order_id varchar(100) unique not null,razorpay_payment_id varchar(100),amount numeric(10,2),status varchar(20) not null,paid_at timestamptz);
