@@ -27,6 +27,11 @@ insert into movies(title,description,poster_url,language,genre,duration_minutes,
 select 'Sathi Leelavathi','Telugu romantic comedy starring Lavanya Tripathi and Dev Mohan, directed by Tatineni Satya. Released 8 May 2026.','https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=800&q=80','Telugu','Romantic Comedy',131,'UA',6.8
 where not exists(select 1 from movies where title='Sathi Leelavathi');
 
+-- Real official poster art (served as static site assets, no external CDN needed)
+update movies set poster_url='/posters/the-paradise.jpg' where title='The Paradise';
+update movies set poster_url='/posters/irumudi.jpg' where title='Irumudi';
+update movies set poster_url='/posters/mandaadi.jpg' where title='Mandaadi';
+
 -- Real Hyderabad theatre network (single screens + multiplexes), concentrated around
 -- KPHB/JNTU/Kukatpally/Miyapur with a few farther ones for distance variety.
 -- Distance-from-me is computed live in the browser from the viewer's actual
@@ -180,56 +185,60 @@ insert into screens(name,total_seats,theatre_id)
 select 'Screen 1',60,t.id from theatres t where t.active=true and not exists(select 1 from screens sc where sc.theatre_id=t.id);
 
 insert into shows(movie_id,screen_id,show_date,start_time,end_time,price)
-select m.id,sc.id,current_date+v.day_offset,v.start_time::time,v.end_time::time,v.price
+select m.id,sc.id,current_date+d.day_offset,v.start_time::time,v.end_time::time,v.price
 from movies m join (values
-  ('The Paradise','Sandhya 70MM',1,'13:00','15:30',180),
-  ('The Paradise','Devi 70MM',1,'15:30','18:00',130),
-  ('The Paradise','Sudarshan 35MM',1,'17:15','19:45',140),
-  ('The Paradise','Mythri Vimal 70MM',1,'19:00','21:30',140),
-  ('The Paradise','Sri Bhramaramba Cinema Hall',1,'21:00','23:30',180),
-  ('The Paradise','Mallikarjuna Theatre',1,'13:45','16:15',170),
-  ('The Paradise','Sree Ramulu Theatre',1,'15:00','17:30',130),
-  ('The Paradise','Sri Sai Ram 70MM',1,'17:15','19:45',130),
-  ('The Paradise','SVC Eeshwar Theatre',1,'19:00','21:30',140),
-  ('Irumudi','Sree Ramulu Theatre',1,'13:15','15:45',170),
-  ('Irumudi','Sri Sai Ram 70MM',1,'15:45','18:15',180),
-  ('Irumudi','SVC Eeshwar Theatre',1,'17:45','20:15',140),
-  ('Irumudi','Sree Ramana Theatre',1,'19:30','22:00',170),
-  ('Irumudi','Ganga Theatre (Mythri Shiva Ganga)',1,'21:00','23:30',190),
-  ('Irumudi','Konark Theatre (Asian Mukta)',1,'13:15','15:45',190),
-  ('Irumudi','Viswanath 70MM',1,'15:45','18:15',180),
-  ('Irumudi','Sensation Sunshine',1,'17:30','20:00',150),
-  ('Irumudi','Shanti Theatre',1,'19:15','21:45',140),
-  ('Mandaadi','Viswanath 70MM',1,'13:30','16:00',190),
-  ('Mandaadi','Sensation Sunshine',1,'15:00','17:30',130),
-  ('Mandaadi','Shanti Theatre',1,'17:00','19:30',160),
-  ('Mandaadi','AMB Cinemas',1,'19:30','22:00',220),
-  ('Mandaadi','Prasads Multiplex',1,'21:30','23:59',240),
-  ('Mandaadi','AAA Cinemas',1,'13:00','15:30',260),
-  ('Mandaadi','Allu Cinemas',1,'15:45','18:15',250),
-  ('Mandaadi','PVR Superplex (Inorbit Mall)',1,'17:00','19:30',240),
-  ('Mandaadi','PVR Nexus Mall',1,'19:00','21:30',230),
-  ('Madhuvidhu','Allu Cinemas',2,'13:30','16:00',240),
-  ('Madhuvidhu','PVR Superplex (Inorbit Mall)',2,'15:30','18:00',260),
-  ('Madhuvidhu','PVR Nexus Mall',2,'17:15','19:45',240),
-  ('Madhuvidhu','PVR LakeShore Mall',2,'19:00','21:30',250),
-  ('Madhuvidhu','INOX GVK One Mall',2,'21:15','23:45',200),
-  ('Madhuvidhu','Cinepolis Lulu Mall',2,'13:30','16:00',260),
-  ('Madhuvidhu','ART Cinemas Tattva Mall',2,'15:15','17:45',200),
-  ('Madhuvidhu','Aparna Cinemas',2,'17:00','19:30',260),
-  ('Madhuvidhu','PVR ICON Next Galleria Mall',2,'19:30','22:00',230),
-  ('Sathi Leelavathi','ART Cinemas Tattva Mall',2,'13:30','16:00',230),
-  ('Sathi Leelavathi','Aparna Cinemas',2,'15:30','18:00',210),
-  ('Sathi Leelavathi','PVR ICON Next Galleria Mall',2,'17:15','19:45',220),
-  ('Sathi Leelavathi','PVR Cinemas Irrum Manzil',2,'19:30','22:00',250),
-  ('Sathi Leelavathi','INOX Ashoka One Mall',2,'21:00','23:30',250),
-  ('Sathi Leelavathi','Asian CineSquare Multiplex',2,'13:15','15:45',240),
-  ('Sathi Leelavathi','Sandhya 70MM',2,'15:15','17:45',170),
-  ('Sathi Leelavathi','Devi 70MM',2,'17:45','20:15',140),
-  ('Sathi Leelavathi','Sudarshan 35MM',2,'19:30','22:00',160)
-) as v(movie_title,theatre_name,day_offset,start_time,end_time,price) on v.movie_title=m.title
+  ('The Paradise','Sandhya 70MM','13:00','15:30',180),
+  ('The Paradise','Devi 70MM','15:30','18:00',130),
+  ('The Paradise','Sudarshan 35MM','17:15','19:45',140),
+  ('The Paradise','Mythri Vimal 70MM','19:00','21:30',140),
+  ('The Paradise','Sri Bhramaramba Cinema Hall','21:00','23:30',180),
+  ('The Paradise','Mallikarjuna Theatre','13:45','16:15',170),
+  ('The Paradise','Sree Ramulu Theatre','15:00','17:30',130),
+  ('The Paradise','Sri Sai Ram 70MM','17:15','19:45',130),
+  ('The Paradise','SVC Eeshwar Theatre','19:00','21:30',140),
+  ('Irumudi','Sree Ramulu Theatre','13:15','15:45',170),
+  ('Irumudi','Sri Sai Ram 70MM','15:45','18:15',180),
+  ('Irumudi','SVC Eeshwar Theatre','17:45','20:15',140),
+  ('Irumudi','Sree Ramana Theatre','19:30','22:00',170),
+  ('Irumudi','Ganga Theatre (Mythri Shiva Ganga)','21:00','23:30',190),
+  ('Irumudi','Konark Theatre (Asian Mukta)','13:15','15:45',190),
+  ('Irumudi','Viswanath 70MM','15:45','18:15',180),
+  ('Irumudi','Sensation Sunshine','17:30','20:00',150),
+  ('Irumudi','Shanti Theatre','19:15','21:45',140),
+  ('Mandaadi','Viswanath 70MM','13:30','16:00',190),
+  ('Mandaadi','Sensation Sunshine','15:00','17:30',130),
+  ('Mandaadi','Shanti Theatre','17:00','19:30',160),
+  ('Mandaadi','AMB Cinemas','19:30','22:00',220),
+  ('Mandaadi','Prasads Multiplex','21:30','23:59',240),
+  ('Mandaadi','AAA Cinemas','13:00','15:30',260),
+  ('Mandaadi','Allu Cinemas','15:45','18:15',250),
+  ('Mandaadi','PVR Superplex (Inorbit Mall)','17:00','19:30',240),
+  ('Mandaadi','PVR Nexus Mall','19:00','21:30',230),
+  ('Madhuvidhu','Allu Cinemas','13:30','16:00',240),
+  ('Madhuvidhu','PVR Superplex (Inorbit Mall)','15:30','18:00',260),
+  ('Madhuvidhu','PVR Nexus Mall','17:15','19:45',240),
+  ('Madhuvidhu','PVR LakeShore Mall','19:00','21:30',250),
+  ('Madhuvidhu','INOX GVK One Mall','21:15','23:45',200),
+  ('Madhuvidhu','Cinepolis Lulu Mall','13:30','16:00',260),
+  ('Madhuvidhu','ART Cinemas Tattva Mall','15:15','17:45',200),
+  ('Madhuvidhu','Aparna Cinemas','17:00','19:30',260),
+  ('Madhuvidhu','PVR ICON Next Galleria Mall','19:30','22:00',230),
+  ('Sathi Leelavathi','ART Cinemas Tattva Mall','13:30','16:00',230),
+  ('Sathi Leelavathi','Aparna Cinemas','15:30','18:00',210),
+  ('Sathi Leelavathi','PVR ICON Next Galleria Mall','17:15','19:45',220),
+  ('Sathi Leelavathi','PVR Cinemas Irrum Manzil','19:30','22:00',250),
+  ('Sathi Leelavathi','INOX Ashoka One Mall','21:00','23:30',250),
+  ('Sathi Leelavathi','Asian CineSquare Multiplex','13:15','15:45',240),
+  ('Sathi Leelavathi','Sandhya 70MM','15:15','17:45',170),
+  ('Sathi Leelavathi','Devi 70MM','17:45','20:15',140),
+  ('Sathi Leelavathi','Sudarshan 35MM','19:30','22:00',160)
+) as v(movie_title,theatre_name,start_time,end_time,price) on v.movie_title=m.title
 join theatres t on t.name=v.theatre_name and t.active=true
 join screens sc on sc.theatre_id=t.id
-where not exists(select 1 from shows sh where sh.movie_id=m.id and sh.screen_id=sc.id);
+cross join generate_series(0,6) as d(day_offset)
+where not exists(
+  select 1 from shows sh where sh.movie_id=m.id and sh.screen_id=sc.id
+    and sh.show_date=current_date+d.day_offset and sh.start_time=v.start_time::time
+);
 
 insert into show_seats(show_id,seat_number,seat_type) select sh.id,chr(65+floor((g-1)/10)::int)||((g-1)%10+1)::text,case when g<=20 then 'PREMIUM' else 'REGULAR' end from shows sh cross join generate_series(1,60) g where not exists(select 1 from show_seats ss where ss.show_id=sh.id);
