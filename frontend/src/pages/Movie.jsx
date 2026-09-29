@@ -20,7 +20,10 @@ export default function Movie() {
     });
   }, [id]);
 
-  const dates = useMemo(() => [...new Set(shows.map((s) => s.show_date))], [shows]);
+  // show_date is ISO (YYYY-MM-DD), so a plain string sort is already chronological -
+  // without this, dates appeared in whatever order they first showed up in the
+  // theatre-sorted shows list (effectively random), not today-then-tomorrow-etc.
+  const dates = useMemo(() => [...new Set(shows.map((s) => s.show_date))].sort(), [shows]);
 
   function findMe() {
     setLocationError("");
@@ -83,17 +86,27 @@ export default function Movie() {
 
       {dates.length > 0 && (
         <div className="date-strip">
-          {dates.map((d) => (
-            <button
-              key={d}
-              className={"date-pill" + (d === selectedDate ? " active" : "")}
-              onClick={() => setSelectedDate(d)}
-            >
-              {new Date(d).toLocaleDateString("en-IN", { weekday: "short" })}
-              <b>{new Date(d).getDate()}</b>
-              {new Date(d).toLocaleDateString("en-IN", { month: "short" })}
-            </button>
-          ))}
+          {dates.map((d) => {
+            const todayIso = new Date().toISOString().slice(0, 10);
+            const tomorrowIso = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+            const label =
+              d === todayIso
+                ? "TODAY"
+                : d === tomorrowIso
+                ? "TMRW"
+                : new Date(d).toLocaleDateString("en-IN", { weekday: "short" }).toUpperCase();
+            return (
+              <button
+                key={d}
+                className={"date-pill" + (d === selectedDate ? " active" : "")}
+                onClick={() => setSelectedDate(d)}
+              >
+                {label}
+                <b>{new Date(d).getDate()}</b>
+                {new Date(d).toLocaleDateString("en-IN", { month: "short" })}
+              </button>
+            );
+          })}
         </div>
       )}
 
