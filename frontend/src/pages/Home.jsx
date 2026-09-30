@@ -2,6 +2,19 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
 
+function MovieCard({ movie }) {
+  return (
+    <Link className="card movie" to={"/movie/" + movie.id}>
+      <img src={movie.poster_url} alt={movie.title} loading="lazy" />
+      <h3>{movie.title}</h3>
+      <p>
+        {movie.language} · {movie.genre}
+      </p>
+      {movie.upcoming ? <b className="coming-soon-tag">Coming Soon</b> : <b>★ {movie.rating}</b>}
+    </Link>
+  );
+}
+
 export default function Home() {
   const [movies, setMovies] = useState([]);
   const [query, setQuery] = useState("");
@@ -16,6 +29,9 @@ export default function Home() {
     setMovies(res.data);
   }
 
+  const nowShowing = movies.filter((m) => !m.upcoming);
+  const comingSoon = movies.filter((m) => m.upcoming);
+
   return (
     <>
       <div className="banner">
@@ -28,18 +44,24 @@ export default function Home() {
         value={query}
         onChange={(e) => search(e.target.value)}
       />
+
+      <h2 className="section-title">Now Showing</h2>
       <div className="grid">
-        {movies.map((movie) => (
-          <Link className="card movie" to={"/movie/" + movie.id} key={movie.id}>
-            <img src={movie.poster_url} alt={movie.title} />
-            <h3>{movie.title}</h3>
-            <p>
-              {movie.language} · {movie.genre}
-            </p>
-            <b>★ {movie.rating}</b>
-          </Link>
+        {nowShowing.map((movie) => (
+          <MovieCard movie={movie} key={movie.id} />
         ))}
       </div>
+
+      {comingSoon.length > 0 && (
+        <>
+          <h2 className="section-title">Coming Soon</h2>
+          <div className="grid">
+            {comingSoon.map((movie) => (
+              <MovieCard movie={movie} key={movie.id} />
+            ))}
+          </div>
+        </>
+      )}
     </>
   );
 }

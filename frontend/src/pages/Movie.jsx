@@ -13,10 +13,14 @@ export default function Movie() {
   const [locationError, setLocationError] = useState("");
 
   useEffect(() => {
-    api.get("/movies/" + id).then((res) => setMovie(res.data));
-    api.get("/shows", { params: { movieId: id } }).then((res) => {
-      setShows(res.data);
-      if (res.data.length) setSelectedDate(res.data[0].show_date);
+    api.get("/movies/" + id).then((res) => {
+      setMovie(res.data);
+      if (!res.data.upcoming) {
+        api.get("/shows", { params: { movieId: id } }).then((showsRes) => {
+          setShows(showsRes.data);
+          if (showsRes.data.length) setSelectedDate(showsRes.data[0].show_date);
+        });
+      }
     });
   }, [id]);
 
@@ -79,12 +83,20 @@ export default function Movie() {
           <h1>{movie.title}</h1>
           <p>{movie.description}</p>
           <p>
-            {movie.language} · {movie.genre} · {movie.duration_minutes} min · {movie.certificate} · ★ {movie.rating}
+            {movie.language} · {movie.genre}
+            {!movie.upcoming && <> · {movie.duration_minutes} min · {movie.certificate} · ★ {movie.rating}</>}
           </p>
         </section>
       </div>
 
-      {dates.length > 0 && (
+      {movie.upcoming ? (
+        <div className="card coming-soon-panel">
+          <h2>Coming Soon</h2>
+          <p>Booking opens closer to release. Check back soon for showtimes.</p>
+        </div>
+      ) : (
+        <>
+          {dates.length > 0 && (
         <div className="date-strip">
           {dates.map((d) => {
             const todayIso = new Date().toISOString().slice(0, 10);
@@ -142,6 +154,8 @@ export default function Movie() {
           </div>
         </div>
       ))}
+        </>
+      )}
     </div>
   );
 }

@@ -27,6 +27,32 @@ insert into movies(title,description,poster_url,language,genre,duration_minutes,
 select 'Sathi Leelavathi','Telugu romantic comedy starring Lavanya Tripathi and Dev Mohan, directed by Tatineni Satya. Released 8 May 2026.','https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=800&q=80','Telugu','Romantic Comedy',131,'UA',6.8
 where not exists(select 1 from movies where title='Sathi Leelavathi');
 
+-- Retired: only had a generic stock-photo poster, no real official artwork available.
+update movies set active=false where title in ('Madhuvidhu','Sathi Leelavathi');
+
+-- Coming Soon: announced/upcoming releases with real official poster art, not yet
+-- in theatres so they carry no shows. Frontend splits Now Showing vs Coming Soon
+-- on the 'upcoming' flag.
+insert into movies(title,description,poster_url,language,genre,duration_minutes,certificate,rating,upcoming)
+select 'Spirit','Cop action drama starring Prabhas as an IPS officer, with Triptii Dimri and Prakash Raj, directed by Sandeep Reddy Vanga (T-Series/Bhadrakali Pictures). Releasing 5 March 2027.','/posters/spirit.jpg','Telugu','Action',0,'A',0,true
+where not exists(select 1 from movies where title='Spirit');
+
+insert into movies(title,description,poster_url,language,genre,duration_minutes,certificate,rating,upcoming)
+select 'OG 2','Announced sequel to "OG - They Call Him OG", starring Power Star Pawan Kalyan, written and directed by Sujeeth. Release date not yet announced.','/posters/og2.jpg','Telugu','Action',0,'UA',0,true
+where not exists(select 1 from movies where title='OG 2');
+
+insert into movies(title,description,poster_url,language,genre,duration_minutes,certificate,rating,upcoming)
+select 'Varanasi','SS Rajamouli''s next, starring Mahesh Babu as Rudhra, produced by Sri Durga Arts. Releasing 2027 (#GlobeTrotter).','/posters/varanasi.jpg','Telugu','Action',0,'UA',0,true
+where not exists(select 1 from movies where title='Varanasi');
+
+insert into movies(title,description,poster_url,language,genre,duration_minutes,certificate,rating,upcoming)
+select 'RC17','Untitled next film from Global Star Ram Charan and director Sukumar (Mythri Movie Makers), music by Devi Sri Prasad. Title and release date not yet announced.','/posters/rc17.jpg','Telugu','Action',0,'UA',0,true
+where not exists(select 1 from movies where title='RC17');
+
+insert into movies(title,description,poster_url,language,genre,duration_minutes,certificate,rating,upcoming)
+select 'Daaka','Announced next film starring Icon Star Allu Arjun, directed by Atlee, presented by Kalanithi Maran''s Sun Pictures. Release date not yet announced.','/posters/daaka.jpg','Telugu','Action',0,'UA',0,true
+where not exists(select 1 from movies where title='Daaka');
+
 -- Real official poster art (served as static site assets, no external CDN needed)
 update movies set poster_url='/posters/the-paradise.jpg' where title='The Paradise';
 update movies set poster_url='/posters/irumudi.jpg' where title='Irumudi';
