@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
 
@@ -18,6 +18,7 @@ function MovieCard({ movie }) {
 export default function Home() {
   const [movies, setMovies] = useState([]);
   const [query, setQuery] = useState("");
+  const [language, setLanguage] = useState("All");
 
   useEffect(() => {
     api.get("/movies").then((res) => setMovies(res.data));
@@ -29,8 +30,10 @@ export default function Home() {
     setMovies(res.data);
   }
 
-  const nowShowing = movies.filter((m) => !m.upcoming);
-  const comingSoon = movies.filter((m) => m.upcoming);
+  const languages = useMemo(() => ["All", ...new Set(movies.map((m) => m.language).filter(Boolean))], [movies]);
+  const filtered = language === "All" ? movies : movies.filter((m) => m.language === language);
+  const nowShowing = filtered.filter((m) => !m.upcoming);
+  const comingSoon = filtered.filter((m) => m.upcoming);
 
   return (
     <>
@@ -45,7 +48,24 @@ export default function Home() {
         onChange={(e) => search(e.target.value)}
       />
 
-      <h2 className="section-title">Now Showing</h2>
+      {languages.length > 1 && (
+        <div className="chip-row">
+          {languages.map((lang) => (
+            <button
+              key={lang}
+              className={"chip" + (language === lang ? " active" : "")}
+              onClick={() => setLanguage(lang)}
+            >
+              {lang}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="section-header">
+        <h2 className="section-title">Now Showing</h2>
+        <span className="section-count">{nowShowing.length} movies</span>
+      </div>
       <div className="grid">
         {nowShowing.map((movie) => (
           <MovieCard movie={movie} key={movie.id} />
@@ -54,7 +74,17 @@ export default function Home() {
 
       {comingSoon.length > 0 && (
         <>
-          <h2 className="section-title">Coming Soon</h2>
+          <a href="#coming-soon" className="cta-banner">
+            <div>
+              <b>Coming Soon</b>
+              <span>Explore upcoming movies</span>
+            </div>
+            <span>→</span>
+          </a>
+          <div className="section-header" id="coming-soon">
+            <h2 className="section-title">Coming Soon</h2>
+            <span className="section-count">{comingSoon.length} movies</span>
+          </div>
           <div className="grid">
             {comingSoon.map((movie) => (
               <MovieCard movie={movie} key={movie.id} />
