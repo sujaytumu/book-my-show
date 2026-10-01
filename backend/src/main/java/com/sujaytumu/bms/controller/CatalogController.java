@@ -42,12 +42,15 @@ public class CatalogController {
     // Real (client-supplied) geolocation is used for "distance from me", computed
     // in the browser via TheatreMap.haversineKm - no server-side fixed reference
     // point. This just returns each theatre's lat/lng so the frontend can do that.
+    // "and sh.show_date>=current_date" keeps past dates out of the browsing list -
+    // ShowWindowScheduler is what keeps the *future* end of the window rolling
+    // forward daily so this doesn't just shrink down to nothing over time.
     @GetMapping("/api/shows")
     public List<Map<String, Object>> shows(@RequestParam long movieId, @RequestParam(required = false) String date) {
         String sql = "select sh.*,t.id theatre_id,t.name theatre_name,t.address theatre_address,t.latitude,t.longitude," +
                 "s.name screen_name from shows sh " +
                 "join screens s on s.id=sh.screen_id join theatres t on t.id=s.theatre_id " +
-                "where sh.movie_id=? and t.active=true ";
+                "where sh.movie_id=? and t.active=true and sh.show_date>=current_date ";
         if (date == null) {
             return db.queryForList(sql + "order by t.name,show_date,start_time", movieId);
         }
