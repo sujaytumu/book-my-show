@@ -45,6 +45,11 @@ public class EmailService {
         this.gmailUsername = gmailUsername;
         this.resendApiKey = resendApiKey;
         this.resendFrom = resendFrom;
+        // Confirms at boot whether the Gmail credential actually reached the app -
+        // if this ever logs blank, the env var isn't wired up server-side, full stop.
+        System.out.println("[EMAIL] Startup config: gmailUsername=" +
+                (gmailUsername.isBlank() ? "<BLANK - not configured>" : "'" + gmailUsername + "' (configured)") +
+                ", resendConfigured=" + !resendApiKey.isBlank());
     }
 
     public boolean isConfigured() {
@@ -53,16 +58,34 @@ public class EmailService {
 
     public void sendTicket(String toEmail, String toName, String subject, String htmlBody, byte[] pdfBytes, String pdfFilename) {
         if (!gmailUsername.isBlank()) {
+            System.out.println("[EMAIL] Attempting Gmail SMTP send: from=" + gmailUsername + " to=" + toEmail);
             try {
                 sendViaGmail(toEmail, subject, htmlBody, pdfBytes, pdfFilename);
+                System.out.println("[EMAIL] Gmail SMTP send SUCCEEDED to=" + toEmail);
                 return;
             } catch (Exception e) {
-                System.err.println("Gmail SMTP send failed, trying Resend fallback: " + e.getMessage());
+                System.err.println("[EMAIL] Gmail SMTP send FAILED to=" + toEmail + " - " + describe(e)
+                        + " - trying Resend fallback");
             }
+        } else {
+            System.out.println("[EMAIL] Skipping Gmail (not configured), trying Resend for to=" + toEmail);
         }
         if (!resendApiKey.isBlank()) {
             sendViaResend(toEmail, subject, htmlBody, pdfBytes, pdfFilename);
+        } else {
+            System.err.println("[EMAIL] No email provider configured at all - ticket for " + toEmail + " was not sent.");
         }
+    }
+
+    /** Full exception chain (class + message for the exception and every cause), not just getMessage() which is often null/unhelpful for SMTP auth failures. */
+    private String describe(Throwable e) {
+        StringBuilder sb = new StringBuilder();
+        Throwable t = e;
+        while (t != null) {
+            sb.append(t.getClass().getSimpleName()).append(": ").append(t.getMessage()).append(" | ");
+            t = t.getCause();
+        }
+        return sb.toString();
     }
 
     private void sendViaGmail(String toEmail, String subject, String htmlBody, byte[] pdfBytes, String pdfFilename) throws Exception {
@@ -98,10 +121,12 @@ public class EmailService {
                     .build();
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() >= 300) {
-                System.err.println("Resend email failed (" + response.statusCode() + "): " + response.body());
+                System.err.println("[EMAIL] Resend send FAILED to=" + toEmail + " status=" + response.statusCode() + " body=" + response.body());
+            } else {
+                System.out.println("[EMAIL] Resend send SUCCEEDED to=" + toEmail);
             }
         } catch (Exception e) {
-            System.err.println("Could not send ticket email via Resend: " + e.getMessage());
+            System.err.println("[EMAIL] Resend send FAILED to=" + toEmail + " - " + describe(e));
         }
     }
 
