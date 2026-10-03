@@ -386,7 +386,7 @@ from movies m join (values
   ('Irumudi','PVR ICON Next Galleria Mall','17:30','20:10',250),
   ('Irumudi','PVR ICON Next Galleria Mall','19:00','21:40',250),
   ('Irumudi','PVR ICON Next Galleria Mall','20:30','23:10',250),
-  ('Irumudi','PVR ICON Next Galleria Mall','22:00','00:40',250)
+  ('Irumudi','PVR ICON Next Galleria Mall','22:00','00:40',250),
   ('Madhuvidhu','Allu Cinemas','13:30','16:00',240),
   ('Madhuvidhu','PVR Superplex (Inorbit Mall)','15:30','18:00',260),
   ('Madhuvidhu','PVR Nexus Mall','17:15','19:45',240),
