@@ -50,12 +50,14 @@ insert into movies(title,description,poster_url,language,genre,duration_minutes,
 select 'RC17','Untitled next film from Global Star Ram Charan and director Sukumar (Mythri Movie Makers), music by Devi Sri Prasad. Title and release date not yet announced.','/posters/rc17.jpg','Telugu','Action',0,'UA',0,true
 where not exists(select 1 from movies where title='RC17');
 
+-- Fix a spelling mistake from an earlier seed: the real title is "Raaka", not "Daaka".
+-- Must run BEFORE the insert below, so its NOT EXISTS check sees the renamed row
+-- instead of creating a duplicate.
+update movies set title='Raaka', poster_url='/posters/raaka.jpg' where title='Daaka';
+
 insert into movies(title,description,poster_url,language,genre,duration_minutes,certificate,rating,upcoming)
 select 'Raaka','Announced next film starring Icon Star Allu Arjun, directed by Atlee, presented by Kalanithi Maran''s Sun Pictures. Release date not yet announced.','/posters/raaka.jpg','Telugu','Action',0,'UA',0,true
 where not exists(select 1 from movies where title='Raaka');
-
--- Fix a spelling mistake from an earlier seed: the real title is "Raaka", not "Daaka".
-update movies set title='Raaka', poster_url='/posters/raaka.jpg' where title='Daaka';
 
 -- Real official poster art (served as static site assets, no external CDN needed)
 update movies set poster_url='/posters/the-paradise.jpg' where title='The Paradise';
