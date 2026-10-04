@@ -15,14 +15,17 @@ function MovieCard({ movie }) {
   );
 }
 
-export default function Home() {
+export default function Home({ mode = "now-showing" }) {
+  const isComingSoon = mode === "coming-soon";
   const [movies, setMovies] = useState([]);
   const [query, setQuery] = useState("");
   const [language, setLanguage] = useState("All");
 
   useEffect(() => {
     api.get("/movies").then((res) => setMovies(res.data));
-  }, []);
+    setQuery("");
+    setLanguage("All");
+  }, [mode]);
 
   async function search(value) {
     setQuery(value);
@@ -30,17 +33,20 @@ export default function Home() {
     setMovies(res.data);
   }
 
-  const languages = useMemo(() => ["All", ...new Set(movies.map((m) => m.language).filter(Boolean))], [movies]);
-  const filtered = language === "All" ? movies : movies.filter((m) => m.language === language);
-  const nowShowing = filtered.filter((m) => !m.upcoming);
-  const comingSoon = filtered.filter((m) => m.upcoming);
+  // Only the active view's movies - never both sets at once.
+  const inView = movies.filter((m) => !!m.upcoming === isComingSoon);
+  const languages = useMemo(() => ["All", ...new Set(inView.map((m) => m.language).filter(Boolean))], [inView]);
+  const filtered = language === "All" ? inView : inView.filter((m) => m.language === language);
 
   return (
     <>
-      <div className="banner">
-        <h1>Book movies. Pick seats. Enjoy.</h1>
-        <p>End-to-end ticket booking with secure seat locking and Razorpay.</p>
-      </div>
+      {!isComingSoon && (
+        <div className="banner">
+          <h1>Book movies. Pick seats. Enjoy.</h1>
+          <p>End-to-end ticket booking with secure seat locking and Razorpay.</p>
+        </div>
+      )}
+
       <input
         className="search"
         placeholder="Search movies..."
@@ -63,35 +69,22 @@ export default function Home() {
       )}
 
       <div className="section-header">
-        <h2 className="section-title">Now Showing</h2>
-        <span className="section-count">{nowShowing.length} movies</span>
+        <h2 className="section-title">{isComingSoon ? "Coming Soon" : "Now Showing"}</h2>
+        <span className="section-count">{filtered.length} movies</span>
       </div>
       <div className="grid">
-        {nowShowing.map((movie) => (
+        {filtered.map((movie) => (
           <MovieCard movie={movie} key={movie.id} />
         ))}
       </div>
 
-      {comingSoon.length > 0 && (
-        <>
-          <a href="#coming-soon" className="cta-banner">
-            <div>
-              <b>Coming Soon</b>
-              <span>Explore upcoming movies</span>
-            </div>
-            <span>→</span>
-          </a>
-          <div className="section-header" id="coming-soon">
-            <h2 className="section-title">Coming Soon</h2>
-            <span className="section-count">{comingSoon.length} movies</span>
-          </div>
-          <div className="grid">
-            {comingSoon.map((movie) => (
-              <MovieCard movie={movie} key={movie.id} />
-            ))}
-          </div>
-        </>
-      )}
+      <Link to={isComingSoon ? "/" : "/coming-soon"} className="cta-banner">
+        <div>
+          <b>{isComingSoon ? "Now Showing" : "Coming Soon"}</b>
+          <span>{isComingSoon ? "Browse movies in cinemas near you" : "Explore upcoming movies"}</span>
+        </div>
+        <span>→</span>
+      </Link>
     </>
   );
 }

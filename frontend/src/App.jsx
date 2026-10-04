@@ -22,7 +22,8 @@ export default function App() {
       <Nav />
       <main>
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Home mode="now-showing" />} />
+          <Route path="/coming-soon" element={<Home mode="coming-soon" />} />
           <Route path="/login" element={<Auth />} />
           <Route path="/register" element={<Auth register />} />
           <Route path="/movie/:id" element={<Movie />} />
