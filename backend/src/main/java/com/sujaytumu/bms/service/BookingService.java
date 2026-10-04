@@ -41,6 +41,14 @@ public class BookingService {
                     "Select between 1 and " + MAX_SEATS_PER_BOOKING + " seats");
         }
 
+        List<Boolean> showStarted = db.queryForList(
+                "select (show_date + start_time) <= (now() at time zone 'Asia/Kolkata') from shows where id=?",
+                Boolean.class, showId);
+        if (showStarted.contains(Boolean.TRUE)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "This show has already started - booking is closed");
+        }
+
         String placeholders = String.join(",", Collections.nCopies(seatNumbers.size(), "?"));
         Object[] params = new Object[seatNumbers.size() + 1];
         params[0] = showId;
