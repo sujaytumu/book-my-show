@@ -96,13 +96,27 @@ export default function Show() {
     }
   }
 
+  // Opens the ticket PDF in a new tab. The blank tab is opened synchronously
+  // (before any await) so browsers don't treat the later redirect as a
+  // blocked popup.
+  async function openTicketInNewTab(bookingId) {
+    const ticketTab = window.open("", "_blank");
+    try {
+      const res = await api.get("/bookings/" + bookingId + "/ticket", { responseType: "blob" });
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: "application/pdf" }));
+      if (ticketTab) ticketTab.location.href = url;
+    } catch (err) {
+      if (ticketTab) ticketTab.close();
+    }
+  }
+
   // Step 2: actually pay (mock or Razorpay) for the held booking.
   async function confirmAndPay() {
     setPending(true);
     try {
       if (mode === "mock") {
         await api.post("/payments/mock-confirm/" + hold.bookingId);
-        alert("Payment simulated (no live gateway configured yet) — ticket emailed to " + contactEmail);
+        openTicketInNewTab(hold.bookingId);
         navigate("/bookings");
         return;
       }
@@ -123,7 +137,7 @@ export default function Show() {
             razorpayPaymentId: response.razorpay_payment_id,
             razorpaySignature: response.razorpay_signature,
           });
-          alert("Payment successful! Ticket emailed to " + contactEmail);
+          openTicketInNewTab(hold.bookingId);
           navigate("/bookings");
         },
       }).open();
