@@ -8,6 +8,8 @@ import Movie from "./pages/Movie";
 import Show from "./pages/Show";
 import Bookings from "./pages/Bookings";
 import Admin from "./pages/Admin";
+//
+import Profile from "./pages/Profile";
 
 export default function App() {
   // The backend is on Render's free tier and spins down after ~15 min idle;
@@ -29,6 +31,7 @@ export default function App() {
           <Route path="/movie/:id" element={<Movie />} />
           <Route path="/show/:id" element={<Show />} />
           <Route path="/bookings" element={<Bookings />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="/admin" element={<Admin />} />
         </Routes>
       </main>
