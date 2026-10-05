@@ -419,93 +419,53 @@ where not exists(
 insert into show_seats(show_id,seat_number,seat_type) select sh.id,chr(65+floor((g-1)/10)::int)||((g-1)%10+1)::text,case when g<=20 then 'PREMIUM' else 'REGULAR' end from shows sh cross join generate_series(1,60) g where not exists(select 1 from show_seats ss where ss.show_id=sh.id);
 
 
-import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { api } from "../api";
 
-function MovieCard({ movie }) {
-  return (
-    <Link className="card movie" to={"/movie/" + movie.id}>
-      <img src={movie.poster_url} alt={movie.title} loading="lazy" />
-      <h3>{movie.title}</h3>
-      <p>
-        {movie.language} · {movie.genre}
-      </p>
-      {movie.upcoming ? <b className="coming-soon-tag">Coming Soon</b> : <b>★ {movie.rating}</b>}
-    </Link>
-  );
-}
+-- ============================================================
+-- Sigma (Now Showing) + Dragon, Ranabaali (Coming Soon)
+-- Idempotent: safe to re-run on every boot.
+-- ============================================================
+insert into movies(title,description,poster_url,language,genre,duration_minutes,certificate,rating,upcoming)
+select 'Sigma','Action-adventure heist film starring Sundeep Kishan with Faria Abdullah, written and directed by Jason Sanjay (Lyca Productions), music by Thaman S. Released 2 October 2026.','/posters/sigma.jpg','Telugu','Action',150,'UA',0,false
+where not exists(select 1 from movies where title='Sigma');
 
-export default function Home({ mode = "now-showing" }) {
-  const isComingSoon = mode === "coming-soon";
-  const [movies, setMovies] = useState([]);
-  const [query, setQuery] = useState("");
-  const [language, setLanguage] = useState("All");
+insert into movies(title,description,poster_url,language,genre,duration_minutes,certificate,rating,upcoming)
+select 'Dragon','Upcoming action film starring Man of Masses NTR, directed by Prashanth Neel (Mythri Movie Makers, NTR Arts, T-Series). Releasing 11 June 2027.','/posters/dragon.jpg','Telugu','Action',0,'UA',0,true
+where not exists(select 1 from movies where title='Dragon');
 
-  useEffect(() => {
-    api.get("/movies").then((res) => setMovies(res.data));
-    setQuery("");
-    setLanguage("All");
-  }, [mode]);
+insert into movies(title,description,poster_url,language,genre,duration_minutes,certificate,rating,upcoming)
+select 'Ranabaali','Upcoming film starring Vijay Deverakonda, directed by Rahul Sankrityan (T-Series Films). Releasing 16 October 2026.','/posters/ranabaali.jpg','Telugu','Action',0,'UA',0,true
+where not exists(select 1 from movies where title='Ranabaali');
 
-  async function search(value) {
-    setQuery(value);
-    const res = await api.get("/movies", { params: { q: value } });
-    setMovies(res.data);
-  }
+-- Showtimes for Sigma only (the two coming-soon movies get no shows), next 7 days.
+insert into shows(movie_id,screen_id,show_date,start_time,end_time,price)
+select m.id,sc.id,current_date+d.day_offset,v.start_time::time,v.end_time::time,v.price
+from movies m join (values
+  ('Sigma','AMB Cinemas','13:00','15:30',250),
+  ('Sigma','AMB Cinemas','16:30','19:00',250),
+  ('Sigma','AMB Cinemas','20:00','22:30',250),
+  ('Sigma','PVR Nexus Mall','14:00','16:30',250),
+  ('Sigma','PVR Nexus Mall','17:30','20:00',250),
+  ('Sigma','PVR Nexus Mall','21:00','23:30',250),
+  ('Sigma','Cinepolis Lulu Mall','13:30','16:00',250),
+  ('Sigma','Cinepolis Lulu Mall','18:00','20:30',250),
+  ('Sigma','Allu Cinemas','15:00','17:30',250),
+  ('Sigma','Allu Cinemas','19:30','22:00',250),
+  ('Sigma','PVR ICON Next Galleria Mall','14:30','17:00',250),
+  ('Sigma','PVR ICON Next Galleria Mall','20:30','23:00',250),
+  ('Sigma','Sandhya 70MM','12:30','15:00',170),
+  ('Sigma','Sandhya 70MM','18:30','21:00',170),
+  ('Sigma','Devi 70MM','15:30','18:00',170),
+  ('Sigma','Devi 70MM','21:30','00:00',170),
+  ('Sigma','Sudarshan 35MM','13:00','15:30',150),
+  ('Sigma','Sudarshan 35MM','19:00','21:30',150)
+) as v(movie_title,theatre_name,start_time,end_time,price) on v.movie_title=m.title
+join theatres t on t.name=v.theatre_name and t.active=true
+join screens sc on sc.theatre_id=t.id
+cross join generate_series(0,6) as d(day_offset)
+where not exists(
+  select 1 from shows sh where sh.movie_id=m.id and sh.screen_id=sc.id
+    and sh.show_date=current_date+d.day_offset and sh.start_time=v.start_time::time
+);
 
-  // Only the active view's movies - never both sets at once.
-  const inView = movies.filter((m) => !!m.upcoming === isComingSoon);
-  const languages = useMemo(() => ["All", ...new Set(inView.map((m) => m.language).filter(Boolean))], [inView]);
-  const filtered = language === "All" ? inView : inView.filter((m) => m.language === language);
-
-  return (
-    <>
-      {!isComingSoon && (
-        <div className="banner">
-          <h1>Book movies. Pick seats. Enjoy.</h1>
-          <p>End-to-end ticket booking with secure seat locking and Razorpay.</p>
-        </div>
-      )}
-
-      <input
-        className="search"
-        placeholder="Search movies..."
-        value={query}
-        onChange={(e) => search(e.target.value)}
-      />
-
-      {languages.length > 1 && (
-        <div className="chip-row">
-          {languages.map((lang) => (
-            <button
-              key={lang}
-              className={"chip" + (language === lang ? " active" : "")}
-              onClick={() => setLanguage(lang)}
-            >
-              {lang}
-            </button>
-          ))}
-        </div>
-      )}
-
-      <Link to={isComingSoon ? "/" : "/coming-soon"} className="cta-banner">
-        <div>
-          <b>{isComingSoon ? "Now Showing" : "Coming Soon"}</b>
-          <span>{isComingSoon ? "Browse movies in cinemas near you" : "Explore upcoming movies"}</span>
-        </div>
-        <span>→</span>
-      </Link>
-
-      <div className="section-header">
-        <h2 className="section-title">{isComingSoon ? "Coming Soon" : "Now Showing"}</h2>
-        <span className="section-count">{filtered.length} movies</span>
-      </div>
-      <div className="grid">
-        {filtered.map((movie) => (
-          <MovieCard movie={movie} key={movie.id} />
-        ))}
-      </div>
-    </>
-  );
-}
+-- Seats for the new shows (only creates seats for shows that have none yet)
+insert into show_seats(show_id,seat_number,seat_type) select sh.id,chr(65+floor((g-1)/10)::int)||((g-1)%10+1)::text,case when g<=20 then 'PREMIUM' else 'REGULAR' end from shows sh cross join generate_series(1,60) g where not exists(select 1 from show_seats ss where ss.show_id=sh.id);
