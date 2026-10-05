@@ -48,7 +48,12 @@ public class CatalogController {
     @GetMapping("/api/shows")
     public List<Map<String, Object>> shows(@RequestParam long movieId, @RequestParam(required = false) String date) {
         String sql = "select sh.*,t.id theatre_id,t.name theatre_name,t.address theatre_address,t.latitude,t.longitude," +
-                "s.name screen_name from shows sh " +
+                
+                "s.name screen_name," +
+                "(select count(*) from show_seats ss where ss.show_id=sh.id) total_seats," +
+                "(select count(*) from show_seats ss where ss.show_id=sh.id and ss.status='AVAILABLE') available_seats " +
+                "from shows sh " +
+
                 "join screens s on s.id=sh.screen_id join theatres t on t.id=s.theatre_id " +
                 "where sh.movie_id=? and t.active=true and sh.show_date>=current_date " +
                 "and (sh.show_date + sh.start_time) > (now() at time zone 'Asia/Kolkata') ";
