@@ -469,3 +469,62 @@ where not exists(
 
 -- Seats for the new shows (only creates seats for shows that have none yet)
 insert into show_seats(show_id,seat_number,seat_type) select sh.id,chr(65+floor((g-1)/10)::int)||((g-1)%10+1)::text,case when g<=20 then 'PREMIUM' else 'REGULAR' end from shows sh cross join generate_series(1,60) g where not exists(select 1 from show_seats ss where ss.show_id=sh.id);
+
+
+--new movies
+
+-- ============================================================
+-- Tella Kagitam (Now Showing) + SYG, Kaaka, Vrushakarma, Bhari (Coming Soon)
+-- ============================================================
+insert into movies(title,description,poster_url,language,genre,duration_minutes,certificate,rating,upcoming)
+select 'Tella Kagitam','Telugu film, now showing in theatres.','/posters/tella_kagitam.jpg','Telugu','Drama',140,'UA',0,false
+where not exists(select 1 from movies where title='Tella Kagitam');
+
+insert into movies(title,description,poster_url,language,genre,duration_minutes,certificate,rating,upcoming)
+select 'SYG','Upcoming Telugu film. Release date not yet announced.','/posters/syg.jpg','Telugu','Action',0,'UA',0,true
+where not exists(select 1 from movies where title='SYG');
+
+insert into movies(title,description,poster_url,language,genre,duration_minutes,certificate,rating,upcoming)
+select 'Kaaka','Upcoming Telugu film. Release date not yet announced.','/posters/kaaka.jpg','Telugu','Action',0,'UA',0,true
+where not exists(select 1 from movies where title='Kaaka');
+
+insert into movies(title,description,poster_url,language,genre,duration_minutes,certificate,rating,upcoming)
+select 'Vrushakarma','Upcoming Telugu film. Release date not yet announced.','/posters/vrushakarma.jpg','Telugu','Action',0,'UA',0,true
+where not exists(select 1 from movies where title='Vrushakarma');
+
+insert into movies(title,description,poster_url,language,genre,duration_minutes,certificate,rating,upcoming)
+select 'Bhari','Upcoming Telugu film. Release date not yet announced.','/posters/bhari.jpg','Telugu','Action',0,'UA',0,true
+where not exists(select 1 from movies where title='Bhari');
+
+-- Shows for Tella Kagitam only, next 7 days, in 6 theatres that have no other live movie
+insert into shows(movie_id,screen_id,show_date,start_time,end_time,price)
+select m.id,sc.id,current_date+d.day_offset,v.start_time::time,v.end_time::time,v.price
+from movies m join (values
+  ('Tella Kagitam','ART Cinemas Tattva Mall','13:30','15:50',220),
+  ('Tella Kagitam','ART Cinemas Tattva Mall','17:00','19:20',220),
+  ('Tella Kagitam','ART Cinemas Tattva Mall','20:30','22:50',220),
+  ('Tella Kagitam','Aparna Cinemas','14:00','16:20',220),
+  ('Tella Kagitam','Aparna Cinemas','17:15','19:35',220),
+  ('Tella Kagitam','Aparna Cinemas','20:30','22:50',220),
+  ('Tella Kagitam','PVR LakeShore Mall','13:00','15:20',240),
+  ('Tella Kagitam','PVR LakeShore Mall','16:15','18:35',240),
+  ('Tella Kagitam','PVR LakeShore Mall','19:30','21:50',240),
+  ('Tella Kagitam','PVR Cinemas Irrum Manzil','14:30','16:50',240),
+  ('Tella Kagitam','PVR Cinemas Irrum Manzil','18:00','20:20',240),
+  ('Tella Kagitam','PVR Cinemas Irrum Manzil','21:15','23:35',240),
+  ('Tella Kagitam','INOX Ashoka One Mall','13:45','16:05',240),
+  ('Tella Kagitam','INOX Ashoka One Mall','17:00','19:20',240),
+  ('Tella Kagitam','INOX Ashoka One Mall','20:15','22:35',240),
+  ('Tella Kagitam','Asian CineSquare Multiplex','14:15','16:35',230),
+  ('Tella Kagitam','Asian CineSquare Multiplex','17:30','19:50',230),
+  ('Tella Kagitam','Asian CineSquare Multiplex','20:45','23:05',230)
+) as v(movie_title,theatre_name,start_time,end_time,price) on v.movie_title=m.title
+join theatres t on t.name=v.theatre_name and t.active=true
+join screens sc on sc.theatre_id=t.id
+cross join generate_series(0,6) as d(day_offset)
+where not exists(
+  select 1 from shows sh where sh.movie_id=m.id and sh.screen_id=sc.id
+    and sh.show_date=current_date+d.day_offset and sh.start_time=v.start_time::time
+);
+
+insert into show_seats(show_id,seat_number,seat_type) select sh.id,chr(65+floor((g-1)/10)::int)||((g-1)%10+1)::text,case when g<=20 then 'PREMIUM' else 'REGULAR' end from shows sh cross join generate_series(1,60) g where not exists(select 1 from show_seats ss where ss.show_id=sh.id);
