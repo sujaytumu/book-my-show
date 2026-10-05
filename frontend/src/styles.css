@@ -132,3 +132,58 @@ footer{text-align:center;padding:40px;color:var(--gray-light);font-size:13px}
   nav{padding:0 4%}
   main{padding:16px 14px 50px}
 }
+
+
+/* ---------- My Bookings (BookMyShow-style order cards) ---------- */
+.bk-heading{margin:4px 0 6px}
+.bk-tabs{display:flex;gap:26px;border-bottom:1.5px solid var(--border);margin:14px 0 22px;overflow-x:auto}
+.bk-tab,.bk-tab:hover{background:none;border:none;border-bottom:3px solid transparent;border-radius:0;padding:12px 2px;margin-bottom:-1.5px;font-size:14px;font-weight:700;text-transform:none;letter-spacing:0;color:var(--gray);white-space:nowrap}
+.bk-tab:hover{color:var(--ink)}
+.bk-tab.active,.bk-tab.active:hover{color:var(--red);border-bottom-color:var(--red)}
+
+.bk-card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:18px;overflow:hidden}
+.bk-main{display:flex;gap:18px;padding:20px 22px}
+.bk-poster{width:92px;height:132px;flex-shrink:0;border-radius:8px;object-fit:cover;background:var(--border);display:block}
+.bk-poster.ph{display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:800;color:var(--gray-light)}
+.bk-info{flex:1;min-width:0}
+.bk-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.bk-title{margin:0;font-size:19px;font-weight:800;line-height:1.25}
+.bk-theatre{margin:5px 0 14px;color:var(--gray);font-size:14px}
+.bk-when{display:flex;flex-wrap:wrap;gap:12px 34px}
+.bk-when small,.bk-foot small{display:block;color:var(--gray-light);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px}
+.bk-when b,.bk-foot b{font-size:14px;font-weight:700;color:var(--ink)}
+
+.bk-status{flex-shrink:0;font-size:12px;font-weight:700;padding:5px 11px;border-radius:20px;white-space:nowrap}
+.bk-status.ok{background:#e6f6ec;color:#15803d}
+.bk-status.bad{background:#fdecec;color:var(--red)}
+.bk-status.wait{background:#fff4e0;color:#b45309}
+
+.bk-divider{position:relative;border-top:2px dashed var(--border);margin:0 22px}
+.bk-divider::before,.bk-divider::after{content:"";position:absolute;top:-11px;width:20px;height:20px;border-radius:50%;background:var(--bg)}
+.bk-divider::before{left:-32px}
+.bk-divider::after{right:-32px}
+
+.bk-foot{display:flex;align-items:center;flex-wrap:wrap;gap:14px 40px;padding:16px 22px 18px}
+.bk-actions{display:flex;gap:10px;flex-wrap:wrap;margin-left:auto}
+
+.bk-btn,.bk-btn:hover{padding:10px 18px;font-size:13px;font-weight:700;text-transform:none;letter-spacing:0;border-radius:6px;display:inline-block;text-align:center}
+.bk-btn.primary,.bk-btn.primary:hover{background:var(--red);border:2px solid var(--red);color:#fff}
+.bk-btn.primary:hover{background:var(--red-dark);border-color:var(--red-dark)}
+.bk-btn.danger,.bk-btn.danger:hover{background:var(--white);border:2px solid var(--border);color:var(--red)}
+.bk-btn.danger:hover{background:var(--red-light);border-color:var(--red)}
+.bk-link{margin-top:6px}
+
+.bk-card.dim .bk-poster{filter:grayscale(.9);opacity:.75}
+.bk-empty{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:44px 20px;text-align:center}
+.bk-empty b{font-size:17px}
+.bk-empty p{color:var(--gray);margin:8px 0 14px}
+
+@media (max-width:640px){
+  .bk-main{padding:16px;gap:14px}
+  .bk-poster{width:72px;height:104px}
+  .bk-title{font-size:16px}
+  .bk-divider{margin:0 16px}
+  .bk-foot{padding:14px 16px 16px;gap:12px 28px}
+  .bk-actions{margin-left:0;width:100%}
+  .bk-actions .bk-btn{flex:1}
+}
