@@ -306,3 +306,12 @@ footer{text-align:center;padding:40px;color:var(--gray-light);font-size:13px}
   .seat-map button{height:28px;font-size:11px}
   .seat-map button.aisle{margin-right:10px}
 }
+
+/* ---------- Favourite cinemas ---------- */
+.theatre-block-side{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.fav-btn,.fav-btn:hover{background:none;border:none;padding:6px;border-radius:50%;line-height:0;color:#9a9aa1;text-transform:none;letter-spacing:0}
+.fav-btn:hover{color:var(--red);background:var(--red-light)}
+.fav-btn.on,.fav-btn.on:hover{color:var(--red)}
+.fav-btn svg{fill:none}
+.fav-btn.on svg{fill:currentColor}
+.visited-tag{display:inline-block;margin-left:10px;padding:3px 9px;border-radius:5px;background:#e8ebf7;color:#3c4a8c;font-size:11px;font-weight:700;vertical-align:middle;letter-spacing:.3px}
