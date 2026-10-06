@@ -163,12 +163,34 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { api } from "../api";
+import { api, currentUser } from "../api";
 import { haversineKm } from "../components/TheatreMap";
 
 // Sold-out (housefull) showtimes are hidden from the list. Set this to false to
 // show them instead as greyed-out, unclickable "Housefull" slots.
 const HIDE_HOUSEFULL = true;
+
+// Favourite cinemas are remembered in this browser, separately per logged-in account (or guest).
+function favKey() {
+  const u = currentUser();
+  return "bms_fav_cinemas_" + (u && u.email ? u.email : "guest");
+}
+function loadFavs() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(favKey()));
+    return Array.isArray(raw) ? raw : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function HeartIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 21s-7.5-4.6-9.5-9.2C1.2 8.6 3 5 6.4 5c2 0 3.6 1.1 4.6 2.7h2C14 6.1 15.6 5 17.6 5 21 5 22.8 8.6 21.5 11.8 19.5 16.4 12 21 12 21z" />
+    </svg>
+  );
+}
 
 const PRICE_BANDS = [
   { key: "low", label: "Below ₹150", test: (p) => p < 150 },
@@ -222,6 +244,9 @@ export default function Movie() {
   const [sheet, setSheet] = useState(null); // "sort" | "filter" | null
   const [priceBands, setPriceBands] = useState([]);
   const [language, setLanguage] = useState(null);
+  const [favs, setFavs] = useState(loadFavs);
+  const [favOnly, setFavOnly] = useState(false);
+  const [visited, setVisited] = useState([]);
 
   useEffect(() => {
     api.get("/movies/" + id).then((res) => {
@@ -234,6 +259,38 @@ export default function Movie() {
       }
     });
   }, [id]);
+
+  // "Visited" = cinemas where the logged-in user has a confirmed booking whose show has already started.
+  useEffect(() => {
+    if (!currentUser()) return;
+    api
+      .get("/bookings/me")
+      .then((res) => {
+        const now = new Date();
+        const names = res.data
+          .filter((b) => {
+            if (b.status !== "CONFIRMED") return false;
+            const [y, m, d] = String(b.show_date).split("-").map(Number);
+            const [hh, mm] = String(b.start_time).split(":").map(Number);
+            return new Date(y, m - 1, d, hh, mm) < now;
+          })
+          .map((b) => b.theatre_name);
+        setVisited([...new Set(names)]);
+      })
+      .catch(() => {});
+  }, []);
+
+  function toggleFav(name) {
+    setFavs((current) => {
+      const next = current.includes(name) ? current.filter((n) => n !== name) : [...current, name];
+      try {
+        localStorage.setItem(favKey(), JSON.stringify(next));
+      } catch (e) {
+        // storage unavailable - favourites just last for this visit
+      }
+      return next;
+    });
+  }
 
   // show_date is ISO (YYYY-MM-DD), so a plain string sort is already chronological -
   // without this, dates appeared in whatever order they first showed up in the
@@ -310,13 +367,14 @@ export default function Movie() {
       const minPrice = (g) => Math.min(...g.shows.map((s) => Number(s.price)));
       groups.sort(
         (a, b) =>
+          Number(favs.includes(b.theatre_name)) - Number(favs.includes(a.theatre_name)) ||
           b.shows.length - a.shows.length ||
           minPrice(a) - minPrice(b) ||
           a.theatre_name.localeCompare(b.theatre_name)
       );
     }
-    return groups;
-  }, [shows, selectedDate, myLocation, sortBy, priceBands]);
+    return favOnly ? groups.filter((g) => favs.includes(g.theatre_name)) : groups;
+  }, [shows, selectedDate, myLocation, sortBy, priceBands, favs, favOnly]);
 
   if (!movie) return <p>Loading...</p>;
 
@@ -396,7 +454,9 @@ export default function Movie() {
         <button className="mv-tool" onClick={() => setSheet("filter")}>
           <FilterIcon />
           <span>Filters</span>
-          {priceBands.length > 0 && <span className="mv-badge">{priceBands.length}</span>}
+          {priceBands.length + (favOnly ? 1 : 0) > 0 && (
+            <span className="mv-badge">{priceBands.length + (favOnly ? 1 : 0)}</span>
+          )}
         </button>
       </div>
 
@@ -421,10 +481,16 @@ export default function Movie() {
       {theatreGroups.length === 0 && (
         <p>
           {hasShowsForDate ? "No shows match your filters." : "No shows scheduled for this date."}
-          {hasShowsForDate && priceBands.length > 0 && (
+          {hasShowsForDate && (priceBands.length > 0 || favOnly) && (
             <>
               {" "}
-              <button className="ghost mv-inline" onClick={() => setPriceBands([])}>
+              <button
+                className="ghost mv-inline"
+                onClick={() => {
+                  setPriceBands([]);
+                  setFavOnly(false);
+                }}
+              >
                 Clear filters
               </button>
             </>
@@ -435,12 +501,25 @@ export default function Movie() {
         <div className="theatre-block card" key={group.theatre_name}>
           <div className="theatre-block-header">
             <div>
-              <h3>{group.theatre_name}</h3>
+              <h3>
+                {group.theatre_name}
+                {visited.includes(group.theatre_name) && <span className="visited-tag">Visited</span>}
+              </h3>
               {group.theatre_address && <p className="theatre-address">{group.theatre_address}</p>}
             </div>
-            {group.distanceKm != null && (
-              <span className="distance-tag">{group.distanceKm.toFixed(1)} km away</span>
-            )}
+            <div className="theatre-block-side">
+              {group.distanceKm != null && (
+                <span className="distance-tag">{group.distanceKm.toFixed(1)} km away</span>
+              )}
+              <button
+                className={"fav-btn" + (favs.includes(group.theatre_name) ? " on" : "")}
+                onClick={() => toggleFav(group.theatre_name)}
+                aria-label={favs.includes(group.theatre_name) ? "Remove from favourites" : "Add to favourites"}
+                title={favs.includes(group.theatre_name) ? "Remove from favourites" : "Add to favourites"}
+              >
+                <HeartIcon />
+              </button>
+            </div>
           </div>
           <div className="time-slots">
             {group.shows.map((show) => {
@@ -489,7 +568,13 @@ export default function Movie() {
           <div className="sheet" onClick={(e) => e.stopPropagation()}>
             <div className="sheet-head">
               <h3>Filters</h3>
-              <button className="sheet-clear" onClick={() => setPriceBands([])}>
+              <button
+                className="sheet-clear"
+                onClick={() => {
+                  setPriceBands([]);
+                  setFavOnly(false);
+                }}
+              >
                 Clear all
               </button>
             </div>
@@ -505,6 +590,13 @@ export default function Movie() {
                   {b.label}
                 </button>
               ))}
+            </div>
+
+            <h4 className="sheet-label">Cinemas</h4>
+            <div className="chip-row">
+              <button className={"chip" + (favOnly ? " active" : "")} onClick={() => setFavOnly((v) => !v)}>
+                ♥ Favourites only ({favs.length})
+              </button>
             </div>
 
             <h4 className="sheet-label">Date</h4>
