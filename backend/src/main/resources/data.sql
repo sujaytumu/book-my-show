@@ -528,3 +528,9 @@ where not exists(
 );
 
 insert into show_seats(show_id,seat_number,seat_type) select sh.id,chr(65+floor((g-1)/10)::int)||((g-1)%10+1)::text,case when g<=20 then 'PREMIUM' else 'REGULAR' end from shows sh cross join generate_series(1,60) g where not exists(select 1 from show_seats ss where ss.show_id=sh.id);
+
+
+-- Demo ratings for Sigma and Tella Kagitam (they were seeded at 0). Only rows still at 0 are updated,
+-- so a rating changed later by hand is never overwritten on restart.
+update movies set rating=7.4 where title='Sigma' and rating=0;
+update movies set rating=7.9 where title='Tella Kagitam' and rating=0;
