@@ -166,6 +166,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { api, currentUser } from "../api";
 import { haversineKm } from "../components/TheatreMap";
 import Reviews from "../components/Reviews";
+import { isWatchlisted, toggleWatchlist } from "../watchlist";
 
 // Sold-out (housefull) showtimes are hidden from the list. Set this to false to
 // show them instead as greyed-out, unclickable "Housefull" slots.
@@ -249,6 +250,12 @@ export default function Movie() {
   const [favOnly, setFavOnly] = useState(false);
   const [visited, setVisited] = useState([]);
   const [shareMsg, setShareMsg] = useState("");
+  const [interested, setInterested] = useState(false);
+
+  // Is this coming-soon movie already on the viewer's watchlist?
+  useEffect(() => {
+    if (movie) setInterested(isWatchlisted(movie.id));
+  }, [movie]);
 
   useEffect(() => {
     api.get("/movies/" + id).then((res) => {
@@ -426,6 +433,14 @@ export default function Movie() {
             {movie.language} · {movie.genre}
             {!movie.upcoming && <> · {movie.duration_minutes} min · {movie.certificate} · ★ {movie.rating}</>}
           </p>
+          {movie.upcoming && (
+            <button
+              className={"share-btn interest-btn" + (interested ? " on" : "")}
+              onClick={() => setInterested(toggleWatchlist(movie))}
+            >
+              {interested ? "♥ In your watchlist" : "♡ I'm interested"}
+            </button>
+          )}
           <button className="share-btn" onClick={shareMovie}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="18" cy="5" r="3" />
