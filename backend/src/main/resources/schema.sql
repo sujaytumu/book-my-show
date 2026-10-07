@@ -18,3 +18,5 @@ alter table bookings add column if not exists contact_email varchar(160);
 alter table bookings add column if not exists contact_phone varchar(20);
 create table if not exists booking_seats(id bigserial primary key,booking_id bigint references bookings(id) on delete cascade,seat_number varchar(10) not null);
 create table if not exists payments(id bigserial primary key,booking_id bigint references bookings(id),razorpay_order_id varchar(100) unique not null,razorpay_payment_id varchar(100),amount numeric(10,2),status varchar(20) not null,paid_at timestamptz);
+create table if not exists reviews(id bigserial primary key,movie_id bigint not null references movies(id) on delete cascade,user_id bigint not null references users(id) on delete cascade,rating int not null check (rating between 1 and 10),body varchar(500),created_at timestamptz not null default now(),updated_at timestamptz not null default now(),unique(movie_id,user_id));
+create index if not exists idx_reviews_movie on reviews(movie_id,created_at desc);
