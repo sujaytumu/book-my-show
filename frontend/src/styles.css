@@ -358,3 +358,12 @@ footer{text-align:center;padding:40px;color:var(--gray-light);font-size:13px}
 .share-btn,.share-btn:hover{display:inline-flex;align-items:center;gap:8px;margin-top:6px;padding:8px 16px;font-size:13px;font-weight:700;text-transform:none;letter-spacing:0;border-radius:6px;background:var(--white);border:1.5px solid var(--border);color:var(--ink)}
 .share-btn:hover{border-color:var(--red);color:var(--red)}
 .share-msg{margin-left:12px;font-size:13px;font-weight:700;color:#15803d}
+
+
+/* ---------- Watchlist ---------- */
+.interest-btn{margin-right:10px}
+.interest-btn.on,.interest-btn.on:hover{background:var(--red);border-color:var(--red);color:#fff}
+.wl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:14px;margin-top:6px}
+.wl-item{position:relative;display:block;text-align:center;font-size:13px;font-weight:600;color:var(--ink)}
+.wl-item img{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:8px;display:block;margin-bottom:6px}
+.wl-remove,.wl-remove:hover{position:absolute;top:6px;right:6px;width:24px;height:24px;padding:0;border-radius:50%;background:rgba(0,0,0,.65);border:none;color:#fff;font-size:16px;line-height:1;text-transform:none;letter-spacing:0}

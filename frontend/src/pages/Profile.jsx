@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { api, currentUser, logout } from "../api";
+import { loadWatchlist, removeFromWatchlist } from "../watchlist";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -41,6 +42,7 @@ export default function Profile() {
   const navigate = useNavigate();
   const user = currentUser();
   const [bookings, setBookings] = useState([]);
+  const [watchlist, setWatchlist] = useState(loadWatchlist);
 
   useEffect(() => {
     if (!user) return;
@@ -133,6 +135,32 @@ export default function Profile() {
         <Link to="/bookings" className="pf-link">
           View all bookings →
         </Link>
+      </div>
+
+      <div className="pf-card">
+        <h3>My Watchlist</h3>
+        {watchlist.length === 0 && (
+          <p className="pf-muted">Tap "I'm interested" on a coming-soon movie to save it here.</p>
+        )}
+        <div className="wl-grid">
+          {watchlist.map((m) => (
+            <Link className="wl-item" to={"/movie/" + m.id} key={m.id}>
+              <img src={m.poster_url} alt={m.title} />
+              <span>{m.title}</span>
+              <button
+                className="wl-remove"
+                aria-label={"Remove " + m.title + " from watchlist"}
+                title="Remove"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setWatchlist(removeFromWatchlist(m.id));
+                }}
+              >
+                ×
+              </button>
+            </Link>
+          ))}
+        </div>
       </div>
 
       <button className="pf-btn" onClick={handleLogout}>
