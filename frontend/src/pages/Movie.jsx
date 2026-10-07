@@ -248,6 +248,7 @@ export default function Movie() {
   const [favs, setFavs] = useState(loadFavs);
   const [favOnly, setFavOnly] = useState(false);
   const [visited, setVisited] = useState([]);
+  const [shareMsg, setShareMsg] = useState("");
 
   useEffect(() => {
     api.get("/movies/" + id).then((res) => {
@@ -291,6 +292,24 @@ export default function Movie() {
       }
       return next;
     });
+  }
+
+  // Share: opens the device share sheet when available (phones), otherwise copies the link.
+  async function shareMovie() {
+    const url = window.location.href;
+    const title = movie ? movie.title : "BookMyShow";
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, text: title + " - book tickets on BookMyShow", url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      setShareMsg("Link copied!");
+      setTimeout(() => setShareMsg(""), 2000);
+    } catch (e) {
+      if (e && e.name === "AbortError") return; // the user just closed the share sheet
+      window.prompt("Copy this link to share:", url);
+    }
   }
 
   // show_date is ISO (YYYY-MM-DD), so a plain string sort is already chronological -
@@ -407,6 +426,16 @@ export default function Movie() {
             {movie.language} · {movie.genre}
             {!movie.upcoming && <> · {movie.duration_minutes} min · {movie.certificate} · ★ {movie.rating}</>}
           </p>
+          <button className="share-btn" onClick={shareMovie}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="18" cy="5" r="3" />
+              <circle cx="6" cy="12" r="3" />
+              <circle cx="18" cy="19" r="3" />
+              <path d="M8.600 13.500l6.800 4M15.400 6.500l-6.800 4" />
+            </svg>
+            Share
+          </button>
+          {shareMsg && <span className="share-msg">{shareMsg}</span>}
         </section>
       </div>
 

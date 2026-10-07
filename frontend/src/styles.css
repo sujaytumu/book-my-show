@@ -352,3 +352,9 @@ footer{text-align:center;padding:40px;color:var(--gray-light);font-size:13px}
 .rv-count{display:block;text-align:right;color:var(--gray-light);font-size:12px;margin-top:4px}
 .rv-delete,.rv-delete:hover{width:100%;margin-top:10px;padding:10px;background:none;border:none;font-size:13px;font-weight:700;text-transform:none;letter-spacing:0;color:var(--gray)}
 .rv-delete:hover{color:var(--red)}
+
+
+/* ---------- Share button ---------- */
+.share-btn,.share-btn:hover{display:inline-flex;align-items:center;gap:8px;margin-top:6px;padding:8px 16px;font-size:13px;font-weight:700;text-transform:none;letter-spacing:0;border-radius:6px;background:var(--white);border:1.5px solid var(--border);color:var(--ink)}
+.share-btn:hover{border-color:var(--red);color:var(--red)}
+.share-msg{margin-left:12px;font-size:13px;font-weight:700;color:#15803d}
