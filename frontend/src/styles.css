@@ -457,3 +457,10 @@ img.cast-photo{object-fit:cover;object-position:top;background:#eee}
 .more-card img{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:8px;display:block;background:var(--border)}
 .more-card b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:6px;font-size:10.4px;line-height:1.25}
 .more-card small{color:var(--gray);font-size:9.6px}
+
+/* ---------- Language filter counts, empty note, fixed Book tickets bar ---------- */
+.lang-row .chip small{margin-left:6px;opacity:.65;font-size:9px;font-weight:700}
+.lang-row .chip.active small{opacity:.9}
+.empty-note{text-align:center;color:var(--gray);margin:28px 0}
+.sticky-book{position:fixed;left:0;right:0;bottom:0;z-index:40;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:var(--white);box-shadow:0 -4px 16px rgba(0,0,0,.1)}
+.sticky-book button{display:block;width:100%;max-width:520px;margin:0 auto;padding:13px 20px}
