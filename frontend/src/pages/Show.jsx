@@ -366,6 +366,13 @@ export default function Show() {
 
   const [hold, setHold] = useState(null); // { bookingId, reference, ticketSubtotal, convenienceFee, gst, amount }
 
+  // Real-BMS style: pick how many tickets first, then tap one seat to grab that many together.
+  const [qty, setQty] = useState(null);
+  const [qtyDraft, setQtyDraft] = useState(2);
+  const [qtyOpen, setQtyOpen] = useState(true);
+  const [zoom, setZoom] = useState(1);
+  const [seatMsg, setSeatMsg] = useState("");
+
 
 
   useEffect(() => {
@@ -404,25 +411,41 @@ export default function Show() {
 
 
 
-  function toggleSeat(seat) {
-
-    if (seat.status !== "AVAILABLE") return;
-
-    setSelected((current) => {
-
-      if (current.includes(seat.seat_number)) {
-
-        return current.filter((s) => s !== seat.seat_number);
-
-      }
-
-      return current.length < MAX_SEATS ? [...current, seat.seat_number] : current;
-
-    });
-
+  function confirmQty() {
+    if (qty !== qtyDraft) setSelected([]);
+    setQty(qtyDraft);
+    setSeatMsg("");
+    setQtyOpen(false);
   }
 
-
+  // Tap a seat -> select `qty` seats together in that row (starting at the tapped seat,
+  // sliding left if there is no room on the right). Tap a selected seat again to clear.
+  function selectSeat(seat) {
+    if (seat.status !== "AVAILABLE") return;
+    if (!qty) {
+      setQtyOpen(true);
+      return;
+    }
+    setSeatMsg("");
+    if (selected.includes(seat.seat_number)) {
+      setSelected([]);
+      return;
+    }
+    const letter = seat.seat_number.charAt(0);
+    const row = seats
+      .filter((x) => x.seat_number.charAt(0) === letter)
+      .sort((x, y) => parseInt(x.seat_number.slice(1), 10) - parseInt(y.seat_number.slice(1), 10));
+    const idx = row.findIndex((x) => x.seat_number === seat.seat_number);
+    for (let start = idx; start > idx - qty; start--) {
+      if (start < 0 || start + qty > row.length) continue;
+      const win = row.slice(start, start + qty);
+      if (win.every((x) => x.status === "AVAILABLE")) {
+        setSelected(win.map((x) => x.seat_number));
+        return;
+      }
+    }
+    setSeatMsg("Can't seat " + qty + " together here. Try another spot or change the number of tickets.");
+  }
 
   // Step 1: lock the seats and get a real fare breakdown (ticket price + convenience fee + GST).
 
@@ -625,8 +648,64 @@ export default function Show() {
 
         <>
 
-          {/* Seat map: rows are grouped into the requested seat classes. */}
-          <div className="seat-map">
+          {qtyOpen && (
+            <div className="qty-overlay" onClick={() => qty && setQtyOpen(false)}>
+              <div className="qty-modal" onClick={(e) => e.stopPropagation()}>
+                <h2>How many seats?</h2>
+                <div className="qty-grid">
+                  {Array.from({ length: MAX_SEATS }, (_, n) => n + 1).map((n) => (
+                    <button
+                      type="button"
+                      key={n}
+                      className={qtyDraft === n ? "on" : ""}
+                      onClick={() => setQtyDraft(n)}
+                    >
+                      {n}
+                      {qtyDraft === n && <i className="tick">✓</i>}
+                    </button>
+                  ))}
+                </div>
+                {show && (
+                  <p className="hint">
+                    {qtyDraft} × ₹{show.price} = <b>₹{(+show.price * qtyDraft).toFixed(0)}</b> (+ fees)
+                  </p>
+                )}
+                <button type="button" className="qty-go" onClick={confirmQty}>
+                  Select Seats
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="seat-toolbar">
+            <button
+              type="button"
+              className="qty-chip"
+              onClick={() => {
+                setQtyDraft(qty || 2);
+                setQtyOpen(true);
+              }}
+            >
+              🎟 {qty || "–"} {qty === 1 ? "Ticket" : "Tickets"} ✎
+            </button>
+            <div className="zoom-ctl">
+              <button type="button" aria-label="Zoom out" disabled={zoom <= 0.6} onClick={() => setZoom((z) => Math.max(0.6, +(z - 0.2).toFixed(1)))}>
+                −
+              </button>
+              <span>{Math.round(zoom * 100)}%</span>
+              <button type="button" aria-label="Zoom in" disabled={zoom >= 2} onClick={() => setZoom((z) => Math.min(2, +(z + 0.2).toFixed(1)))}>
+                +
+              </button>
+              <button type="button" className="fit" onClick={() => setZoom(1)}>
+                Reset
+              </button>
+            </div>
+          </div>
+          {seatMsg && <p className="notice">{seatMsg}</p>}
+
+          {/* Seat map: rows are grouped into the seat classes. Zoom scales seat size; it scrolls when larger than the screen. */}
+          <div className="seat-zoom">
+          <div className="seat-map" style={{ "--z": zoom }}>
             {sections.map((section) => (
               <div className="seat-class" key={section.label}>
                 <div className="seat-class-title">{section.label}</div>
@@ -641,10 +720,10 @@ export default function Show() {
                             (rowMap[letter].length > 5 && idx === 4 ? " aisle" : "")
                           }
                           title={seat.seat_number}
-                          onClick={() => toggleSeat(seat)}
+                          onClick={() => selectSeat(seat)}
                           key={seat.id}
                         >
-                          {seat.seat_number.slice(1)}
+                          {selected.includes(seat.seat_number) ? "✓" : seat.seat_number.slice(1)}
                         </button>
                       ))}
                     </div>
@@ -652,6 +731,7 @@ export default function Show() {
                 ))}
               </div>
             ))}
+          </div>
           </div>
 
           {/* SCREEN is kept below the seats as requested. */}
@@ -725,9 +805,9 @@ export default function Show() {
 
           <div className="bar">
 
-            <b>{selected.length} seats selected</b>
+            <b>{selected.length ? selected.join(", ") : qty ? "Select " + qty + (qty === 1 ? " seat" : " seats") : "Choose tickets"}</b>
 
-            <button disabled={!selected.length || pending} onClick={reviewBooking}>
+            <button disabled={!qty || selected.length !== qty || pending} onClick={reviewBooking}>
 
               {pending ? "Please wait..." : "Review Booking"}
 
