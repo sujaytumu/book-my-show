@@ -367,9 +367,9 @@ export default function Show() {
   const [hold, setHold] = useState(null); // { bookingId, reference, ticketSubtotal, convenienceFee, gst, amount }
 
   // Real-BMS style: pick how many tickets first, then tap one seat to grab that many together.
-  const [qty, setQty] = useState(null);
+  const [qty, setQty] = useState(2);
   const [qtyDraft, setQtyDraft] = useState(2);
-  const [qtyOpen, setQtyOpen] = useState(true);
+  const [qtyOpen, setQtyOpen] = useState(false);
   const [zoom, setZoom] = useState(1);
   const zoomValue = useRef(1);
   const zoomRef = useRef(null); // scroll container of the seat map
@@ -694,13 +694,38 @@ export default function Show() {
 
         <div className="show-header">
 
-          <h1>{show.movie_title}</h1>
+          <div className="show-header-text">
 
-          <p>
+            <h1>{show.movie_title}</h1>
+
+            <p>
 
             {show.theatre_name} / {show.screen_name} · {show.show_date} · {show.start_time?.slice(0, 5)} · from ₹{show.price}
 
           </p>
+
+          </div>
+
+          {!hold && (
+
+            <button
+              type="button"
+              className="qty-chip"
+              title="Number of tickets"
+              aria-label={"Number of tickets: " + qty}
+              onClick={() => {
+                setQtyDraft(qty);
+                setQtyOpen(true);
+              }}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4z" />
+                <path d="M13 6v12" strokeDasharray="2 2" />
+              </svg>
+              <b>{qty}</b>
+            </button>
+
+          )}
 
         </div>
 
@@ -717,7 +742,7 @@ export default function Show() {
         <>
 
           {qtyOpen && (
-            <div className="qty-overlay" onClick={() => qty && setQtyOpen(false)}>
+            <div className="qty-overlay" onClick={() => setQtyOpen(false)}>
               <div className="qty-modal" onClick={(e) => e.stopPropagation()}>
                 <h2>How many seats?</h2>
                 <div className="qty-grid">
@@ -745,18 +770,6 @@ export default function Show() {
             </div>
           )}
 
-          <div className="seat-toolbar">
-            <button
-              type="button"
-              className="qty-chip"
-              onClick={() => {
-                setQtyDraft(qty || 2);
-                setQtyOpen(true);
-              }}
-            >
-              🎟 {qty || "–"} {qty === 1 ? "Ticket" : "Tickets"} ✎
-            </button>
-          </div>
           {seatMsg && <p className="notice">{seatMsg}</p>}
 
           {/* Seat map: rows are grouped into the seat classes. Zoom scales seat size; it scrolls when larger than the screen. */}
