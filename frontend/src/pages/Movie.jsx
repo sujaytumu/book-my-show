@@ -1,5 +1,5 @@
 // import { useEffect, useMemo, useState } from "react";
-// import { useNavigate, useParams } from "react-router-dom";
+// import { Link, useNavigate, useParams } from "react-router-dom";
 // import { api } from "../api";
 // import { haversineKm } from "../components/TheatreMap";
 
@@ -257,6 +257,33 @@ function movieTags(movie) {
     .filter(Boolean)
     .forEach((l) => tags.push(l));
   return [...new Set(tags.map((t) => t.trim()).filter(Boolean))];
+}
+
+// Horizontal row of other movies (poster, title, rating) like BMS "You might also like".
+function MoreMovies({ currentId, upcoming }) {
+  const [movies, setMovies] = useState([]);
+  useEffect(() => {
+    api
+      .get("/movies")
+      .then((res) => setMovies(res.data))
+      .catch(() => {});
+  }, []);
+  const list = movies.filter((m) => String(m.id) !== String(currentId) && !!m.upcoming === !!upcoming).slice(0, 12);
+  if (list.length === 0) return null;
+  return (
+    <div className="more-movies">
+      <h2>{upcoming ? "More coming soon" : "You might also like"}</h2>
+      <div className="more-row">
+        {list.map((m) => (
+          <Link className="more-card" to={"/movie/" + m.id} key={m.id}>
+            <img src={m.poster_url} alt={m.title} loading="lazy" />
+            <b>{m.title}</b>
+            {!m.upcoming && Number(m.rating) > 0 && <small>★ {m.rating}</small>}
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 // 1234 -> "1.2K", 12 -> "12"
@@ -565,10 +592,13 @@ export default function Movie() {
       )}
 
       {movie.upcoming ? (
-        <div className="card coming-soon-panel">
-          <h2>Coming Soon</h2>
-          <p>Booking opens closer to release. Check back soon for showtimes.</p>
-        </div>
+        <>
+          <div className="card coming-soon-panel">
+            <h2>Coming Soon</h2>
+            <p>Booking opens closer to release. Check back soon for showtimes.</p>
+          </div>
+          <MoreMovies currentId={id} upcoming={true} />
+        </>
       ) : (
         <>
           {dates.length > 0 && (
@@ -697,6 +727,7 @@ export default function Movie() {
       ))}
 
         <div id="ratings"><Reviews movieId={id} /></div>
+        <MoreMovies currentId={id} upcoming={false} />
         </>
       )}
 

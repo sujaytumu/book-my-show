@@ -376,6 +376,7 @@ export default function Show() {
   const pinch = useRef(null); // { dist, zoom } while two fingers are down
   const anchor = useRef(null); // keeps the point between the fingers steady while zooming
   const [seatMsg, setSeatMsg] = useState("");
+  const [secsLeft, setSecsLeft] = useState(null); // countdown while the seats are held for payment
 
 
 
@@ -416,6 +417,28 @@ export default function Show() {
 
 
   zoomValue.current = zoom;
+
+  // Seats are held for 10 minutes once you review the booking; count down like BMS.
+  useEffect(() => {
+    if (!hold?.expiresAt) {
+      setSecsLeft(null);
+      return;
+    }
+    const end = new Date(hold.expiresAt).getTime();
+    const tick = () => {
+      const left = Math.max(0, Math.round((end - Date.now()) / 1000));
+      setSecsLeft(left);
+      if (left === 0) {
+        setHold(null);
+        setSelected([]);
+        setSeatMsg("Your seat hold expired. Please select seats again.");
+        api.get("/shows/" + id + "/seats").then((res) => setSeats(res.data));
+      }
+    };
+    tick();
+    const timer = setInterval(tick, 1000);
+    return () => clearInterval(timer);
+  }, [hold, id]);
 
   const MIN_ZOOM = 0.6;
   const MAX_ZOOM = 2.4;
@@ -896,6 +919,15 @@ export default function Show() {
 
           <h2>Confirm booking</h2>
 
+          {secsLeft != null && (
+            <p className={"hold-timer" + (secsLeft <= 60 ? " low" : "")}>
+              ⏱ Complete payment in{" "}
+              <b>
+                {String(Math.floor(secsLeft / 60)).padStart(2, "0")}:{String(secsLeft % 60).padStart(2, "0")}
+              </b>
+            </p>
+          )}
+
           <p>
 
             {show?.movie_title} · Seats: <b>{selected.join(", ")}</b>
@@ -956,7 +988,7 @@ export default function Show() {
 
             <button disabled={pending} onClick={confirmAndPay}>
 
-              {pending ? "Please wait..." : mode === "razorpay" ? "Pay with Razorpay" : "Pay & Confirm (Test Mode)"}
+              {pending ? "Please wait..." : "Pay ₹" + hold.amount.toFixed(2) + (mode === "razorpay" ? "" : " (Test Mode)")}
 
             </button>
 
