@@ -194,6 +194,71 @@ function HeartIcon() {
   );
 }
 
+function castSlug(name) {
+  return String(name || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+// Photo from /cast/<name>.jpg (drop files into frontend/public/cast/); falls back to initials.
+function CastAvatar({ person }) {
+  const [broken, setBroken] = useState(false);
+  if (broken) return <div className="cast-avatar">{castInitials(person.name)}</div>;
+  return (
+    <img
+      className="cast-avatar cast-photo"
+      src={person.photo || "/cast/" + castSlug(person.name) + ".jpg"}
+      alt={person.name}
+      loading="lazy"
+      onError={() => setBroken(true)}
+    />
+  );
+}
+
+// BMS style: ★ 8.2/10 and "1.2K Votes" (real votes from the Ratings & Reviews below).
+function RatingPill({ movieId, fallback }) {
+  const [summary, setSummary] = useState(null);
+  useEffect(() => {
+    api
+      .get("/movies/" + movieId + "/reviews")
+      .then((res) => setSummary(res.data))
+      .catch(() => {});
+  }, [movieId]);
+  const votes = summary?.count || 0;
+  const score = votes > 0 ? Number(summary.average) : Number(fallback);
+  if (!score) return null;
+  return (
+    <a className="rating-pill" href="#ratings">
+      <span className="rp-star">★</span>
+      <b>{score.toFixed(1)}/10</b>
+      {votes > 0 && <span className="rp-votes">{fmtCount(votes)} {votes === 1 ? "Vote" : "Votes"}</span>}
+    </a>
+  );
+}
+
+// Tags: genres, language, certificate, duration (like the BMS pill row).
+function movieTags(movie) {
+  const tags = [];
+  if (!movie.upcoming && movie.duration_minutes) {
+    const h = Math.floor(movie.duration_minutes / 60);
+    const m = movie.duration_minutes % 60;
+    tags.push((h ? h + "h " : "") + (m ? m + "m" : "").trim());
+  }
+  String(movie.genre || "")
+    .split(/[,/&]|\s+/)
+    .map((g) => g.trim())
+    .filter(Boolean)
+    .forEach((g) => tags.push(g));
+  if (movie.certificate) tags.push(movie.certificate);
+  String(movie.language || "")
+    .split(/[,/&]/)
+    .map((l) => l.trim())
+    .filter(Boolean)
+    .forEach((l) => tags.push(l));
+  return [...new Set(tags.map((t) => t.trim()).filter(Boolean))];
+}
+
 // 1234 -> "1.2K", 12 -> "12"
 function fmtCount(n) {
   if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, "") + "K";
@@ -451,10 +516,12 @@ export default function Movie() {
         <section>
           <h1>{movie.title}</h1>
           <p>{movie.description}</p>
-          <p>
-            {movie.language} · {movie.genre}
-            {!movie.upcoming && <> · {movie.duration_minutes} min · {movie.certificate} · ★ {movie.rating}</>}
-          </p>
+          {!movie.upcoming && <RatingPill movieId={id} fallback={movie.rating} />}
+          <div className="mv-tags">
+            {movieTags(movie).map((t) => (
+              <span key={t}>{t}</span>
+            ))}
+          </div>
           {movie.upcoming && (
             <button
               className={"share-btn interest-btn" + (interested ? " on" : "")}
@@ -488,7 +555,7 @@ export default function Movie() {
           <div className="cast-row">
             {parseCast(movie.cast_crew).map((p) => (
               <div className="cast-item" key={p.name + p.role}>
-                <div className="cast-avatar">{castInitials(p.name)}</div>
+                <CastAvatar person={p} />
                 <b>{p.name}</b>
                 <small>{p.role}</small>
               </div>
@@ -629,7 +696,7 @@ export default function Movie() {
         </div>
       ))}
 
-        <Reviews movieId={id} />
+        <div id="ratings"><Reviews movieId={id} /></div>
         </>
       )}
 
