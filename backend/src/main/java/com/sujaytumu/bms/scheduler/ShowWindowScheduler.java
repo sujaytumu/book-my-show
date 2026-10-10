@@ -38,7 +38,8 @@ public class ShowWindowScheduler {
     public void topUpWindow() {
         db.update("""
                 insert into shows(movie_id,screen_id,show_date,start_time,end_time,price)
-                select r.movie_id, r.screen_id, current_date + d.day_offset, r.start_time, r.end_time, r.price
+                select r.movie_id, r.screen_id, current_date + d.day_offset, r.start_time, r.end_time,
+                       case when t.theatre_type = 'MULTIPLEX' then 150 else 100 end
                 from (select distinct movie_id, screen_id, start_time, end_time, price from shows) r
                 join movies m on m.id = r.movie_id
                 join screens sc on sc.id = r.screen_id

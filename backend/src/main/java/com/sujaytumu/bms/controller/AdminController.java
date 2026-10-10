@@ -36,10 +36,11 @@ public class AdminController {
     @PostMapping("/theatres")
     public Map<String, Object> addTheatre(@RequestBody Map<String, Object> body) {
         long id = db.queryForObject(
-                "insert into theatres(name,address,city_id,latitude,longitude) values(?,?,?,?,?) returning id",
+                "insert into theatres(name,address,city_id,latitude,longitude,theatre_type) values(?,?,?,?,?,?) returning id",
                 Long.class,
                 body.get("name"), body.get("address"), body.get("cityId"),
-                body.get("latitude"), body.get("longitude"));
+                body.get("latitude"), body.get("longitude"),
+                "MULTIPLEX".equalsIgnoreCase(String.valueOf(body.get("theatreType"))) ? "MULTIPLEX" : "SINGLE");
         return Map.of("id", id);
     }
 
@@ -79,7 +80,9 @@ public class AdminController {
                 LocalDate.parse(body.get("date").toString()),
                 LocalTime.parse(body.get("start").toString()),
                 LocalTime.parse(body.get("end").toString()),
-                body.get("price"));
+                // Price is fixed by theatre type (Rs 100 single screen / Rs 150 multiplex, class multipliers on top).
+                db.queryForObject("select case when t.theatre_type='MULTIPLEX' then 150 else 100 end " +
+                        "from screens sc join theatres t on t.id=sc.theatre_id where sc.id=?", Integer.class, screenId));
 
         // First third of seats are PREMIUM, the rest REGULAR; 10 seats per row (A1-A10, B1-B10, ...).
         int premiumCount = Math.max(1, totalSeats / 3);

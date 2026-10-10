@@ -47,7 +47,7 @@ public class CatalogController {
     // forward daily so this doesn't just shrink down to nothing over time.
     @GetMapping("/api/shows")
     public List<Map<String, Object>> shows(@RequestParam long movieId, @RequestParam(required = false) String date) {
-        String sql = "select sh.*,t.id theatre_id,t.name theatre_name,t.address theatre_address,t.latitude,t.longitude," +
+        String sql = "select sh.*,t.id theatre_id,t.theatre_type,t.name theatre_name,t.address theatre_address,t.latitude,t.longitude," +
                 
                 "s.name screen_name," +
                 "(select count(*) from show_seats ss where ss.show_id=sh.id) total_seats," +
@@ -65,11 +65,14 @@ public class CatalogController {
 
     @GetMapping("/api/shows/{id}")
     public Map<String, Object> show(@PathVariable long id) {
-        return db.queryForMap(
-                "select sh.*, m.title movie_title, t.name theatre_name, t.latitude, t.longitude, s.name screen_name " +
+        Map<String, Object> show = db.queryForMap(
+                "select sh.*, m.title movie_title, t.name theatre_name, t.theatre_type, t.latitude, t.longitude, s.name screen_name " +
                         "from shows sh join movies m on m.id=sh.movie_id " +
                         "join screens s on s.id=sh.screen_id join theatres t on t.id=s.theatre_id " +
                         "where sh.id=?", id);
+        // Per-class prices (Recliner / Balcony / Second Class / Dress Class) for the seat picker.
+        show.put("class_prices", com.sujaytumu.bms.service.Pricing.classPrices((String) show.get("theatre_type")));
+        return show;
     }
 
     @GetMapping("/api/shows/{id}/seats")

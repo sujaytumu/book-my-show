@@ -302,7 +302,7 @@ const MAX_SEATS = 10;
 
 function seatClassFor(index) {
 
-  if (index < 2) return "Recliner";
+  if (index < 1) return "Recliner";
 
   if (index < 4) return "Balcony";
 
@@ -618,6 +618,15 @@ export default function Show() {
     section.rows.push(letter);
   });
 
+  // Class price list comes from the server (single screen base ₹100, multiplex base ₹150).
+  const classPrices = show?.class_prices || {};
+  const rowClass = {};
+  sections.forEach((sec) => sec.rows.forEach((l) => (rowClass[l] = sec.label)));
+  const selectedTotal = selected.reduce(
+    (sum, sn) => sum + Number(classPrices[rowClass[sn.charAt(0)]] ?? show?.price ?? 0),
+    0
+  );
+
   return (
 
     <>
@@ -630,7 +639,7 @@ export default function Show() {
 
           <p>
 
-            {show.theatre_name} / {show.screen_name} · {show.show_date} · {show.start_time?.slice(0, 5)} · ₹{show.price}
+            {show.theatre_name} / {show.screen_name} · {show.show_date} · {show.start_time?.slice(0, 5)} · from ₹{show.price}
 
           </p>
 
@@ -665,9 +674,9 @@ export default function Show() {
                     </button>
                   ))}
                 </div>
-                {show && (
+                {show?.class_prices && (
                   <p className="hint">
-                    {qtyDraft} × ₹{show.price} = <b>₹{(+show.price * qtyDraft).toFixed(0)}</b> (+ fees)
+                    ₹{Math.min(...Object.values(show.class_prices))} – ₹{Math.max(...Object.values(show.class_prices))} per ticket, depending on the class
                   </p>
                 )}
                 <button type="button" className="qty-go" onClick={confirmQty}>
@@ -708,7 +717,7 @@ export default function Show() {
           <div className="seat-map" style={{ "--z": zoom }}>
             {sections.map((section) => (
               <div className="seat-class" key={section.label}>
-                <div className="seat-class-title">{section.label}</div>
+                <div className="seat-class-title">{section.label}{classPrices[section.label] != null ? " · ₹" + classPrices[section.label] : ""}</div>
                 {section.rows.map((letter) => (
                   <div className="seat-row" key={letter}>
                     <span className="seat-row-label">{letter}</span>
@@ -805,7 +814,7 @@ export default function Show() {
 
           <div className="bar">
 
-            <b>{selected.length ? selected.join(", ") : qty ? "Select " + qty + (qty === 1 ? " seat" : " seats") : "Choose tickets"}</b>
+            <b>{selected.length ? selected.join(", ") + " · ₹" + selectedTotal : qty ? "Select " + qty + (qty === 1 ? " seat" : " seats") : "Choose tickets"}</b>
 
             <button disabled={!qty || selected.length !== qty || pending} onClick={reviewBooking}>
 
