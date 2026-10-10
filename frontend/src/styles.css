@@ -371,12 +371,7 @@ footer{text-align:center;padding:40px;color:var(--gray-light);font-size:13px}
 /* ---------- Seat picker: ticket count + zoom ---------- */
 .seat-toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;max-width:560px;margin:0 auto 10px}
 .qty-chip{background:var(--white);color:var(--ink);border:1.5px solid var(--red);border-radius:20px;padding:6px 14px;font-size:13px;font-weight:700}
-.zoom-ctl{display:inline-flex;align-items:center;gap:6px}
-.zoom-ctl button{width:32px;height:32px;padding:0;border-radius:50%;background:var(--white);color:var(--ink);border:1.5px solid #c7c7cc;font-size:18px;font-weight:700;line-height:1}
-.zoom-ctl button:disabled{opacity:.4;cursor:not-allowed}
-.zoom-ctl .fit{width:auto;border-radius:16px;padding:0 12px;font-size:12px}
-.zoom-ctl span{min-width:42px;text-align:center;font-size:12px;font-weight:700;color:var(--gray)}
-.seat-zoom{overflow:auto;max-width:100%;padding-bottom:6px;-webkit-overflow-scrolling:touch}
+.seat-zoom{overflow:auto;max-width:100%;padding-bottom:6px;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y}
 .seat-zoom+.screen{margin-top:26px}
 .seat-map{--w:34px;--h:30px;--g:6px;--fs:12px;--z:1;max-width:none;width:max-content;min-width:0;margin:10px auto 0}
 .seat-map .seat-row-seats{flex:none;gap:calc(var(--g) * var(--z))}

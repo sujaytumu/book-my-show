@@ -282,7 +282,7 @@
 
 
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -371,6 +371,10 @@ export default function Show() {
   const [qtyDraft, setQtyDraft] = useState(2);
   const [qtyOpen, setQtyOpen] = useState(true);
   const [zoom, setZoom] = useState(1);
+  const zoomValue = useRef(1);
+  const zoomRef = useRef(null); // scroll container of the seat map
+  const pinch = useRef(null); // { dist, zoom } while two fingers are down
+  const anchor = useRef(null); // keeps the point between the fingers steady while zooming
   const [seatMsg, setSeatMsg] = useState("");
 
 
@@ -410,6 +414,61 @@ export default function Show() {
   }, [pending]);
 
 
+
+  zoomValue.current = zoom;
+
+  const MIN_ZOOM = 0.6;
+  const MAX_ZOOM = 2.4;
+
+  function applyZoom(next, cx) {
+    const clamped = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, next));
+    setZoom((current) => {
+      if (clamped !== current) anchor.current = { cx, ratio: clamped / current };
+      return clamped;
+    });
+  }
+
+  // After the seat map resizes, scroll so the point between the fingers stays under them.
+  useLayoutEffect(() => {
+    const el = zoomRef.current;
+    const a = anchor.current;
+    if (el && a) el.scrollLeft = (el.scrollLeft + a.cx) * a.ratio - a.cx;
+    anchor.current = null;
+  }, [zoom]);
+
+  // Laptop/trackpad pinch (ctrl + wheel) zooms the seat map too.
+  useEffect(() => {
+    const el = zoomRef.current;
+    if (!el) return;
+    const onWheel = (e) => {
+      if (!e.ctrlKey) return;
+      e.preventDefault();
+      const rect = el.getBoundingClientRect();
+      applyZoom(zoomValue.current * Math.exp(-e.deltaY * 0.01), e.clientX - rect.left);
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  });
+
+  function touchDist(e) {
+    const [a, b] = [e.touches[0], e.touches[1]];
+    return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+  }
+
+  function onPinchStart(e) {
+    if (e.touches.length === 2) pinch.current = { dist: touchDist(e), zoom };
+  }
+
+  function onPinchMove(e) {
+    if (e.touches.length !== 2 || !pinch.current) return;
+    const rect = zoomRef.current.getBoundingClientRect();
+    const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
+    applyZoom(pinch.current.zoom * (touchDist(e) / pinch.current.dist), cx);
+  }
+
+  function onPinchEnd(e) {
+    if (e.touches.length < 2) pinch.current = null;
+  }
 
   function confirmQty() {
     if (qty !== qtyDraft) setSelected([]);
@@ -697,23 +756,11 @@ export default function Show() {
             >
               🎟 {qty || "–"} {qty === 1 ? "Ticket" : "Tickets"} ✎
             </button>
-            <div className="zoom-ctl">
-              <button type="button" aria-label="Zoom out" disabled={zoom <= 0.6} onClick={() => setZoom((z) => Math.max(0.6, +(z - 0.2).toFixed(1)))}>
-                −
-              </button>
-              <span>{Math.round(zoom * 100)}%</span>
-              <button type="button" aria-label="Zoom in" disabled={zoom >= 2} onClick={() => setZoom((z) => Math.min(2, +(z + 0.2).toFixed(1)))}>
-                +
-              </button>
-              <button type="button" className="fit" onClick={() => setZoom(1)}>
-                Reset
-              </button>
-            </div>
           </div>
           {seatMsg && <p className="notice">{seatMsg}</p>}
 
           {/* Seat map: rows are grouped into the seat classes. Zoom scales seat size; it scrolls when larger than the screen. */}
-          <div className="seat-zoom">
+          <div className="seat-zoom" ref={zoomRef} onTouchStart={onPinchStart} onTouchMove={onPinchMove} onTouchEnd={onPinchEnd} onTouchCancel={onPinchEnd}>
           <div className="seat-map" style={{ "--z": zoom }}>
             {sections.map((section) => (
               <div className="seat-class" key={section.label}>
