@@ -1,7 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <circle cx="32" cy="32" r="32" fill="#D81E2A"/>
-  <path fill="#ffffff" d="M14 24a4 4 0 0 1 4-4h28a4 4 0 0 1 4 4v2a4 4 0 0 0 0 8v2a4 4 0 0 1-4 4H18a4 4 0 0 1-4-4v-2a4 4 0 0 0 0-8z"/>
-  <line x1="26" y1="21" x2="26" y2="43" stroke="#D81E2A" stroke-width="2" stroke-dasharray="3,3"/>
-  <circle cx="33" cy="32" r="5" fill="#D81E2A"/>
-  <path fill="#D81E2A" d="M31.5 29.5l5 2.5-5 2.5z"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F0434C"/>
+      <stop offset="1" stop-color="#B3121B"/>
+    </linearGradient>
+    <linearGradient id="tk" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#FFE3E4"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <g transform="rotate(-14 256 256)">
+    <path fill="#000" fill-opacity=".18" transform="translate(0 10)" d="M96 176a36 36 0 0 1 36-36h248a36 36 0 0 1 36 36v34a46 46 0 0 0 0 92v34a36 36 0 0 1-36 36H132a36 36 0 0 1-36-36v-34a46 46 0 0 0 0-92z"/>
+    <path fill="url(#tk)" d="M96 176a36 36 0 0 1 36-36h248a36 36 0 0 1 36 36v34a46 46 0 0 0 0 92v34a36 36 0 0 1-36 36H132a36 36 0 0 1-36-36v-34a46 46 0 0 0 0-92z"/>
+    <line x1="190" y1="158" x2="190" y2="354" stroke="#D81E2A" stroke-opacity=".55" stroke-width="7" stroke-linecap="round" stroke-dasharray="2 16"/>
+    <circle cx="298" cy="256" r="62" fill="#D81E2A"/>
+    <path fill="#fff" d="M282 224l54 32-54 32z" stroke="#fff" stroke-width="10" stroke-linejoin="round"/>
+  </g>
 </svg>
