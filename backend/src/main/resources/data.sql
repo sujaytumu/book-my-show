@@ -574,3 +574,23 @@ update movies set cast_crew='[{"name": "Mahesh Babu", "role": "Actor"}, {"name":
 update movies set cast_crew='[{"name": "Ram Charan", "role": "Actor"}, {"name": "Sukumar", "role": "Director"}, {"name": "Devi Sri Prasad", "role": "Music"}, {"name": "Mythri Movie Makers", "role": "Producer"}]' where title='RC17' and cast_crew is null;
 update movies set cast_crew='[{"name": "Allu Arjun", "role": "Actor"}, {"name": "Atlee", "role": "Director"}, {"name": "Sun Pictures", "role": "Presenter"}]' where title='Raaka' and cast_crew is null;
 update movies set cast_crew='[{"name": "Pawan Kalyan", "role": "Actor"}, {"name": "Sujeeth", "role": "Writer & Director"}]' where title='OG 2' and cast_crew is null;
+
+-- ============================================================
+-- Per-show language and format (2D / 3D), and a full 10 x 15 = 150 seat layout.
+-- Everything below only fills what is missing, so re-running it changes nothing that exists.
+-- ============================================================
+update shows sh set language = m.language from movies m where m.id = sh.movie_id and sh.language is null;
+
+-- Demo assignment: multiplex shows starting at 18:00 or later are 3D, everything else 2D.
+-- Only shows with no format yet are touched, so a format set by an admin is never overwritten.
+update shows sh set format = case when t.theatre_type = 'MULTIPLEX' and sh.start_time >= time '18:00' then '3D' else '2D' end
+from screens sc join theatres t on t.id = sc.theatre_id
+where sc.id = sh.screen_id and sh.format is null;
+alter table shows alter column format set default '2D';
+
+-- Every show gets rows A-J with 15 seats each (A1-J15). Existing seats and bookings are not touched.
+insert into show_seats(show_id,seat_number,seat_type)
+select sh.id, chr(65 + r) || n::text, case when r < 4 then 'PREMIUM' else 'REGULAR' end
+from shows sh cross join generate_series(0,9) r cross join generate_series(1,15) n
+where (select count(*) from show_seats ss where ss.show_id = sh.id) < 150
+on conflict (show_id,seat_number) do nothing;

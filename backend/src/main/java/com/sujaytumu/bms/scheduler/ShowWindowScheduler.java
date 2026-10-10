@@ -37,10 +37,10 @@ public class ShowWindowScheduler {
     @Scheduled(cron = "0 5 0 * * *")
     public void topUpWindow() {
         db.update("""
-                insert into shows(movie_id,screen_id,show_date,start_time,end_time,price)
+                insert into shows(movie_id,screen_id,show_date,start_time,end_time,price,format,language)
                 select r.movie_id, r.screen_id, current_date + d.day_offset, r.start_time, r.end_time,
-                       case when t.theatre_type = 'MULTIPLEX' then 150 else 100 end
-                from (select distinct movie_id, screen_id, start_time, end_time, price from shows) r
+                       case when t.theatre_type = 'MULTIPLEX' then 150 else 100 end, r.format, r.language
+                from (select distinct movie_id, screen_id, start_time, end_time, price, format, language from shows) r
                 join movies m on m.id = r.movie_id
                 join screens sc on sc.id = r.screen_id
                 join theatres t on t.id = sc.theatre_id
@@ -52,5 +52,14 @@ public class ShowWindowScheduler {
                       and sh2.show_date = current_date + d.day_offset and sh2.start_time = r.start_time
                 )
                 """, WINDOW_DAYS - 1);
+
+        // New shows need their seats too (10 rows A-J x 15 seats).
+        db.update("""
+                insert into show_seats(show_id,seat_number,seat_type)
+                select sh.id, chr(65 + r) || n::text, case when r < 4 then 'PREMIUM' else 'REGULAR' end
+                from shows sh cross join generate_series(0,9) r cross join generate_series(1,15) n
+                where (select count(*) from show_seats ss where ss.show_id = sh.id) < 150
+                on conflict (show_id,seat_number) do nothing
+                """);
     }
 }

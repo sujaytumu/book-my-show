@@ -72,9 +72,11 @@ public class AdminController {
     public Map<String, Object> addShow(@RequestBody Map<String, Object> body) {
         long screenId = ((Number) body.get("screenId")).longValue();
         int totalSeats = db.queryForObject("select total_seats from screens where id=?", Integer.class, screenId);
+        totalSeats = Math.max(totalSeats, 150); // the seat layout is always 10 rows (A-J) x 15 seats
 
         long id = db.queryForObject(
-                "insert into shows(movie_id,screen_id,show_date,start_time,end_time,price) values(?,?,?,?,?,?) returning id",
+                "insert into shows(movie_id,screen_id,show_date,start_time,end_time,price,format,language) " +
+                        "values(?,?,?,?,?,?,?,(select language from movies where id=?)) returning id",
                 Long.class,
                 body.get("movieId"), screenId,
                 LocalDate.parse(body.get("date").toString()),
@@ -82,12 +84,14 @@ public class AdminController {
                 LocalTime.parse(body.get("end").toString()),
                 // Price is fixed by theatre type (Rs 100 single screen / Rs 150 multiplex, class multipliers on top).
                 db.queryForObject("select case when t.theatre_type='MULTIPLEX' then 150 else 100 end " +
-                        "from screens sc join theatres t on t.id=sc.theatre_id where sc.id=?", Integer.class, screenId));
+                        "from screens sc join theatres t on t.id=sc.theatre_id where sc.id=?", Integer.class, screenId),
+                "3D".equalsIgnoreCase(String.valueOf(body.get("format"))) ? "3D" : "2D",
+                body.get("movieId"));
 
-        // First third of seats are PREMIUM, the rest REGULAR; 10 seats per row (A1-A10, B1-B10, ...).
+        // First third of seats are PREMIUM, the rest REGULAR; 15 seats per row (A1-A15, B1-B15, ...).
         int premiumCount = Math.max(1, totalSeats / 3);
         for (int seat = 1; seat <= totalSeats; seat++) {
-            String seatNumber = "" + (char) ('A' + (seat - 1) / 10) + ((seat - 1) % 10 + 1);
+            String seatNumber = "" + (char) ('A' + (seat - 1) / 15) + ((seat - 1) % 15 + 1);
             String seatType = seat <= premiumCount ? "PREMIUM" : "REGULAR";
             db.update("insert into show_seats(show_id,seat_number,seat_type) values(?,?,?)", id, seatNumber, seatType);
         }

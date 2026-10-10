@@ -11,7 +11,7 @@ const emptyMovie = {
   certificate: "",
   rating: "",
 };
-const emptyShow = { movieId: "", screenId: "", date: "", start: "", end: "" };
+const emptyShow = { movieId: "", screenId: "", date: "", start: "", end: "", format: "2D" };
 const emptyCity = { name: "" };
 const emptyTheatre = { name: "", address: "", cityId: "", latitude: "", longitude: "", theatreType: "SINGLE" };
 const emptyScreen = { name: "", totalSeats: "60", theatreId: "" };
@@ -191,6 +191,10 @@ export default function Admin() {
           <input type="date" required value={showForm.date} onChange={updateShow("date")} />
           <input type="time" required placeholder="Start" value={showForm.start} onChange={updateShow("start")} />
           <input type="time" required placeholder="End" value={showForm.end} onChange={updateShow("end")} />
+          <select value={showForm.format} onChange={updateShow("format")}>
+            <option value="2D">2D</option>
+            <option value="3D">3D</option>
+          </select>
           <button>Schedule show</button>
         </form>
       </div>

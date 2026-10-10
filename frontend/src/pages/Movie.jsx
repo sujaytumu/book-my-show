@@ -380,6 +380,8 @@ export default function Movie() {
   const [sheet, setSheet] = useState(null); // "sort" | "filter" | null
   const [priceBands, setPriceBands] = useState([]);
   const [language, setLanguage] = useState(null);
+  const [formats, setFormats] = useState([]); // "2D" / "3D"
+  const [langFilter, setLangFilter] = useState([]); // languages of the shows
   const [favs, setFavs] = useState(loadFavs);
   const [favOnly, setFavOnly] = useState(false);
   const [visited, setVisited] = useState([]);
@@ -499,6 +501,8 @@ export default function Movie() {
       if (s.show_date !== selectedDate) return false;
       if (HIDE_HOUSEFULL && availability(s) === "full") return false;
       if (bands.length && !bands.some((b) => b.test(Number(s.price)))) return false;
+      if (formats.length && !formats.includes(s.format || "2D")) return false;
+      if (langFilter.length && !langFilter.includes(s.language || movie?.language)) return false;
       return true;
     });
     const groups = [];
@@ -535,7 +539,7 @@ export default function Movie() {
       );
     }
     return favOnly ? groups.filter((g) => favs.includes(g.theatre_name)) : groups;
-  }, [shows, selectedDate, myLocation, sortBy, priceBands, favs, favOnly]);
+  }, [shows, selectedDate, myLocation, sortBy, priceBands, favs, favOnly, formats, langFilter, movie]);
 
   if (!movie) return <p>Loading...</p>;
 
@@ -549,6 +553,7 @@ export default function Movie() {
         .filter(Boolean)
     : [];
   const activeLanguage = language || languages[0];
+  const showLanguages = [...new Set([...shows.map((s) => s.language).filter(Boolean), ...languages])];
 
   function chipDate(d) {
     if (d === todayIso) return "Today, " + new Date(d).getDate() + " " + new Date(d).toLocaleDateString("en-IN", { month: "short" });
@@ -614,10 +619,11 @@ export default function Movie() {
             {Number(movie.tickets_last_hour) > 0 ? (
               <>
                 <b>{fmtCount(Number(movie.tickets_last_hour))}</b> tickets booked in last 1 hour
-              </>
-            ) : Number(movie.tickets_per_hour) > 0 ? (
-              <>
-                <b>{fmtCount(Number(movie.tickets_per_hour))}</b> tickets / hour today
+                {Number(movie.tickets_last_day) > 0 && (
+                  <>
+                    {" "}· <b>{fmtCount(Number(movie.tickets_last_day))}</b> in 24 hrs
+                  </>
+                )}
               </>
             ) : (
               <>Bookings are open. Grab your seats!</>
@@ -689,8 +695,8 @@ export default function Movie() {
         <button className="mv-tool" onClick={() => setSheet("filter")}>
           <FilterIcon />
           <span>Filters</span>
-          {priceBands.length + (favOnly ? 1 : 0) > 0 && (
-            <span className="mv-badge">{priceBands.length + (favOnly ? 1 : 0)}</span>
+          {priceBands.length + formats.length + langFilter.length + (favOnly ? 1 : 0) > 0 && (
+            <span className="mv-badge">{priceBands.length + formats.length + langFilter.length + (favOnly ? 1 : 0)}</span>
           )}
         </button>
       </div>
@@ -716,13 +722,15 @@ export default function Movie() {
       {theatreGroups.length === 0 && (
         <p>
           {hasShowsForDate ? "No shows match your filters." : "No shows scheduled for this date."}
-          {hasShowsForDate && (priceBands.length > 0 || favOnly) && (
+          {hasShowsForDate && (priceBands.length > 0 || formats.length > 0 || langFilter.length > 0 || favOnly) && (
             <>
               {" "}
               <button
                 className="ghost mv-inline"
                 onClick={() => {
                   setPriceBands([]);
+                  setFormats([]);
+                  setLangFilter([]);
                   setFavOnly(false);
                 }}
               >
@@ -768,7 +776,7 @@ export default function Movie() {
                   onClick={() => navigate("/show/" + show.id)}
                 >
                   {show.start_time.slice(0, 5)}
-                  <small>{av === "full" ? "Housefull" : "₹" + show.price}</small>
+                  <small>{av === "full" ? "Housefull" : "₹" + show.price + (show.format ? " · " + show.format : "")}</small>
                 </button>
               );
             })}
@@ -811,6 +819,8 @@ export default function Movie() {
                 className="sheet-clear"
                 onClick={() => {
                   setPriceBands([]);
+                  setFormats([]);
+                  setLangFilter([]);
                   setFavOnly(false);
                 }}
               >
@@ -851,22 +861,31 @@ export default function Movie() {
               ))}
             </div>
 
-            {languages.length > 0 && (
-              <>
-                <h4 className="sheet-label">Language</h4>
-                <div className="chip-row">
-                  {languages.map((l) => (
-                    <button
-                      key={l}
-                      className={"chip" + (l === activeLanguage ? " active" : "")}
-                      onClick={() => setLanguage(l)}
-                    >
-                      {l}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
+            <h4 className="sheet-label">Language</h4>
+            <div className="chip-row">
+              {showLanguages.map((l) => (
+                <button
+                  key={l}
+                  className={"chip" + (langFilter.includes(l) ? " active" : "")}
+                  onClick={() => setLangFilter((cur) => (cur.includes(l) ? cur.filter((x) => x !== l) : [...cur, l]))}
+                >
+                  {l}
+                </button>
+              ))}
+            </div>
+
+            <h4 className="sheet-label">Format</h4>
+            <div className="chip-row">
+              {["2D", "3D"].map((f) => (
+                <button
+                  key={f}
+                  className={"chip" + (formats.includes(f) ? " active" : "")}
+                  onClick={() => setFormats((cur) => (cur.includes(f) ? cur.filter((x) => x !== f) : [...cur, f]))}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
 
             <button className="sheet-done" onClick={() => setSheet(null)}>
               Show {theatreGroups.length} {theatreGroups.length === 1 ? "cinema" : "cinemas"}

@@ -374,6 +374,7 @@ export default function Show() {
   const zoomValue = useRef(1);
   const zoomRef = useRef(null); // scroll container of the seat map
   const pinch = useRef(null); // { dist, zoom } while two fingers are down
+  const fitted = useRef(false); // auto-fit the 15-seat rows to the screen width once
   const anchor = useRef(null); // keeps the point between the fingers steady while zooming
   const [seatMsg, setSeatMsg] = useState("");
   const [secsLeft, setSecsLeft] = useState(null); // countdown while the seats are held for payment
@@ -440,7 +441,7 @@ export default function Show() {
     return () => clearInterval(timer);
   }, [hold, id]);
 
-  const MIN_ZOOM = 0.6;
+  const MIN_ZOOM = 0.4;
   const MAX_ZOOM = 2.4;
 
   function applyZoom(next, cx) {
@@ -450,6 +451,17 @@ export default function Show() {
       return clamped;
     });
   }
+
+  // 15 seats per row is wider than a phone: start zoomed out so every seat is visible (pinch to zoom in).
+  useLayoutEffect(() => {
+    const el = zoomRef.current;
+    const map = el && el.firstElementChild;
+    if (!map || !seats.length || fitted.current) return;
+    const natural = map.scrollWidth / zoom;
+    if (!natural) return;
+    fitted.current = true;
+    setZoom(Math.min(1, Math.max(MIN_ZOOM, +((el.clientWidth - 4) / natural).toFixed(2))));
+  }, [seats.length, hold]);
 
   // After the seat map resizes, scroll so the point between the fingers stays under them.
   useLayoutEffect(() => {
@@ -723,7 +735,7 @@ export default function Show() {
 
             <p>
 
-            {show.theatre_name} / {show.screen_name} · {show.show_date} · {show.start_time?.slice(0, 5)} · from ₹{show.price}
+            {show.theatre_name} / {show.screen_name} · {show.show_date} · {show.start_time?.slice(0, 5)}{show.format ? " · " + show.format : ""} · from ₹{show.price}
 
           </p>
 
@@ -809,7 +821,7 @@ export default function Show() {
                         <button
                           className={
                             (selected.includes(seat.seat_number) ? "selected" : seat.status.toLowerCase()) +
-                            (rowMap[letter].length > 5 && idx === 4 ? " aisle" : "")
+                            ((idx + 1) % 5 === 0 && idx < rowMap[letter].length - 1 ? " aisle" : "")
                           }
                           title={seat.seat_number}
                           onClick={() => selectSeat(seat)}

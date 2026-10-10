@@ -22,3 +22,5 @@ create table if not exists booking_seats(id bigserial primary key,booking_id big
 create table if not exists payments(id bigserial primary key,booking_id bigint references bookings(id),razorpay_order_id varchar(100) unique not null,razorpay_payment_id varchar(100),amount numeric(10,2),status varchar(20) not null,paid_at timestamptz);
 create table if not exists reviews(id bigserial primary key,movie_id bigint not null references movies(id) on delete cascade,user_id bigint not null references users(id) on delete cascade,rating int not null check (rating between 1 and 10),body varchar(500),created_at timestamptz not null default now(),updated_at timestamptz not null default now(),unique(movie_id,user_id));
 create index if not exists idx_reviews_movie on reviews(movie_id,created_at desc);
+alter table shows add column if not exists format varchar(10);
+alter table shows add column if not exists language varchar(40);
