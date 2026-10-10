@@ -259,6 +259,26 @@ function movieTags(movie) {
   return [...new Set(tags.map((t) => t.trim()).filter(Boolean))];
 }
 
+// Fixed "Book tickets" bar at the bottom. Scrolls to the cinemas list and hides itself once that list is on screen.
+function StickyBook() {
+  const [visible, setVisible] = useState(true);
+  useEffect(() => {
+    const target = document.getElementById("showtimes");
+    if (!target || typeof IntersectionObserver === "undefined") return;
+    const obs = new IntersectionObserver(([entry]) => setVisible(!entry.isIntersecting), { threshold: 0.05 });
+    obs.observe(target);
+    return () => obs.disconnect();
+  }, []);
+  if (!visible) return null;
+  return (
+    <div className="sticky-book">
+      <button type="button" onClick={() => document.getElementById("showtimes")?.scrollIntoView({ behavior: "smooth", block: "start" })}>
+        Book tickets
+      </button>
+    </div>
+  );
+}
+
 // Horizontal row of other movies (poster, title, rating) like BMS "You might also like".
 function MoreMovies({ currentId, upcoming }) {
   const [movies, setMovies] = useState([]);
@@ -625,7 +645,7 @@ export default function Movie() {
         </div>
       )}
 
-      <div className="cinemas-header">
+      <div className="cinemas-header" id="showtimes">
         <h2>Cinemas</h2>
       </div>
 
@@ -728,6 +748,7 @@ export default function Movie() {
 
         <div id="ratings"><Reviews movieId={id} /></div>
         <MoreMovies currentId={id} upcoming={false} />
+        <StickyBook />
         </>
       )}
 
