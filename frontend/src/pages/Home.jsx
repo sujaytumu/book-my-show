@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
 
+const MAIN_LANGUAGES = ["Telugu", "Hindi", "Tamil", "Kannada", "Malayalam", "English"];
+
 function MovieCard({ movie }) {
   return (
     <Link className="card movie" to={"/movie/" + movie.id}>
@@ -35,7 +37,11 @@ export default function Home({ mode = "now-showing" }) {
 
   // Only the active view's movies - never both sets at once.
   const inView = movies.filter((m) => !!m.upcoming === isComingSoon);
-  const languages = useMemo(() => ["All", ...new Set(inView.map((m) => m.language).filter(Boolean))], [inView]);
+  // Always offer the main Indian film languages (like BMS), plus any other language that has movies.
+  const languages = useMemo(
+    () => ["All", ...new Set([...inView.map((m) => m.language).filter(Boolean), ...MAIN_LANGUAGES])],
+    [inView]
+  );
   const filtered = language === "All" ? inView : inView.filter((m) => m.language === language);
 
   return (
@@ -56,7 +62,7 @@ export default function Home({ mode = "now-showing" }) {
       />
 
       {languages.length > 1 && (
-        <div className="chip-row">
+        <div className="chip-row lang-row">
           {languages.map((lang) => (
             <button
               key={lang}
@@ -64,6 +70,7 @@ export default function Home({ mode = "now-showing" }) {
               onClick={() => setLanguage(lang)}
             >
               {lang}
+              {lang !== "All" && <small>{inView.filter((m) => m.language === lang).length}</small>}
             </button>
           ))}
         </div>
@@ -86,6 +93,14 @@ export default function Home({ mode = "now-showing" }) {
           <MovieCard movie={movie} key={movie.id} />
         ))}
       </div>
+      {filtered.length === 0 && (
+        <p className="empty-note">
+          No {isComingSoon ? "upcoming" : "running"} {language} movies right now.{" "}
+          <button className="ghost" onClick={() => setLanguage("All")}>
+            Show all
+          </button>
+        </p>
+      )}
     </>
   );
 }
