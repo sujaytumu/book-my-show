@@ -36,7 +36,15 @@ public class CatalogController {
 
     @GetMapping("/api/movies/{id}")
     public Map<String, Object> movie(@PathVariable long id) {
-        return db.queryForMap("select * from movies where id=?", id);
+        Map<String, Object> movie = db.queryForMap("select * from movies where id=?", id);
+        // Real demand figure: seats in CONFIRMED bookings over the last 24 hours, averaged per hour.
+        Long sold = db.queryForObject(
+                "select count(*) from booking_seats bs join bookings b on b.id=bs.booking_id " +
+                        "join shows sh on sh.id=b.show_id " +
+                        "where sh.movie_id=? and b.status='CONFIRMED' and b.created_at > now() - interval '24 hours'",
+                Long.class, id);
+        movie.put("tickets_per_hour", Math.round((sold == null ? 0 : sold) / 24.0 * 10.0) / 10.0);
+        return movie;
     }
 
     // Real (client-supplied) geolocation is used for "distance from me", computed
