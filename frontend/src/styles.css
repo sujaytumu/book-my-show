@@ -425,3 +425,14 @@ footer{text-align:center;padding:40px;color:var(--gray-light);font-size:10.4px}
 .qty-grid button.on,.qty-grid button.on:hover{background:#1ea83c;color:#fff;border-color:#1ea83c}
 .qty-grid button:hover{border-color:#1ea83c;color:#1ea83c;background:var(--white)}
 .qty-grid .tick{box-sizing:border-box;background:var(--white);color:#1ea83c;border:1.5px solid #1ea83c;line-height:15px;font-weight:800}
+
+/* ---------- Movie page: demand badge + cast & crew ---------- */
+.mv-hot{display:inline-flex;align-items:center;gap:6px;margin:0 0 4px;padding:6px 12px;border-radius:16px;background:var(--red-light);color:var(--red);font-size:10.4px;font-weight:600}
+.mv-hot b{font-weight:800;font-size:11.2px}
+.cast-block h2{margin:14px 0 8px}
+.cast-row{display:flex;gap:14px;overflow-x:auto;padding-bottom:8px;-ms-overflow-style:none;scrollbar-width:none}
+.cast-row::-webkit-scrollbar{display:none}
+.cast-item{flex:none;width:76px;text-align:center}
+.cast-avatar{width:56px;height:56px;margin:0 auto 6px;border-radius:50%;background:linear-gradient(135deg,var(--red),var(--red-dark));color:#fff;display:flex;align-items:center;justify-content:center;font-size:12.8px;font-weight:800}
+.cast-item b{display:block;font-size:9.6px;line-height:1.25;color:var(--ink)}
+.cast-item small{display:block;margin-top:2px;font-size:9px;color:var(--gray)}

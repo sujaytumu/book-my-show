@@ -1,6 +1,7 @@
 create table if not exists users(id bigserial primary key,name varchar(100) not null,email varchar(160) unique not null,password varchar(255) not null,role varchar(20) not null default 'USER');
 create table if not exists movies(id bigserial primary key,title varchar(200) not null,description text,poster_url text,language varchar(60),genre varchar(100),duration_minutes int,certificate varchar(20),rating numeric(3,1) default 0,active boolean default true);
 alter table movies add column if not exists upcoming boolean not null default false;
+alter table movies add column if not exists cast_crew text;
 create table if not exists cities(id bigserial primary key,name varchar(100) unique not null);
 create table if not exists theatres(id bigserial primary key,name varchar(160) not null,address text,city_id bigint references cities(id),latitude numeric(9,6),longitude numeric(9,6));
 alter table theatres add column if not exists latitude numeric(9,6);
