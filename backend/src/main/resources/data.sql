@@ -534,3 +534,12 @@ insert into show_seats(show_id,seat_number,seat_type) select sh.id,chr(65+floor(
 -- so a rating changed later by hand is never overwritten on restart.
 update movies set rating=7.4 where title='Sigma' and rating=0;
 update movies set rating=7.9 where title='Tella Kagitam' and rating=0;
+
+-- Seat layout is 10 rows (A-J) x 10 seats. Shows that still have the original 60 seats (A1-F10)
+-- get the missing 40 (G1-J10) added. Existing seats and bookings are never touched, and a show
+-- is only topped up once (it stops matching after reaching 100 seats).
+insert into show_seats(show_id,seat_number,seat_type)
+select sh.id,chr(65+floor((g-1)/10)::int)||((g-1)%10+1)::text,'REGULAR'
+from shows sh cross join generate_series(61,100) g
+where (select count(*) from show_seats ss where ss.show_id=sh.id)=60
+on conflict (show_id,seat_number) do nothing;
