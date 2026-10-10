@@ -194,10 +194,10 @@ function HeartIcon() {
   );
 }
 
+// Show price is the starting price: ₹100 at single screens, ₹150 at multiplexes.
 const PRICE_BANDS = [
-  { key: "low", label: "Below ₹150", test: (p) => p < 150 },
-  { key: "mid", label: "₹150 – ₹250", test: (p) => p >= 150 && p <= 250 },
-  { key: "high", label: "Above ₹250", test: (p) => p > 250 },
+  { key: "low", label: "₹100 (Single screens)", test: (p) => p <= 100 },
+  { key: "mid", label: "₹150 (Multiplexes)", test: (p) => p > 100 },
 ];
 
 const SORTS = [

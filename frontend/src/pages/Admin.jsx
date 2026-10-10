@@ -11,9 +11,9 @@ const emptyMovie = {
   certificate: "",
   rating: "",
 };
-const emptyShow = { movieId: "", screenId: "", date: "", start: "", end: "", price: "" };
+const emptyShow = { movieId: "", screenId: "", date: "", start: "", end: "" };
 const emptyCity = { name: "" };
-const emptyTheatre = { name: "", address: "", cityId: "", latitude: "", longitude: "" };
+const emptyTheatre = { name: "", address: "", cityId: "", latitude: "", longitude: "", theatreType: "SINGLE" };
 const emptyScreen = { name: "", totalSeats: "60", theatreId: "" };
 
 export default function Admin() {
@@ -89,6 +89,10 @@ export default function Admin() {
         <form onSubmit={submitTheatre}>
           <input placeholder="Theatre name" required value={theatreForm.name} onChange={updateTheatre("name")} />
           <input placeholder="Address" value={theatreForm.address} onChange={updateTheatre("address")} />
+          <select value={theatreForm.theatreType} onChange={updateTheatre("theatreType")}>
+            <option value="SINGLE">Single screen (tickets from ₹100)</option>
+            <option value="MULTIPLEX">Multiplex (tickets from ₹150)</option>
+          </select>
           <select required value={theatreForm.cityId} onChange={updateTheatre("cityId")}>
             <option value="">Select city</option>
             {cities.map((c) => (
@@ -187,7 +191,6 @@ export default function Admin() {
           <input type="date" required value={showForm.date} onChange={updateShow("date")} />
           <input type="time" required placeholder="Start" value={showForm.start} onChange={updateShow("start")} />
           <input type="time" required placeholder="End" value={showForm.end} onChange={updateShow("end")} />
-          <input placeholder="Price" type="number" required value={showForm.price} onChange={updateShow("price")} />
           <button>Schedule show</button>
         </form>
       </div>
