@@ -44,6 +44,13 @@ public class CatalogController {
                         "where sh.movie_id=? and b.status='CONFIRMED' and b.created_at > now() - interval '24 hours'",
                 Long.class, id);
         movie.put("tickets_per_hour", Math.round((sold == null ? 0 : sold) / 24.0 * 10.0) / 10.0);
+        // Seats in CONFIRMED bookings made in the last 60 minutes (the "Trending" banner).
+        Long lastHour = db.queryForObject(
+                "select count(*) from booking_seats bs join bookings b on b.id=bs.booking_id " +
+                        "join shows sh on sh.id=b.show_id " +
+                        "where sh.movie_id=? and b.status='CONFIRMED' and b.created_at > now() - interval '1 hour'",
+                Long.class, id);
+        movie.put("tickets_last_hour", lastHour == null ? 0 : lastHour);
         return movie;
     }
 
