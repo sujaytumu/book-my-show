@@ -411,3 +411,17 @@ footer{text-align:center;padding:40px;color:var(--gray-light);font-size:10.4px}
   .details section>h1+p{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 }
 .movie-page h2{margin:18px 0 10px}
+
+/* ---------- Seat page: small ticket-count icon at top right, green selection (like BMS) ---------- */
+.show-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.show-header-text{min-width:0}
+.qty-chip,.qty-chip:hover{display:inline-flex;align-items:center;gap:5px;flex:none;padding:6px 10px;border-radius:16px;background:var(--white);color:#1ea83c;border:1.5px solid #1ea83c;font-size:11.2px;font-weight:800;letter-spacing:0;text-transform:none;line-height:1}
+.qty-chip:hover{background:#eaf8ee}
+.seat-map button{color:#1ea83c;border-color:#1ea83c}
+.seat-map button.available:hover{background:#eaf8ee;color:#1ea83c}
+.seat-map button.selected,.seat-map button.selected:hover{background:#1ea83c;color:#fff;border-color:#1ea83c}
+.seat-legend .lg.available{border-color:#1ea83c}
+.seat-legend .lg.selected{border-color:#1ea83c;background:#1ea83c}
+.qty-grid button.on,.qty-grid button.on:hover{background:#1ea83c;color:#fff;border-color:#1ea83c}
+.qty-grid button:hover{border-color:#1ea83c;color:#1ea83c;background:var(--white)}
+.qty-grid .tick{box-sizing:border-box;background:var(--white);color:#1ea83c;border:1.5px solid #1ea83c;line-height:15px;font-weight:800}
