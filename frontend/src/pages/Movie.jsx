@@ -577,6 +577,17 @@ export default function Movie() {
               {interested ? "♥ In your watchlist" : "♡ I'm interested"}
             </button>
           )}
+          <a
+            className="share-btn trailer-btn"
+            href={"https://www.youtube.com/results?search_query=" + encodeURIComponent(movie.title + " official trailer")}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+            Watch trailer
+          </a>
           <button className="share-btn" onClick={shareMovie}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="18" cy="5" r="3" />

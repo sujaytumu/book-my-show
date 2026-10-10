@@ -464,3 +464,6 @@ img.cast-photo{object-fit:cover;object-position:top;background:#eee}
 .empty-note{text-align:center;color:var(--gray);margin:28px 0}
 .sticky-book{position:fixed;left:0;right:0;bottom:0;z-index:40;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:var(--white);box-shadow:0 -4px 16px rgba(0,0,0,.1)}
 .sticky-book button{display:block;width:100%;max-width:520px;margin:0 auto;padding:13px 20px}
+
+.trailer-btn,.trailer-btn:hover{text-decoration:none;margin-right:8px;color:var(--ink)}
+.trailer-btn:hover{color:var(--red)}
