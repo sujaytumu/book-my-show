@@ -288,10 +288,6 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import { api, currentUser } from "../api";
 
-import TheatreMap, { haversineKm } from "../components/TheatreMap";
-
-
-
 const MAX_SEATS = 10;
 
 
@@ -304,13 +300,13 @@ const MAX_SEATS = 10;
 
 // first 2 rows Recliner, next 2 Balcony, next Second Class, the rest Dress Class.
 
-function seatClassFor(index, rowCount) {
+function seatClassFor(index) {
 
-  if (index < Math.ceil((rowCount * 2) / 6)) return "Recliner";
+  if (index < 2) return "Recliner";
 
-  if (index < Math.ceil((rowCount * 4) / 6)) return "Balcony";
+  if (index < 4) return "Balcony";
 
-  if (index < Math.ceil((rowCount * 5) / 6)) return "Second Class";
+  if (index < 7) return "Second Class";
 
   return "Dress Class";
 
@@ -364,10 +360,6 @@ export default function Show() {
 
   const [slow, setSlow] = useState(false);
 
-  const [myLocation, setMyLocation] = useState(null);
-
-  const [locationError, setLocationError] = useState("");
-
   const [contactEmail, setContactEmail] = useState(user?.email || "");
 
   const [contactPhone, setContactPhone] = useState("");
@@ -409,30 +401,6 @@ export default function Show() {
     return () => clearTimeout(timer);
 
   }, [pending]);
-
-
-
-  function findMe() {
-
-    setLocationError("");
-
-    if (!navigator.geolocation) {
-
-      setLocationError("Your browser doesn't support location.");
-
-      return;
-
-    }
-
-    navigator.geolocation.getCurrentPosition(
-
-      (pos) => setMyLocation({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
-
-      () => setLocationError("Location permission denied — enable it in your browser to see distance.")
-
-    );
-
-  }
 
 
 
@@ -606,16 +574,6 @@ export default function Show() {
 
 
 
-  const distanceKm =
-
-    show?.latitude != null && myLocation
-
-      ? haversineKm(myLocation.lat, myLocation.lon, +show.latitude, +show.longitude).toFixed(1)
-
-      : null;
-
-
-
   // Group the flat seat list into rows (A, B, C...) and then into seat classes.
   const rowMap = {};
   seats.forEach((seat) => {
@@ -628,7 +586,7 @@ export default function Show() {
   );
   const sections = [];
   rowLetters.forEach((letter, i) => {
-    const label = seatClassFor(i, rowLetters.length);
+    const label = seatClassFor(i);
     let section = sections[sections.length - 1];
     if (!section || section.label !== label) {
       section = { label, rows: [] };
@@ -854,50 +812,6 @@ export default function Show() {
             </button>
 
           </div>
-
-        </div>
-
-      )}
-
-
-
-      {show?.latitude != null && (
-
-        <div className="theatre-location card">
-
-          <h2>Theatre location</h2>
-
-          {distanceKm ? (
-
-            <p>
-
-              <b>{distanceKm} km</b> away from your current location.
-
-            </p>
-
-          ) : (
-
-            <button className="ghost" onClick={findMe}>
-
-              Show distance from me
-
-            </button>
-
-          )}
-
-          {locationError && <p className="error">{locationError}</p>}
-
-          <TheatreMap
-
-            theatreLat={+show.latitude}
-
-            theatreLon={+show.longitude}
-
-            theatreName={show.theatre_name}
-
-            myLocation={myLocation}
-
-          />
 
         </div>
 
