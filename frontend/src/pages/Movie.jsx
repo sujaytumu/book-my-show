@@ -162,7 +162,7 @@
 
 
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { api, currentUser } from "../api";
 import { haversineKm } from "../components/TheatreMap";
 import Reviews from "../components/Reviews";
