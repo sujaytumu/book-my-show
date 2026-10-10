@@ -601,9 +601,28 @@ export default function Movie() {
         </section>
       </div>
 
-      {!movie.upcoming && Number(movie.tickets_per_hour) > 0 && (
-        <div className="mv-hot">
-          🔥 <b>{fmtCount(Number(movie.tickets_per_hour))}</b> tickets / hour
+      {!movie.upcoming && (
+        <div className="trending-bar">
+          <span className="tb-tag">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 17l6-6 4 4 8-8" />
+              <path d="M15 7h6v6" />
+            </svg>
+            Trending
+          </span>
+          <span className="tb-text">
+            {Number(movie.tickets_last_hour) > 0 ? (
+              <>
+                <b>{fmtCount(Number(movie.tickets_last_hour))}</b> tickets booked in last 1 hour
+              </>
+            ) : Number(movie.tickets_per_hour) > 0 ? (
+              <>
+                <b>{fmtCount(Number(movie.tickets_per_hour))}</b> tickets / hour today
+              </>
+            ) : (
+              <>Bookings are open. Grab your seats!</>
+            )}
+          </span>
         </div>
       )}
 
