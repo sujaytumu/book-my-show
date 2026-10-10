@@ -60,7 +60,7 @@ export default function Nav() {
   return (
     <nav>
       <Link to="/" className="logo">
-        BookMyShow
+        BMS
       </Link>
       <div>
         {user ? (
