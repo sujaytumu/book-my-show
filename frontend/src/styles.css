@@ -398,3 +398,16 @@ footer{text-align:center;padding:40px;color:var(--gray-light);font-size:10.4px}
 .nav-menu a,.nav-menu button.nav-menu-logout{display:block;width:100%;box-sizing:border-box;padding:10px 16px;margin:0;text-align:left;background:none;border:0;border-radius:0;color:var(--ink);font-size:11.2px;font-weight:600;letter-spacing:0;text-transform:none;cursor:pointer}
 .nav-menu a:hover,.nav-menu button.nav-menu-logout:hover{background:var(--red-light);color:var(--red)}
 .nav-menu button.nav-menu-logout{border-top:1px solid var(--border);margin-top:4px;color:var(--red);font-weight:800}
+
+/* ---------- Compact movie details (poster beside the text, like BMS) ---------- */
+.details{grid-template-columns:150px 1fr;gap:18px;padding:14px;margin-bottom:12px}
+.details>img{width:100%;height:auto;max-height:225px;object-fit:cover;object-position:top}
+.details section p{margin:0 0 8px;line-height:1.45}
+.details h1{font-size:17.6px;margin:0 0 6px}
+@media(max-width:650px){
+  .details{grid-template-columns:104px 1fr;gap:12px;padding:10px}
+  .details>img{max-height:156px}
+  .details h1{font-size:15.2px}
+  .details section>h1+p{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+}
+.movie-page h2{margin:18px 0 10px}
