@@ -562,3 +562,15 @@ update theatres set theatre_type='MULTIPLEX' where name in (
 update shows sh set price = case when t.theatre_type='MULTIPLEX' then 150 else 100 end
 from screens sc join theatres t on t.id=sc.theatre_id
 where sc.id=sh.screen_id and sh.price <> case when t.theatre_type='MULTIPLEX' then 150 else 100 end;
+
+-- Cast & crew shown on the movie page. Taken from each movie's own description above; only filled when still empty.
+update movies set cast_crew='[{"name": "Nani", "role": "Actor"}, {"name": "Raghav Juyal", "role": "Actor"}, {"name": "Srikanth Odela", "role": "Director"}]' where title='The Paradise' and cast_crew is null;
+update movies set cast_crew='[{"name": "Ravi Teja", "role": "Actor"}, {"name": "Priya Bhavani Shankar", "role": "Actor"}, {"name": "Shiva Nirvana", "role": "Director"}]' where title='Irumudi' and cast_crew is null;
+update movies set cast_crew='[{"name": "Sundeep Kishan", "role": "Actor"}, {"name": "Faria Abdullah", "role": "Actor"}, {"name": "Jason Sanjay", "role": "Writer & Director"}, {"name": "Thaman S", "role": "Music"}, {"name": "Lyca Productions", "role": "Producer"}]' where title='Sigma' and cast_crew is null;
+update movies set cast_crew='[{"name": "Vijay Deverakonda", "role": "Actor"}, {"name": "Rahul Sankrityan", "role": "Director"}, {"name": "T-Series Films", "role": "Producer"}]' where title='Ranabaali' and cast_crew is null;
+update movies set cast_crew='[{"name": "Prabhas", "role": "Actor"}, {"name": "Triptii Dimri", "role": "Actor"}, {"name": "Prakash Raj", "role": "Actor"}, {"name": "Sandeep Reddy Vanga", "role": "Director"}, {"name": "T-Series", "role": "Producer"}]' where title='Spirit' and cast_crew is null;
+update movies set cast_crew='[{"name": "NTR", "role": "Actor"}, {"name": "Prashanth Neel", "role": "Director"}, {"name": "Mythri Movie Makers", "role": "Producer"}]' where title='Dragon' and cast_crew is null;
+update movies set cast_crew='[{"name": "Mahesh Babu", "role": "Actor"}, {"name": "S. S. Rajamouli", "role": "Director"}, {"name": "Sri Durga Arts", "role": "Producer"}]' where title='Varanasi' and cast_crew is null;
+update movies set cast_crew='[{"name": "Ram Charan", "role": "Actor"}, {"name": "Sukumar", "role": "Director"}, {"name": "Devi Sri Prasad", "role": "Music"}, {"name": "Mythri Movie Makers", "role": "Producer"}]' where title='RC17' and cast_crew is null;
+update movies set cast_crew='[{"name": "Allu Arjun", "role": "Actor"}, {"name": "Atlee", "role": "Director"}, {"name": "Sun Pictures", "role": "Presenter"}]' where title='Raaka' and cast_crew is null;
+update movies set cast_crew='[{"name": "Pawan Kalyan", "role": "Actor"}, {"name": "Sujeeth", "role": "Writer & Director"}]' where title='OG 2' and cast_crew is null;

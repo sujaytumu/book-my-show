@@ -194,6 +194,28 @@ function HeartIcon() {
   );
 }
 
+// 1234 -> "1.2K", 12 -> "12"
+function fmtCount(n) {
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, "") + "K";
+  return String(n);
+}
+
+function castInitials(name) {
+  const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+  return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
+}
+
+function parseCast(raw) {
+  try {
+    const list = JSON.parse(raw || "[]");
+    return Array.isArray(list) ? list.filter((p) => p && p.name) : [];
+  } catch {
+    return [];
+  }
+}
+
 // Show price is the starting price: ₹100 at single screens, ₹150 at multiplexes.
 const PRICE_BANDS = [
   { key: "low", label: "₹100 (Single screens)", test: (p) => p <= 100 },
@@ -453,6 +475,27 @@ export default function Movie() {
           {shareMsg && <span className="share-msg">{shareMsg}</span>}
         </section>
       </div>
+
+      {!movie.upcoming && Number(movie.tickets_per_hour) > 0 && (
+        <div className="mv-hot">
+          🔥 <b>{fmtCount(Number(movie.tickets_per_hour))}</b> tickets / hour
+        </div>
+      )}
+
+      {parseCast(movie.cast_crew).length > 0 && (
+        <div className="cast-block">
+          <h2>Cast &amp; Crew</h2>
+          <div className="cast-row">
+            {parseCast(movie.cast_crew).map((p) => (
+              <div className="cast-item" key={p.name + p.role}>
+                <div className="cast-avatar">{castInitials(p.name)}</div>
+                <b>{p.name}</b>
+                <small>{p.role}</small>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {movie.upcoming ? (
         <div className="card coming-soon-panel">
