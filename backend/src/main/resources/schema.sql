@@ -6,6 +6,7 @@ create table if not exists theatres(id bigserial primary key,name varchar(160) n
 alter table theatres add column if not exists latitude numeric(9,6);
 alter table theatres add column if not exists longitude numeric(9,6);
 alter table theatres add column if not exists active boolean not null default true;
+alter table theatres add column if not exists theatre_type varchar(20) not null default 'SINGLE';
 create table if not exists screens(id bigserial primary key,name varchar(80) not null,total_seats int not null,theatre_id bigint references theatres(id));
 create table if not exists shows(id bigserial primary key,movie_id bigint references movies(id),screen_id bigint references screens(id),show_date date not null,start_time time not null,end_time time not null,price numeric(10,2) not null);
 create table if not exists show_seats(id bigserial primary key,show_id bigint references shows(id) on delete cascade,seat_number varchar(10) not null,seat_type varchar(30) not null,status varchar(20) not null default 'AVAILABLE',locked_by bigint,locked_until timestamptz,unique(show_id,seat_number));

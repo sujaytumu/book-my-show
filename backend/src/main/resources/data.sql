@@ -543,3 +543,22 @@ select sh.id,chr(65+floor((g-1)/10)::int)||((g-1)%10+1)::text,'REGULAR'
 from shows sh cross join generate_series(61,100) g
 where (select count(*) from show_seats ss where ss.show_id=sh.id)=60
 on conflict (show_id,seat_number) do nothing;
+
+-- ============================================================
+-- Ticket pricing: base price (Dress Class rows) is Rs 100 at single screens and Rs 150 at
+-- multiplexes. Recliner (row A) = 300%, Balcony (B-D) = 150%, Second Class (E-G) = 125%,
+-- Dress Class (H-J) = 100% of that base. Class prices are computed in Pricing.java; shows.price
+-- holds the base ("starting from") price. Existing bookings keep the amount they were paid.
+-- ============================================================
+update theatres set theatre_type='MULTIPLEX' where name in (
+  'AMB Cinemas','Prasads Multiplex','AAA Cinemas','Allu Cinemas','PVR Superplex (Inorbit Mall)',
+  'PVR Nexus Mall','PVR LakeShore Mall','INOX GVK One Mall','Cinepolis Lulu Mall','ART Cinemas Tattva Mall',
+  'Aparna Cinemas','PVR ICON Next Galleria Mall','PVR Cinemas Irrum Manzil','INOX Ashoka One Mall',
+  'Asian CineSquare Multiplex',
+  'PVR: Manjeera Trinity Mall','INOX: The Forum Sujana Mall','Miraj Cinemas: Cinetown',
+  'Miraj Cinemas: A2A Central Mall','Cinepolis: DSL Virtue Mall'
+) and theatre_type<>'MULTIPLEX';
+
+update shows sh set price = case when t.theatre_type='MULTIPLEX' then 150 else 100 end
+from screens sc join theatres t on t.id=sc.theatre_id
+where sc.id=sh.screen_id and sh.price <> case when t.theatre_type='MULTIPLEX' then 150 else 100 end;

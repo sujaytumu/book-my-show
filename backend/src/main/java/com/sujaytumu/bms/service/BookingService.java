@@ -73,12 +73,17 @@ public class BookingService {
 
         Map<String, Object> user = db.queryForMap("select id,name,email from users where email=?", email);
         long userId = ((Number) user.get("id")).longValue();
-        double price = ((Number) db.queryForMap("select price from shows where id=?", showId).get("price")).doubleValue();
+        String theatreType = db.queryForObject(
+                "select t.theatre_type from shows sh join screens sc on sc.id=sh.screen_id " +
+                        "join theatres t on t.id=sc.theatre_id where sh.id=?", String.class, showId);
 
         // Real ticketing platforms charge the seat price plus a convenience fee, with
         // GST applied to that fee (not to the ticket price itself, which already has
         // any entertainment tax baked in by the cinema). 3% is a representative rate.
-        double subtotal = round2(price * seatNumbers.size());
+        // Seat price depends on the seat's class (row) and the theatre type - see Pricing.
+        double subtotal = 0;
+        for (String seatNumber : seatNumbers) subtotal += Pricing.seatPrice(theatreType, seatNumber);
+        subtotal = round2(subtotal);
         double convenienceFee = round2(subtotal * 0.03);
         double gst = round2(convenienceFee * 0.18);
         double total = round2(subtotal + convenienceFee + gst);
