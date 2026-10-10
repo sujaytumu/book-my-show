@@ -37,6 +37,7 @@
 // }
 
 
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { currentUser, logout } from "../api";
 
@@ -51,8 +52,28 @@ function initials(name) {
 export default function Nav() {
   const navigate = useNavigate();
   const user = currentUser();
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  // Close the profile menu on outside tap/click or Escape.
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setOpen(false);
+    };
+    const onKey = (e) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("touchstart", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("touchstart", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
 
   function handleLogout() {
+    setOpen(false);
     logout();
     navigate("/");
   }
@@ -64,16 +85,38 @@ export default function Nav() {
       </Link>
       <div>
         {user ? (
-          <>
-            <Link to="/profile" className="nav-avatar" title={"My Profile · " + user.name} aria-label="My Profile">
+          <div className="nav-user" ref={menuRef}>
+            <button
+              type="button"
+              className="nav-avatar"
+              title={user.name}
+              aria-label="Profile menu"
+              aria-haspopup="menu"
+              aria-expanded={open}
+              onClick={() => setOpen((o) => !o)}
+            >
               {initials(user.name)}
-            </Link>
-            <Link to="/bookings">My Bookings</Link>
-            {user.role === "ADMIN" && <Link to="/admin">Admin</Link>}
-            <button className="ghost" onClick={handleLogout}>
-              Logout
             </button>
-          </>
+            {open && (
+              <div className="nav-menu" role="menu">
+                <div className="nav-menu-name">{user.name}</div>
+                <Link to="/profile" role="menuitem" onClick={() => setOpen(false)}>
+                  My Profile
+                </Link>
+                <Link to="/bookings" role="menuitem" onClick={() => setOpen(false)}>
+                  My Bookings
+                </Link>
+                {user.role === "ADMIN" && (
+                  <Link to="/admin" role="menuitem" onClick={() => setOpen(false)}>
+                    Admin
+                  </Link>
+                )}
+                <button type="button" role="menuitem" className="nav-menu-logout" onClick={handleLogout}>
+                  Logout
+                </button>
+              </div>
+            )}
+          </div>
         ) : (
           <>
             <Link to="/login">Login</Link>
