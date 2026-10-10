@@ -77,7 +77,7 @@ public class CatalogController {
                 "from shows sh " +
 
                 "join screens s on s.id=sh.screen_id join theatres t on t.id=s.theatre_id " +
-                "where sh.movie_id=? and t.active=true and sh.show_date>=current_date " +
+                "where sh.movie_id=? and t.active=true and sh.show_date>=(now() at time zone 'Asia/Kolkata')::date " +
                 "and (sh.show_date + sh.start_time) > (now() at time zone 'Asia/Kolkata') ";
         if (date == null) {
             return db.queryForList(sql + "order by t.name,show_date,start_time", movieId);

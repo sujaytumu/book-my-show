@@ -38,7 +38,7 @@ public class ShowWindowScheduler {
     public void topUpWindow() {
         db.update("""
                 insert into shows(movie_id,screen_id,show_date,start_time,end_time,price,format,language)
-                select r.movie_id, r.screen_id, current_date + d.day_offset, r.start_time, r.end_time,
+                select r.movie_id, r.screen_id, (now() at time zone 'Asia/Kolkata')::date + d.day_offset, r.start_time, r.end_time,
                        case when t.theatre_type = 'MULTIPLEX' then 150 else 100 end, r.format, r.language
                 from (select distinct movie_id, screen_id, start_time, end_time, price, format, language from shows) r
                 join movies m on m.id = r.movie_id
@@ -49,7 +49,7 @@ public class ShowWindowScheduler {
                 and not exists (
                     select 1 from shows sh2
                     where sh2.movie_id = r.movie_id and sh2.screen_id = r.screen_id
-                      and sh2.show_date = current_date + d.day_offset and sh2.start_time = r.start_time
+                      and sh2.show_date = (now() at time zone 'Asia/Kolkata')::date + d.day_offset and sh2.start_time = r.start_time
                 )
                 """, WINDOW_DAYS - 1);
 

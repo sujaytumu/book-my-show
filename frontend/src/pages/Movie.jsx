@@ -368,6 +368,22 @@ function FilterIcon() {
   );
 }
 
+// Dates are worked out in India time (IST), not UTC: at 2:30 AM on 11 Oct IST it is still 10 Oct in UTC.
+function istToday() {
+  const parts = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
+  const get = (type) => parts.find((x) => x.type === type).value;
+  return get("year") + "-" + get("month") + "-" + get("day");
+}
+function addDaysIso(iso, n) {
+  const d = new Date(iso + "T00:00:00Z");
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+// "2026-10-11" -> a Date that always reads as that calendar day (formatted with timeZone: "UTC")
+function isoDay(iso) {
+  return new Date(iso + "T00:00:00Z");
+}
+
 export default function Movie() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -543,8 +559,8 @@ export default function Movie() {
 
   if (!movie) return <p>Loading...</p>;
 
-  const todayIso = new Date().toISOString().slice(0, 10);
-  const tomorrowIso = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+  const todayIso = istToday();
+  const tomorrowIso = addDaysIso(todayIso, 1);
   const hasShowsForDate = shows.some((s) => s.show_date === selectedDate);
   const languages = movie.language
     ? String(movie.language)
@@ -556,9 +572,10 @@ export default function Movie() {
   const showLanguages = [...new Set([...shows.map((s) => s.language).filter(Boolean), ...languages])];
 
   function chipDate(d) {
-    if (d === todayIso) return "Today, " + new Date(d).getDate() + " " + new Date(d).toLocaleDateString("en-IN", { month: "short" });
-    if (d === tomorrowIso) return "Tomorrow, " + new Date(d).getDate() + " " + new Date(d).toLocaleDateString("en-IN", { month: "short" });
-    return new Date(d).toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" });
+    const day = isoDay(d);
+    if (d === todayIso) return "Today, " + day.getUTCDate() + " " + day.toLocaleDateString("en-IN", { month: "short", timeZone: "UTC" });
+    if (d === tomorrowIso) return "Tomorrow, " + day.getUTCDate() + " " + day.toLocaleDateString("en-IN", { month: "short", timeZone: "UTC" });
+    return day.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
   }
 
   return (
@@ -619,11 +636,6 @@ export default function Movie() {
             {Number(movie.tickets_last_hour) > 0 ? (
               <>
                 <b>{fmtCount(Number(movie.tickets_last_hour))}</b> tickets booked in last 1 hour
-                {Number(movie.tickets_last_day) > 0 && (
-                  <>
-                    {" "}· <b>{fmtCount(Number(movie.tickets_last_day))}</b> in 24 hrs
-                  </>
-                )}
               </>
             ) : (
               <>Bookings are open. Grab your seats!</>
@@ -665,7 +677,7 @@ export default function Movie() {
                 ? "TODAY"
                 : d === tomorrowIso
                 ? "TMRW"
-                : new Date(d).toLocaleDateString("en-IN", { weekday: "short" }).toUpperCase();
+                : isoDay(d).toLocaleDateString("en-IN", { weekday: "short", timeZone: "UTC" }).toUpperCase();
             return (
               <button
                 key={d}
@@ -673,8 +685,8 @@ export default function Movie() {
                 onClick={() => setSelectedDate(d)}
               >
                 {label}
-                <b>{new Date(d).getDate()}</b>
-                {new Date(d).toLocaleDateString("en-IN", { month: "short" })}
+                <b>{isoDay(d).getUTCDate()}</b>
+                {isoDay(d).toLocaleDateString("en-IN", { month: "short", timeZone: "UTC" })}
               </button>
             );
           })}
