@@ -87,7 +87,7 @@ export default function Nav() {
     navigate("/");
   }
 
-  if (pathname === "/search" || pathname === "/city") return null;
+  if (pathname === "/search" || pathname === "/city" || pathname.startsWith("/movie/") || pathname.startsWith("/show/")) return null;
   const right = (
       <div className="nav-right">
         {user ? (
