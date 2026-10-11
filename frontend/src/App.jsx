@@ -11,11 +11,12 @@ import Admin from "./pages/Admin";
 //
 import Profile from "./pages/Profile";
 import Search from "./pages/Search";
+import MovieList from "./pages/MovieList";
 import City from "./pages/City";
 import { IcTarget, IcHome, IcSearch, IcTicket, IcUser } from "./components/Icons";
 import { alreadyAsked, detectCity, markAsked, setCity } from "./location";
 
-const TAB_PAGES = ["/", "/coming-soon", "/search", "/bookings", "/profile"];
+const TAB_PAGES = ["/", "/search", "/bookings", "/profile"];
 
 function TabBar() {
   const { pathname } = useLocation();
@@ -29,7 +30,7 @@ function TabBar() {
   return (
     <div className="tabbar">
       {tabs.map(([to, label, Icon]) => (
-        <NavLink key={to} to={to} end className={({ isActive }) => (isActive || (to === "/" && pathname === "/coming-soon") ? "on" : "")}>
+        <NavLink key={to} to={to} end className={({ isActive }) => (isActive ? "on" : "")}>
           <Icon width={26} height={26} />
           {label}
         </NavLink>
@@ -97,7 +98,8 @@ export default function App() {
       <main>
         <Routes>
           <Route path="/" element={<Home mode="now-showing" />} />
-          <Route path="/coming-soon" element={<Home mode="coming-soon" />} />
+          <Route path="/coming-soon" element={<MovieList upcoming />} />
+          <Route path="/now-showing" element={<MovieList />} />
           <Route path="/login" element={<Auth />} />
           <Route path="/register" element={<Auth register />} />
           <Route path="/movie/:id" element={<Movie />} />
@@ -110,7 +112,7 @@ export default function App() {
         </Routes>
       </main>
       <TabBar />
-      {askLoc && ["/", "/coming-soon"].includes(pathname) && <LocationPrompt onDone={() => setAskLoc(false)} />}
+      {askLoc && pathname === "/" && <LocationPrompt onDone={() => setAskLoc(false)} />}
     </>
   );
 }

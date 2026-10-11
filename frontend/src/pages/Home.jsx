@@ -40,7 +40,7 @@ export default function Home({ mode = "now-showing" }) {
   return (
     <div className="home-page">
       <div className="home-tabs">
-        <Link to="/" className={!isSoon ? "on" : ""}>
+        <Link to="/now-showing" className={!isSoon ? "on" : ""}>
           <IcReel width={34} height={34} />
           Movies
         </Link>
@@ -87,7 +87,7 @@ export default function Home({ mode = "now-showing" }) {
 
           <div className="hp-head">
             <h2 className="hp-h">Recommended Movies</h2>
-            <Link to="/search">See All ›</Link>
+            <Link to="/now-showing">See All ›</Link>
           </div>
           <div className="poster-row">
             {running.map((m) => (

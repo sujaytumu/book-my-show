@@ -627,3 +627,94 @@ img.cast-photo{object-fit:cover;object-position:top;background:#eee}
 .no-cinemas b{font-size:16px}
 .no-cinemas span{color:var(--gray);font-size:13px}
 .no-cinemas a{margin-top:10px;background:#e0415a;color:#fff;border-radius:8px;padding:10px 22px;font-weight:600}
+
+/* ---------- Movie list pages (Now Showing / Coming soon) ---------- */
+.ml-page{padding-bottom:30px}
+.ml-top{display:flex;align-items:center;gap:14px;padding:6px 0 14px}
+.ml-top button,.ml-top>a{background:none;border:0;padding:6px;color:#222;display:flex}
+.ml-top>div{flex:1;min-width:0}
+.ml-top h1{margin:0;font-size:20px;font-weight:600}
+.ml-top p{margin:2px 0 0;color:var(--gray);font-size:14px}
+.ml-top i{font-style:normal;margin:0 4px}
+.ml-chips{display:flex;gap:10px;overflow-x:auto;padding:4px 0 16px;align-items:center;scrollbar-width:none}
+.ml-chips::-webkit-scrollbar{display:none}
+.ml-chips button{flex:none;background:#fff;border:1.5px solid #cfcfd4;color:#e0415a;border-radius:24px;padding:9px 18px;font-size:14px;text-transform:none;letter-spacing:0;font-weight:400}
+.ml-chips button.on{background:#e0415a;border-color:#e0415a;color:#fff}
+.ml-chips .ml-filter{width:42px;height:42px;padding:0;border-radius:50%;border-color:#e0415a;display:flex;align-items:center;justify-content:center}
+.ml-chips .ml-filter.on{background:#fdecef;color:#e0415a}
+.ml-sep{flex:none;width:1.5px;height:38px;background:#d5dbe8}
+.ml-banner{display:flex;align-items:baseline;gap:10px;background:linear-gradient(90deg,#e0415a,#e8566c);color:#fff;border-radius:12px;padding:20px 18px;margin:2px 0 22px;position:relative}
+.ml-banner b{font-size:21px;font-weight:600}
+.ml-banner span{font-size:15px}
+.ml-banner em{position:absolute;right:16px;top:50%;transform:translateY(-52%);font-style:normal;font-size:30px}
+.ml-grid{display:grid;grid-template-columns:1fr 1fr;gap:26px 14px}
+.ml-card{display:block;min-width:0}
+.ml-card img{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:14px;background:#ddd;display:block}
+.ml-card b{display:block;margin-top:10px;font-size:18px;font-weight:500;line-height:1.25}
+.ml-card small{display:block;color:var(--gray);font-size:14px;margin-top:6px}
+.ml-rate{display:block;margin-top:10px;font-size:16px;font-weight:500}
+.ml-rate i{color:#e0415a;font-style:normal;margin-right:4px}
+.ml-pill{display:inline-block;margin-top:10px;background:#eef1f7;color:#555;border-radius:8px;padding:7px 12px;font-size:14px}
+@media(min-width:700px){.ml-grid{grid-template-columns:repeat(4,1fr)}}
+
+/* ---------- Movie details (BMS style) ---------- */
+.mv-bar{display:flex;align-items:center;gap:12px;margin:-6px 0 12px}
+.mv-bar h1{flex:1;margin:0;font-size:20px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mv-bar button{background:none;border:0;padding:6px;color:#222;display:flex}
+.mv-share-msg{margin:0 0 8px}
+.mv-hero{position:relative;border-radius:16px;overflow:hidden;aspect-ratio:16/9;background:#111}
+.mv-hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 22%}
+.mv-trailer{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:8px;background:rgba(40,40,40,.72);color:#fff;border-radius:24px;padding:9px 18px;font-size:16px;backdrop-filter:blur(4px)}
+.mv-strip{position:absolute;left:0;right:0;bottom:0;background:#000;color:#fff;text-align:center;padding:9px 0;font-size:16px;font-weight:500}
+.mv-info{padding:16px 2px 6px}
+.mv-info .rating-pill,.mv-info .rating-pill:hover{background:none;color:var(--ink);padding:0;margin:0 0 8px;font-size:15px;gap:8px}
+.mv-info .rating-pill .rp-star{color:#e0415a;font-size:26px}
+.mv-info .rating-pill b{font-size:26px;font-weight:600}
+.mv-info .rating-pill .rp-votes{border:0;padding:0;color:var(--gray);font-size:15px}
+.mv-meta{margin:0 0 12px;color:var(--gray);font-size:15px;line-height:1.5}
+.mv-info .mv-tags{margin:0 0 12px;gap:8px}
+.mv-info .mv-tags span{padding:7px 12px;border-radius:6px;background:#eceef2;font-size:13px;font-weight:600;letter-spacing:.2px}
+.mv-desc{margin:0;color:#555;font-size:15px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.mv-desc.open{display:block;overflow:visible}
+.mv-more{background:none;border:0;padding:0;margin-left:6px;color:#e0415a;font-size:15px;text-transform:none;letter-spacing:0;font-weight:400}
+.mv-offers{margin:18px 0 6px}
+.mv-offers h2,.cast-block h2{font-size:20px;font-weight:600;margin:0 0 12px}
+.mv-offer-row{display:flex;gap:12px;overflow-x:auto;margin:0 -18px;padding:0 18px 4px;scrollbar-width:none}
+.mv-offer-row::-webkit-scrollbar{display:none}
+.mv-offer{flex:0 0 78%;display:flex;align-items:center;gap:12px;background:#fff7e8;border:1.5px solid #f3dfb4;border-radius:14px;padding:14px}
+.mv-offer i{flex:none;width:46px;height:46px;border-radius:12px;background:#1e1e22;color:#f0b400;font-style:normal;font-weight:800;font-size:22px;display:flex;align-items:center;justify-content:center}
+.mv-offer b{display:block;font-size:15px;font-weight:600;line-height:1.25}
+.mv-offer small{color:var(--gray);font-size:13px}
+.lf-sheet{padding-top:10px}
+.lf-sheet .grab{display:block;width:56px;height:5px;border-radius:3px;background:#e0e0e4;margin:0 auto 20px}
+.lf-movie{display:block;font-size:16px;color:#333}
+.lf-title{font-size:24px;font-weight:400;margin:4px 0 16px}
+.lf-lang{background:#f1f3f8;color:#555;margin:0 -22px;padding:16px 22px;font-size:16px}
+.lf-chips{display:flex;gap:12px;flex-wrap:wrap;padding:20px 0 14px}
+.lf-chips button{background:#fff;border:1.5px solid #cfcfd4;color:#e0415a;border-radius:26px;padding:12px 26px;font-size:18px;text-transform:none;letter-spacing:0;font-weight:400}
+
+/* ---------- Showtimes page (BMS style) ---------- */
+.book-head{position:sticky;top:0;z-index:20;background:#fff;margin:-24px -18px 0;padding:14px 16px 12px;gap:12px;box-shadow:0 1px 0 #e3e3e8}
+.book-head .bh-text{flex:1;min-width:0}
+.book-head b{font-size:20px;font-weight:500}
+.book-head small{font-size:14px;color:#222}
+.book-head .book-back{background:none;box-shadow:none;border-radius:0;width:auto;min-width:0;height:auto;padding:4px}
+.movie-page .date-strip{gap:0;margin:0 -18px;background:#fff;border-bottom:1px solid #e3e3e8;padding:0;overflow-x:auto}
+.movie-page .date-pill{flex:1 0 20%;border:0;border-radius:0;background:#fff;color:#666;padding:14px 4px;font-size:15px;font-weight:400}
+.movie-page .date-pill b{font-size:26px;font-weight:600;margin:4px 0;color:#222}
+.movie-page .date-pill.active{background:#ef4f63;color:#fff}
+.movie-page .date-pill.active b{color:#fff}
+.lf-row{display:flex;justify-content:space-between;align-items:center;margin:0 -18px;background:#fff;padding:16px 18px;border-bottom:1px solid #e3e3e8;font-size:16px;font-weight:500}
+.lf-row button{background:none;border:0;padding:0;color:#e0415a;font-size:16px;text-transform:none;letter-spacing:0;font-weight:400}
+.cinemas-header{display:none}
+.movie-page .mv-toolbar{justify-content:flex-start;margin:0 -18px;background:#fff;padding:14px 18px;gap:10px;box-shadow:0 2px 6px rgba(0,0,0,.05);overflow-x:auto}
+.movie-page .mv-tool,.movie-page .mv-tool:hover{border-radius:26px;border:1.5px solid #cfcfd4;color:#e0415a;font-size:16px;font-weight:400;padding:9px 18px;background:#fff;flex:none}
+.mv-tool .chev{font-style:normal;margin-left:2px;transform:translateY(-3px)}
+.movie-page .slot-legend{margin-top:14px}
+.theatre-block-header{display:flex;align-items:flex-start;gap:14px}
+.th-logo{flex:none;width:44px;height:44px;border-radius:10px;border:1px solid #e3e3e8;background:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;color:#e0415a}
+.th-main{flex:1;min-width:0}
+.theatre-block-header .theatre-block-side{flex:none}
+.theatre-block h3{font-size:19px;font-weight:500}
+.theatre-address{font-size:14px}
+@media (max-width:640px){.book-head{margin:-16px -14px 0}.movie-page .date-strip,.lf-row,.movie-page .mv-toolbar{margin-left:-14px;margin-right:-14px}.mv-offer-row{margin-left:-14px;margin-right:-14px;padding-left:14px;padding-right:14px}}

@@ -387,6 +387,12 @@ function classPriceList(theatreType) {
   ];
 }
 
+function time12(t) {
+  const [hh, mm] = String(t).split(":");
+  const n = parseInt(hh, 10);
+  return String(n % 12 || 12).padStart(2, "0") + ":" + mm + " " + (n < 12 ? "AM" : "PM");
+}
+
 export default function Movie() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -409,6 +415,11 @@ export default function Movie() {
   const [visited, setVisited] = useState([]);
   const [shareMsg, setShareMsg] = useState("");
   const [interested, setInterested] = useState(false);
+  const [offers, setOffers] = useState([]);
+  const [readMore, setReadMore] = useState(false);
+  useEffect(() => {
+    api.get("/coupons").then((res) => setOffers(res.data)).catch(() => {});
+  }, []);
 
   // Is this coming-soon movie already on the viewer's watchlist?
   useEffect(() => {
@@ -587,6 +598,11 @@ export default function Movie() {
   }
 
   const booking = !movie.upcoming && searchParams.get("book") === "1";
+  const formatOptions = [...new Set(shows.map((x) => x.format || "2D"))].sort();
+  const handleBook = () => {
+    if (formatOptions.length > 0) setSheet("lf");
+    else openBooking();
+  };
   const openBooking = () => {
     setSearchParams({ book: "1" });
     window.scrollTo(0, 0);
@@ -597,65 +613,95 @@ export default function Movie() {
       {booking ? (
         <div className="book-head">
           <button type="button" className="book-back" onClick={() => navigate(-1)} aria-label="Back">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M15 5l-7 7 7 7" />
             </svg>
           </button>
-          <div>
+          <div className="bh-text">
             <b>{movie.title}</b>
-            <small>{[movie.language, movie.genre].filter(Boolean).join(" · ")}</small>
+            {movie.duration_minutes ? <small>Movie runtime: {Math.floor(movie.duration_minutes / 60)}h {movie.duration_minutes % 60}m</small> : null}
           </div>
+          {shows.length > 0 && (
+            <button type="button" className="book-back bh-icon" onClick={() => setSheet("filter")} aria-label="Filters">
+              <FilterIcon />
+            </button>
+          )}
         </div>
       ) : (
       <>
-      <button type="button" className="mv-back" onClick={() => navigate(-1)} aria-label="Back">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M15 5l-7 7 7 7" />
-        </svg>
-      </button>
-      <div className="details card">
+      <div className="mv-bar">
+        <button type="button" onClick={() => navigate(-1)} aria-label="Back">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M15 5l-7 7 7 7" />
+          </svg>
+        </button>
+        <h1>{movie.title}</h1>
+        <button type="button" onClick={shareMovie} aria-label="Share">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="18" cy="5" r="3" />
+            <circle cx="6" cy="12" r="3" />
+            <circle cx="18" cy="19" r="3" />
+            <path d="M8.600 13.500l6.800 4M15.400 6.500l-6.800 4" />
+          </svg>
+        </button>
+      </div>
+      {shareMsg && <p className="share-msg mv-share-msg">{shareMsg}</p>}
+
+      <div className="mv-hero">
         <img src={movie.poster_url} alt={movie.title} />
-        <section>
-          <h1>{movie.title}</h1>
-          <p>{movie.description}</p>
-          {!movie.upcoming && <RatingPill movieId={id} fallback={movie.rating} />}
-          <div className="mv-tags">
-            {movieTags(movie).map((t) => (
-              <span key={t}>{t}</span>
+        <a
+          className="mv-trailer"
+          href={"https://www.youtube.com/results?search_query=" + encodeURIComponent(movie.title + " official trailer")}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+          Trailer
+        </a>
+        <span className="mv-strip">{movie.upcoming ? "Coming soon" : "In cinemas"}</span>
+      </div>
+
+      <div className="mv-info">
+        {!movie.upcoming && <RatingPill movieId={id} fallback={movie.rating} />}
+        <p className="mv-meta">
+          {[
+            movie.duration_minutes ? Math.floor(movie.duration_minutes / 60) + "h " + (movie.duration_minutes % 60) + "m" : null,
+            String(movie.genre || "").replace(/[/]/g, ", "),
+            movie.certificate,
+          ]
+            .filter(Boolean)
+            .join("  •  ")}
+        </p>
+        <div className="mv-tags">
+          {[...new Set(shows.map((x) => x.format || "2D"))].length > 0 && (
+            <span>{[...new Set(shows.map((x) => x.format || "2D"))].sort().join(", ")}</span>
+          )}
+          {String(movie.language || "")
+            .split(/[,/&]/)
+            .map((l) => l.trim())
+            .filter(Boolean)
+            .map((l) => (
+              <span key={l}>{l.toUpperCase()}</span>
             ))}
-          </div>
-          {movie.upcoming && (
-            <button
-              className={"share-btn interest-btn" + (interested ? " on" : "")}
-              onClick={() => setInterested(toggleWatchlist(movie))}
-            >
-              {interested ? "♥ In your watchlist" : "♡ I'm interested"}
+        </div>
+        <p className={"mv-desc" + (readMore ? " open" : "")}>
+          {movie.description}
+          {!readMore && String(movie.description || "").length > 110 && (
+            <button type="button" className="mv-more" onClick={() => setReadMore(true)}>
+              ...Read more
             </button>
           )}
-          <div className="mv-actions">
-          <a
-            className="share-btn trailer-btn"
-            href={"https://www.youtube.com/results?search_query=" + encodeURIComponent(movie.title + " official trailer")}
-            target="_blank"
-            rel="noopener noreferrer"
+        </p>
+        {movie.upcoming && (
+          <button
+            className={"share-btn interest-btn" + (interested ? " on" : "")}
+            onClick={() => setInterested(toggleWatchlist(movie))}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M8 5v14l11-7z" />
-            </svg>
-            Watch trailer
-          </a>
-          <button className="share-btn" onClick={shareMovie}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="18" cy="5" r="3" />
-              <circle cx="6" cy="12" r="3" />
-              <circle cx="18" cy="19" r="3" />
-              <path d="M8.600 13.500l6.800 4M15.400 6.500l-6.800 4" />
-            </svg>
-            Share
+            {interested ? "♥ In your watchlist" : "♡ I'm interested"}
           </button>
-          </div>
-          {shareMsg && <span className="share-msg">{shareMsg}</span>}
-        </section>
+        )}
       </div>
 
       {!movie.upcoming && (
@@ -676,6 +722,23 @@ export default function Movie() {
               <>Bookings are open. Grab your seats!</>
             )}
           </span>
+        </div>
+      )}
+
+      {!movie.upcoming && offers.length > 0 && (
+        <div className="mv-offers">
+          <h2>Top offers for you</h2>
+          <div className="mv-offer-row">
+            {offers.map((o) => (
+              <div className="mv-offer" key={o.code}>
+                <i>%</i>
+                <span>
+                  <b>{o.description}</b>
+                  <small>Use code {o.code}</small>
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -734,16 +797,22 @@ export default function Movie() {
 
       {shows.length > 0 && (
       <>
-      <div className="cinemas-header" id="showtimes">
-        <h2>Cinemas</h2>
+      <div className="cinemas-header" id="showtimes" />
+      <div className="lf-row">
+        <span>
+          {movie.language}
+          {formats.length > 0 ? "  •  " + formats.join(", ") : ""}
+        </span>
+        <button type="button" onClick={() => setSheet("lf")}>
+          Change ›
+        </button>
       </div>
 
       <div className="mv-toolbar">
         <button className="mv-tool" onClick={() => setSheet("sort")}>
           <SortIcon />
-          <span>
-            Sort by: <b>{sortBy === "distance" ? "Distance" : "Relevance"}</b>
-          </span>
+          <span>Sort by</span>
+          <i className="chev">⌄</i>
         </button>
         <button className="mv-tool" onClick={() => setSheet("filter")}>
           <FilterIcon />
@@ -807,7 +876,8 @@ export default function Movie() {
       {theatreGroups.map((group) => (
         <div className="theatre-block card" key={group.theatre_name}>
           <div className="theatre-block-header">
-            <div>
+            <span className="th-logo">{String(group.theatre_name).trim().charAt(0).toUpperCase()}</span>
+            <div className="th-main">
               <h3>
                 {group.theatre_name}
                 <button
@@ -851,7 +921,7 @@ export default function Movie() {
                   title={av === "full" ? "Housefull" : av === "fast" ? "Filling fast" : "Available"}
                   onClick={() => navigate("/show/" + show.id)}
                 >
-                  {show.start_time.slice(0, 5)}
+                  {time12(show.start_time)}
                   <small>{av === "full" ? "Housefull" : "₹" + show.price + (show.format ? " · " + show.format : "")}</small>
                 </button>
               );
@@ -864,7 +934,7 @@ export default function Movie() {
         {!booking && (<>
         <div id="ratings"><Reviews movieId={id} /></div>
         <MoreMovies currentId={id} upcoming={false} />
-        <StickyBook onClick={openBooking} />
+        <StickyBook onClick={handleBook} />
         </>)}
         </>
       )}
@@ -909,6 +979,44 @@ export default function Movie() {
             <button className="sheet-done" onClick={() => setSheet(null)}>
               Close
             </button>
+          </div>
+        </div>
+      )}
+
+      {sheet === "lf" && (
+        <div className="sheet-backdrop" onClick={() => setSheet(null)}>
+          <div className="sheet lf-sheet" onClick={(e) => e.stopPropagation()}>
+            <i className="grab" />
+            <small className="lf-movie">{movie.title}</small>
+            <h3 className="lf-title">Select language and format</h3>
+            <div className="lf-lang">{String(movie.language || "").toUpperCase()}</div>
+            <div className="lf-chips">
+              {formatOptions.map((f) => (
+                <button
+                  type="button"
+                  key={f}
+                  onClick={() => {
+                    setFormats([f]);
+                    setSheet(null);
+                    openBooking();
+                  }}
+                >
+                  {f}
+                </button>
+              ))}
+              {formatOptions.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormats([]);
+                    setSheet(null);
+                    openBooking();
+                  }}
+                >
+                  Select all
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}
