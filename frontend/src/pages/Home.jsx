@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
-import { IcClap, IcFilm, IcReel, IcSearch } from "../components/Icons";
+import { IcClap, IcFilm, IcReel } from "../components/Icons";
 
 function Poster({ movie }) {
   return (
@@ -25,9 +25,14 @@ function Poster({ movie }) {
 export default function Home({ mode = "now-showing" }) {
   const isSoon = mode === "coming-soon";
   const [movies, setMovies] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get("/movies").then((res) => setMovies(res.data)).catch(() => {});
+    api
+      .get("/movies")
+      .then((res) => setMovies(res.data))
+      .catch(() => {})
+      .finally(() => setLoading(false));
     window.scrollTo(0, 0);
   }, [mode]);
 
@@ -48,17 +53,26 @@ export default function Home({ mode = "now-showing" }) {
           <IcClap width={34} height={34} />
           Coming Soon
         </Link>
-        <Link to="/search">
-          <IcSearch width={34} height={34} />
-          Search
-        </Link>
         <a href="#top-rated" onClick={(e) => { e.preventDefault(); document.getElementById("top-rated")?.scrollIntoView({ behavior: "smooth" }); }}>
           <IcFilm width={34} height={34} />
           Top Rated
         </a>
       </div>
 
-      {isSoon ? (
+      {loading ? (
+        <>
+          <div className="sk sk-hero" />
+          <div className="sk sk-line w40" />
+          <div className="sk-row">
+            {[0, 1, 2].map((i) => (
+              <div key={i}>
+                <div className="sk sk-poster" />
+                <div className="sk sk-line" />
+              </div>
+            ))}
+          </div>
+        </>
+      ) : isSoon ? (
         <>
           <h2 className="hp-h">Coming Soon</h2>
           <div className="poster-grid">
