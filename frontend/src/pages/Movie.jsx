@@ -168,6 +168,7 @@ import { haversineKm } from "../components/TheatreMap";
 import Reviews from "../components/Reviews";
 import { isWatchlisted, toggleWatchlist } from "../watchlist";
 import { getCity } from "../location";
+import { IcSearch } from "../components/Icons";
 
 // Sold-out (housefull) showtimes are hidden from the list. Set this to false to
 // show them instead as greyed-out, unclickable "Housefull" slots.
@@ -393,6 +394,13 @@ function time12(t) {
   return String(n % 12 || 12).padStart(2, "0") + ":" + mm + " " + (n < 12 ? "AM" : "PM");
 }
 
+function slotKind(t) {
+  const n = parseInt(String(t).slice(0, 2), 10);
+  if (n >= 22 || n < 4) return "late";
+  if (n < 8) return "early";
+  return "";
+}
+
 export default function Movie() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -416,6 +424,9 @@ export default function Movie() {
   const [shareMsg, setShareMsg] = useState("");
   const [interested, setInterested] = useState(false);
   const [offers, setOffers] = useState([]);
+  const [cineQuery, setCineQuery] = useState("");
+  const [cineSearch, setCineSearch] = useState(false);
+  const [hintOff, setHintOff] = useState(false);
   const [readMore, setReadMore] = useState(false);
   useEffect(() => {
     api.get("/coupons").then((res) => setOffers(res.data)).catch(() => {});
@@ -622,9 +633,14 @@ export default function Movie() {
             {movie.duration_minutes ? <small>Movie runtime: {Math.floor(movie.duration_minutes / 60)}h {movie.duration_minutes % 60}m</small> : null}
           </div>
           {shows.length > 0 && (
-            <button type="button" className="book-back bh-icon" onClick={() => setSheet("filter")} aria-label="Filters">
-              <FilterIcon />
-            </button>
+            <>
+              <button type="button" className="book-back bh-icon" onClick={() => setCineSearch((x) => !x)} aria-label="Search cinemas">
+                <IcSearch width={22} height={22} />
+              </button>
+              <button type="button" className="book-back bh-icon" onClick={() => setSheet("filter")} aria-label="Filters">
+                <FilterIcon />
+              </button>
+            </>
           )}
         </div>
       ) : (
@@ -774,12 +790,7 @@ export default function Movie() {
           {dates.length > 0 && (
         <div className="date-strip">
           {dates.map((d) => {
-            const label =
-              d === todayIso
-                ? "TODAY"
-                : d === tomorrowIso
-                ? "TMRW"
-                : isoDay(d).toLocaleDateString("en-IN", { weekday: "short", timeZone: "UTC" }).toUpperCase();
+            const label = isoDay(d).toLocaleDateString("en-IN", { weekday: "short", timeZone: "UTC" }).toUpperCase();
             return (
               <button
                 key={d}
@@ -797,6 +808,12 @@ export default function Movie() {
 
       {shows.length > 0 && (
       <>
+      {cineSearch && (
+        <div className="cine-search">
+          <IcSearch width={18} height={18} />
+          <input autoFocus placeholder="Search for cinema" value={cineQuery} onChange={(e) => setCineQuery(e.target.value)} />
+        </div>
+      )}
       <div className="cinemas-header" id="showtimes" />
       <div className="lf-row">
         <span>
@@ -814,31 +831,20 @@ export default function Movie() {
           <span>Sort by</span>
           <i className="chev">⌄</i>
         </button>
-        <button className="mv-tool" onClick={() => setSheet("filter")}>
-          <FilterIcon />
-          <span>Filters</span>
-          {priceBands.length + langFilter.length + (favOnly ? 1 : 0) > 0 && (
-            <span className="mv-badge">{priceBands.length + langFilter.length + (favOnly ? 1 : 0)}</span>
-          )}
+        <span className="mv-sep" />
+        <button className={"mv-tool" + (formats.length ? " on" : "")} onClick={() => setSheet("filter")}>
+          <span>Special Formats</span>
+          <i className="chev">⌄</i>
+        </button>
+        <button className={"mv-tool" + (priceBands.length ? " on" : "")} onClick={() => setSheet("filter")}>
+          <span>Price</span>
+          <i className="chev">⌄</i>
+        </button>
+        <button className={"mv-tool" + (favOnly ? " on" : "")} onClick={() => setFavOnly((x) => !x)}>
+          <span>Favourites</span>
         </button>
       </div>
 
-      <div className="slot-legend">
-        <span>
-          <i className="lg ok" />
-          Available
-        </span>
-        <span>
-          <i className="lg fast" />
-          Filling fast
-        </span>
-        {HIDE_HOUSEFULL ? <span className="lg-note">Housefull shows are hidden</span> : (
-          <span>
-            <i className="lg full" />
-            Housefull
-          </span>
-        )}
-      </div>
       </>
       )}
 
@@ -873,7 +879,7 @@ export default function Movie() {
           )}
         </p>
       )}
-      {theatreGroups.map((group) => (
+      {theatreGroups.filter((g) => !cineQuery.trim() || g.theatre_name.toLowerCase().includes(cineQuery.trim().toLowerCase())).map((group) => (
         <div className="theatre-block card" key={group.theatre_name}>
           <div className="theatre-block-header">
             <span className="th-logo">{String(group.theatre_name).trim().charAt(0).toUpperCase()}</span>
@@ -922,7 +928,8 @@ export default function Movie() {
                   onClick={() => navigate("/show/" + show.id)}
                 >
                   {time12(show.start_time)}
-                  <small>{av === "full" ? "Housefull" : "₹" + show.price + (show.format ? " · " + show.format : "")}</small>
+                  <small>{av === "full" ? "Housefull" : show.format || "2D"}</small>
+                  {slotKind(show.start_time) && <i className={"slot-badge " + slotKind(show.start_time)}>{slotKind(show.start_time) === "late" ? "☾" : "☀"}</i>}
                 </button>
               );
             })}
@@ -937,6 +944,14 @@ export default function Movie() {
         <StickyBook onClick={handleBook} />
         </>)}
         </>
+      )}
+
+      {booking && !hintOff && theatreGroups.some((g) => g.shows.some((x) => slotKind(x.start_time))) && (
+        <div className="slot-hint">
+          <span><i className="slot-badge late">☾</i> Late night shows</span>
+          <span><i className="slot-badge early">☀</i> Early morning shows</span>
+          <button type="button" onClick={() => setHintOff(true)} aria-label="Close">×</button>
+        </div>
       )}
 
       {sheet === "cinema" && infoGroup && (
