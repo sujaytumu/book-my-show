@@ -34,7 +34,7 @@ public class BookingService {
 
     @Transactional
     public Map<String, Object> holdSeats(String email, long showId, List<String> rawSeatNumbers,
-                                          String contactEmail, String contactPhone) {
+                                          String contactEmail, String contactPhone, String couponCode) {
         List<String> seatNumbers = rawSeatNumbers.stream().distinct().toList();
         if (seatNumbers.isEmpty() || seatNumbers.size() > MAX_SEATS_PER_BOOKING) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -84,9 +84,37 @@ public class BookingService {
         double subtotal = 0;
         for (String seatNumber : seatNumbers) subtotal += Pricing.seatPrice(theatreType, seatNumber);
         subtotal = round2(subtotal);
+        // Optional coupon: a percentage off the ticket price only. The convenience fee and GST stay on the full price.
+        String appliedCoupon = null;
+        double discount = 0;
+        if (couponCode != null && !couponCode.isBlank()) {
+            List<Map<String, Object>> found = db.queryForList(
+                    "select * from coupons where upper(code)=upper(?) and active=true", couponCode.trim());
+            if (found.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This coupon code is not valid");
+            }
+            Map<String, Object> coupon = found.get(0);
+            double minAmount = ((Number) coupon.get("min_amount")).doubleValue();
+            if (subtotal < minAmount) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Add Rs " + Math.round(minAmount - subtotal) + " more in tickets to use " + coupon.get("code"));
+            }
+            if (Boolean.TRUE.equals(coupon.get("first_booking_only"))) {
+                Long earlier = db.queryForObject(
+                        "select count(*) from bookings where user_id=? and status='CONFIRMED'", Long.class, userId);
+                if (earlier != null && earlier > 0) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            coupon.get("code") + " is only valid on your first booking");
+                }
+            }
+            double percent = ((Number) coupon.get("percent")).doubleValue();
+            double cap = ((Number) coupon.get("max_discount")).doubleValue();
+            discount = Math.min(Math.min(round2(subtotal * percent / 100.0), cap), subtotal);
+            appliedCoupon = (String) coupon.get("code");
+        }
         double convenienceFee = round2(subtotal * 0.03);
         double gst = round2(convenienceFee * 0.18);
-        double total = round2(subtotal + convenienceFee + gst);
+        double total = round2(subtotal - discount + convenienceFee + gst);
 
         String finalContactEmail = (contactEmail == null || contactEmail.isBlank())
                 ? (String) user.get("email") : contactEmail.trim();
@@ -97,10 +125,10 @@ public class BookingService {
 
         long bookingId = db.queryForObject(
                 "insert into bookings(user_id,show_id,reference,status,amount,ticket_subtotal,convenience_fee," +
-                        "gst_amount,contact_email,contact_phone,expires_at) " +
-                        "values(?,?,?,'PENDING',?,?,?,?,?,?,?) returning id",
+                        "gst_amount,contact_email,contact_phone,expires_at,coupon_code,discount_amount) " +
+                        "values(?,?,?,'PENDING',?,?,?,?,?,?,?,?,?) returning id",
                 Long.class, userId, showId, reference, total, subtotal, convenienceFee, gst,
-                finalContactEmail, finalContactPhone, Timestamp.from(expiresAt));
+                finalContactEmail, finalContactPhone, Timestamp.from(expiresAt), appliedCoupon, discount);
 
         for (String seatNumber : seatNumbers) {
             db.update("insert into booking_seats(booking_id,seat_number) values(?,?)", bookingId, seatNumber);
@@ -108,15 +136,18 @@ public class BookingService {
                     bookingId, Timestamp.from(expiresAt), showId, seatNumber);
         }
 
-        return Map.of(
-                "bookingId", bookingId,
-                "reference", reference,
-                "ticketSubtotal", subtotal,
-                "convenienceFee", convenienceFee,
-                "gst", gst,
-                "amount", total,
-                "expiresAt", expiresAt.toString(),
-                "seats", seatNumbers);
+        Map<String, Object> result = new java.util.LinkedHashMap<>();
+        result.put("bookingId", bookingId);
+        result.put("reference", reference);
+        result.put("ticketSubtotal", subtotal);
+        result.put("discount", discount);
+        if (appliedCoupon != null) result.put("couponCode", appliedCoupon);
+        result.put("convenienceFee", convenienceFee);
+        result.put("gst", gst);
+        result.put("amount", total);
+        result.put("expiresAt", expiresAt.toString());
+        result.put("seats", seatNumbers);
+        return result;
     }
 
     private double round2(double value) {
@@ -170,7 +201,7 @@ public class BookingService {
     public Map<String, Object> bookingDetail(String email, long bookingId) {
         return db.queryForMap("""
                 select b.id, b.reference, b.status, b.amount, b.ticket_subtotal, b.convenience_fee, b.gst_amount,
-                       b.contact_email, b.contact_phone, b.created_at, m.title,
+                       b.coupon_code, b.discount_amount, b.contact_email, b.contact_phone, b.created_at, m.title,
                        sh.show_date, sh.start_time, t.name theatre_name, u.email user_email, u.name user_name,
                        string_agg(bs.seat_number, ', ' order by bs.seat_number) seats
                 from bookings b

@@ -377,6 +377,8 @@ export default function Show() {
   const fitted = useRef(false); // auto-fit the 15-seat rows to the screen width once
   const anchor = useRef(null); // keeps the point between the fingers steady while zooming
   const [seatMsg, setSeatMsg] = useState("");
+  const [couponCode, setCouponCode] = useState(""); // typed or picked coupon, validated by the server on Review Booking
+  const [offers, setOffers] = useState([]); // active offers from the server
   const [secsLeft, setSecsLeft] = useState(null); // countdown while the seats are held for payment
 
 
@@ -418,6 +420,13 @@ export default function Show() {
 
 
   zoomValue.current = zoom;
+
+  useEffect(() => {
+    api
+      .get("/coupons")
+      .then((res) => setOffers(res.data))
+      .catch(() => {});
+  }, []);
 
   // Seats are held for 10 minutes once you review the booking; count down like BMS.
   useEffect(() => {
@@ -568,6 +577,7 @@ export default function Show() {
         contactEmail: contactEmail.trim(),
 
         contactPhone: contactPhone.trim() || null,
+        couponCode: couponCode.trim() || null,
 
       });
 
@@ -889,6 +899,30 @@ export default function Show() {
 
               />
 
+              <h3 className="offers-title">Offers</h3>
+              <input
+                type="text"
+                placeholder="Have a coupon code?"
+                value={couponCode}
+                autoCapitalize="characters"
+                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+              />
+              {offers.length > 0 && (
+                <div className="offer-list">
+                  {offers.map((o) => (
+                    <button
+                      type="button"
+                      key={o.code}
+                      className={"offer-chip" + (couponCode === o.code ? " on" : "")}
+                      onClick={() => setCouponCode(couponCode === o.code ? "" : o.code)}
+                    >
+                      <b>{o.code}</b>
+                      <small>{o.description}</small>
+                    </button>
+                  ))}
+                </div>
+              )}
+
             </div>
 
           )}
@@ -953,6 +987,13 @@ export default function Show() {
             <span>₹{hold.ticketSubtotal.toFixed(2)}</span>
 
           </div>
+
+          {hold.discount > 0 && (
+            <div className="fare-row fare-discount">
+              <span>Coupon {hold.couponCode}</span>
+              <span>−₹{hold.discount.toFixed(2)}</span>
+            </div>
+          )}
 
           <div className="fare-row">
 

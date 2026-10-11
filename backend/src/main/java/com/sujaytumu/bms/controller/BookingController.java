@@ -32,7 +32,8 @@ public class BookingController {
                 .map(Object::toString).toList();
         String contactEmail = body.get("contactEmail") == null ? null : body.get("contactEmail").toString();
         String contactPhone = body.get("contactPhone") == null ? null : body.get("contactPhone").toString();
-        return bookingService.holdSeats(auth.getName(), showId, seatNumbers, contactEmail, contactPhone);
+        String couponCode = body.get("couponCode") == null ? null : body.get("couponCode").toString();
+        return bookingService.holdSeats(auth.getName(), showId, seatNumbers, contactEmail, contactPhone, couponCode);
     }
 
     @GetMapping("/me")
