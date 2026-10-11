@@ -1041,7 +1041,7 @@ export default function Show() {
 
             <button disabled={pending} onClick={confirmAndPay}>
 
-              {pending ? "Please wait..." : "Pay ₹" + hold.amount.toFixed(2) + (mode === "razorpay" ? "" : " (Test Mode)")}
+              {pending ? "Please wait..." : "Pay ₹" + hold.amount.toFixed(2)}
 
             </button>
 

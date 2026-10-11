@@ -35,7 +35,6 @@ export default function App() {
           <Route path="/admin" element={<Admin />} />
         </Routes>
       </main>
-      <footer>Spring Boot · React · PostgreSQL · Razorpay</footer>
     </>
   );
 }
