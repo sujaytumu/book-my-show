@@ -622,6 +622,7 @@ export default function Movie() {
               {interested ? "♥ In your watchlist" : "♡ I'm interested"}
             </button>
           )}
+          <div className="mv-actions">
           <a
             className="share-btn trailer-btn"
             href={"https://www.youtube.com/results?search_query=" + encodeURIComponent(movie.title + " official trailer")}
@@ -642,6 +643,7 @@ export default function Movie() {
             </svg>
             Share
           </button>
+          </div>
           {shareMsg && <span className="share-msg">{shareMsg}</span>}
         </section>
       </div>

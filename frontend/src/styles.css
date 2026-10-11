@@ -529,3 +529,5 @@ img.cast-photo{object-fit:cover;object-position:top;background:#eee}
 .sheet-mode .qty-go{background:#1ea83c;border-color:#1ea83c;border-radius:10px;height:46px}
 .bms-head{margin:-24px -18px 10px}
 @media (max-width:640px){.bms-head{margin:-16px -14px 10px}}
+.mv-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.mv-actions .share-btn,.mv-actions .share-btn:hover{margin:0;width:100%;justify-content:center;white-space:nowrap;padding:9px 6px;gap:6px;box-sizing:border-box}
