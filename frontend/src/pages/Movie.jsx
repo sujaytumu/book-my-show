@@ -384,6 +384,17 @@ function isoDay(iso) {
   return new Date(iso + "T00:00:00Z");
 }
 
+// Class prices for a theatre type. Mirrors Pricing.java: base ₹100 (single screen) / ₹150 (multiplex).
+function classPriceList(theatreType) {
+  const base = theatreType === "MULTIPLEX" ? 150 : 100;
+  return [
+    ["Recliner", base * 3],
+    ["Balcony", base * 1.5],
+    ["Second Class", base * 1.25],
+    ["Dress Class", base],
+  ];
+}
+
 export default function Movie() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -393,7 +404,8 @@ export default function Movie() {
   const [myLocation, setMyLocation] = useState(null);
   const [locationError, setLocationError] = useState("");
   const [sortBy, setSortBy] = useState("relevance");
-  const [sheet, setSheet] = useState(null); // "sort" | "filter" | null
+  const [sheet, setSheet] = useState(null); // "sort" | "filter" | "cinema" | null
+  const [infoGroup, setInfoGroup] = useState(null); // theatre shown in the cinema details sheet
   const [priceBands, setPriceBands] = useState([]);
   const [language, setLanguage] = useState(null);
   const [formats, setFormats] = useState([]); // "2D" / "3D"
@@ -528,6 +540,7 @@ export default function Movie() {
         group = {
           theatre_name: show.theatre_name,
           theatre_address: show.theatre_address,
+          theatre_type: show.theatre_type,
           latitude: show.latitude,
           longitude: show.longitude,
           shows: [],
@@ -758,6 +771,18 @@ export default function Movie() {
             <div>
               <h3>
                 {group.theatre_name}
+                <button
+                  type="button"
+                  className="info-btn"
+                  aria-label={"About " + group.theatre_name}
+                  title="Cinema details"
+                  onClick={() => {
+                    setInfoGroup(group);
+                    setSheet("cinema");
+                  }}
+                >
+                  i
+                </button>
                 {visited.includes(group.theatre_name) && <span className="visited-tag">Visited</span>}
               </h3>
               {group.theatre_address && <p className="theatre-address">{group.theatre_address}</p>}
@@ -800,6 +825,50 @@ export default function Movie() {
         <MoreMovies currentId={id} upcoming={false} />
         <StickyBook />
         </>
+      )}
+
+      {sheet === "cinema" && infoGroup && (
+        <div className="sheet-backdrop" onClick={() => setSheet(null)}>
+          <div className="sheet" onClick={(e) => e.stopPropagation()}>
+            <div className="sheet-head">
+              <h3>{infoGroup.theatre_name}</h3>
+            </div>
+            <div className="ci-tags">
+              <span>{infoGroup.theatre_type === "MULTIPLEX" ? "Multiplex" : "Single screen"}</span>
+              <span>10 rows × 15 seats</span>
+              {infoGroup.distanceKm != null && <span>{infoGroup.distanceKm.toFixed(1)} km away</span>}
+            </div>
+            {infoGroup.theatre_address && <p className="ci-address">{infoGroup.theatre_address}</p>}
+            {infoGroup.latitude != null && (
+              <a
+                className="ci-directions"
+                href={"https://www.google.com/maps/dir/?api=1&destination=" + infoGroup.latitude + "," + infoGroup.longitude}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Get directions
+              </a>
+            )}
+            <h4 className="sheet-label">Ticket prices</h4>
+            <div className="ci-prices">
+              {classPriceList(infoGroup.theatre_type).map(([name, price]) => (
+                <div key={name}>
+                  <span>{name}</span>
+                  <b>₹{price}</b>
+                </div>
+              ))}
+            </div>
+            <h4 className="sheet-label">Good to know</h4>
+            <ul className="ci-notes">
+              <li>Seats are held for 10 minutes while you pay.</li>
+              <li>Bookings can be cancelled from My Bookings.</li>
+              <li>Up to 10 tickets per booking.</li>
+            </ul>
+            <button className="sheet-done" onClick={() => setSheet(null)}>
+              Close
+            </button>
+          </div>
+        </div>
       )}
 
       {sheet === "sort" && (
