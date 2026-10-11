@@ -101,6 +101,11 @@ public class TicketService {
                 drawText(cs, bold, 11, margin, y, DARK, "Fare Breakdown");
                 y -= 20;
                 y = priceRow(cs, regular, margin, y, contentWidth, "Ticket Price", booking.get("ticket_subtotal"), DARK, false);
+                Object couponDiscount = booking.get("discount_amount");
+                if (couponDiscount instanceof Number && ((Number) couponDiscount).doubleValue() > 0) {
+                    y = priceRow(cs, regular, margin, y, contentWidth, "Coupon " + booking.get("coupon_code"),
+                            -((Number) couponDiscount).doubleValue(), DARK, false);
+                }
                 y = priceRow(cs, regular, margin, y, contentWidth, "Convenience Fee", booking.get("convenience_fee"), DARK, false);
                 y = priceRow(cs, regular, margin, y, contentWidth, "GST (18% on fee)", booking.get("gst_amount"), DARK, false);
                 y -= 4;

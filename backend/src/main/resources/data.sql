@@ -594,3 +594,13 @@ select sh.id, chr(65 + r) || n::text, case when r < 4 then 'PREMIUM' else 'REGUL
 from shows sh cross join generate_series(0,9) r cross join generate_series(1,15) n
 where (select count(*) from show_seats ss where ss.show_id = sh.id) < 150
 on conflict (show_id,seat_number) do nothing;
+
+-- ============================================================
+-- Offers: percentage off the ticket price (convenience fee and GST are not discounted).
+-- Seeded once; an edited or deactivated coupon is never overwritten.
+-- ============================================================
+insert into coupons(code,description,percent,max_discount,min_amount,first_booking_only) values
+  ('BMS10','10% off up to Rs 100 on orders of Rs 200 or more',10,100,200,false),
+  ('MOVIE20','20% off up to Rs 150 on orders of Rs 500 or more',20,150,500,false),
+  ('FIRST15','15% off up to Rs 120 on your first booking (min Rs 150)',15,120,150,true)
+on conflict (code) do nothing;

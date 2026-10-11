@@ -484,3 +484,12 @@ img.cast-photo{object-fit:cover;object-position:top;background:#eee}
 .ci-prices div{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)}
 .ci-prices b{font-weight:800}
 .ci-notes{margin:0;padding-left:18px;color:var(--gray);line-height:1.7}
+
+/* ---------- Offers / coupons ---------- */
+.offers-title{margin:14px 0 8px;font-size:12px}
+.offer-list{display:flex;flex-direction:column;gap:8px}
+.offer-chip,.offer-chip:hover{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;padding:10px 12px;border-radius:8px;border:1.5px dashed #1ea83c;background:#f4fbf6;color:var(--ink);text-align:left;text-transform:none;letter-spacing:0;font-weight:400;cursor:pointer}
+.offer-chip b{color:#15803d;font-weight:800;font-size:11.2px;letter-spacing:.5px}
+.offer-chip small{color:var(--gray);font-size:9.6px}
+.offer-chip.on{background:#e3f6e8;border-style:solid}
+.fare-discount{color:#15803d;font-weight:700}

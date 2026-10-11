@@ -97,6 +97,12 @@ public class CatalogController {
         return show;
     }
 
+    /** Active offers shown on the booking page (code + description only). */
+    @GetMapping("/api/coupons")
+    public List<Map<String, Object>> coupons() {
+        return db.queryForList("select code, description from coupons where active=true order by code");
+    }
+
     @GetMapping("/api/shows/{id}/seats")
     public List<Map<String, Object>> seats(@PathVariable long id) {
         return db.queryForList(
