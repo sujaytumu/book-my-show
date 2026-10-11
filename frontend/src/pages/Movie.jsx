@@ -604,6 +604,9 @@ export default function Movie() {
         </div>
       ) : (
       <>
+      <button type="button" className="mv-back" onClick={() => navigate(-1)} aria-label="Back">
+        ‹
+      </button>
       <div className="details card">
         <img src={movie.poster_url} alt={movie.title} />
         <section>

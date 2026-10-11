@@ -619,3 +619,4 @@ img.cast-photo{object-fit:cover;object-position:top;background:#eee}
 .loc-sheet p{color:var(--gray);margin:0 0 18px;font-size:14px}
 .loc-allow{width:100%;background:#e0415a;border:0;border-radius:10px;color:#fff;height:48px;font-size:16px;font-weight:600;text-transform:none;letter-spacing:0}
 .loc-manual{width:100%;background:none;border:0;color:#e0415a;font-size:15px;padding:14px 0 0;text-transform:none;letter-spacing:0;font-weight:500}
+.mv-back{display:flex;align-items:center;justify-content:center;border:0;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.15);width:38px;height:38px;border-radius:50%;font-size:28px;line-height:1;margin:0 0 10px;padding:0 0 3px;color:var(--ink);cursor:pointer}
