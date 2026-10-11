@@ -7,9 +7,14 @@ export default function Search() {
   const navigate = useNavigate();
   const [movies, setMovies] = useState([]);
   const [q, setQ] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get("/movies").then((res) => setMovies(res.data)).catch(() => {});
+    api
+      .get("/movies")
+      .then((res) => setMovies(res.data))
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   const telugu = useMemo(() => movies.filter((m) => m.language === "Telugu"), [movies]);
@@ -26,7 +31,22 @@ export default function Search() {
         <input autoFocus placeholder="Search for latest movies" value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
 
-      {results ? (
+      {loading ? (
+        <>
+          <div className="sk sk-line w40 sk-h" />
+          <div className="sp-grid">
+            {Array.from({ length: 8 }, (_, i) => (
+              <div className="sp-item" key={i}>
+                <div className="sk sk-thumb" />
+                <span style={{ flex: 1 }}>
+                  <div className="sk sk-line" />
+                  <div className="sk sk-line w60" />
+                </span>
+              </div>
+            ))}
+          </div>
+        </>
+      ) : results ? (
         <>
           <h2 className="sp-h">Movies</h2>
           <div className="sp-grid">

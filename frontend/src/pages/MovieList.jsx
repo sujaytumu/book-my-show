@@ -15,9 +15,14 @@ export default function MovieList({ upcoming = false }) {
   const [movies, setMovies] = useState([]);
   const [genre, setGenre] = useState(null);
   const [topRated, setTopRated] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get("/movies").then((res) => setMovies(res.data)).catch(() => {});
+    api
+      .get("/movies")
+      .then((res) => setMovies(res.data))
+      .catch(() => {})
+      .finally(() => setLoading(false));
     window.scrollTo(0, 0);
   }, [upcoming]);
 
@@ -47,7 +52,7 @@ export default function MovieList({ upcoming = false }) {
         <div>
           <h1>{upcoming ? "Coming soon" : "Now Showing"}</h1>
           <p>
-            {getCity()} <i>|</i> {list.length} {list.length === 1 ? "Movie" : "Movies"}
+            {getCity()} <i>|</i> {loading ? "…" : list.length + (list.length === 1 ? " Movie" : " Movies")}
           </p>
         </div>
         <Link to="/search" aria-label="Search">
@@ -84,6 +89,17 @@ export default function MovieList({ upcoming = false }) {
         <em>›</em>
       </Link>
 
+      {loading && (
+        <div className="ml-grid">
+          {Array.from({ length: 6 }, (_, i) => (
+            <div key={i}>
+              <div className="sk sk-poster" />
+              <div className="sk sk-line" />
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="ml-grid">
         {list.map((m) => (
           <Link key={m.id} to={"/movie/" + m.id} className="ml-card">
@@ -100,7 +116,7 @@ export default function MovieList({ upcoming = false }) {
           </Link>
         ))}
       </div>
-      {list.length === 0 && <p className="empty-note">No movies found.</p>}
+      {!loading && list.length === 0 && <p className="empty-note">No movies found.</p>}
     </div>
   );
 }
