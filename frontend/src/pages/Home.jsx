@@ -48,10 +48,7 @@ export default function Home({ mode = "now-showing" }) {
     <>
 
       
-        <div className="banner">
-          <h1>Book movies. Pick seats. Enjoy.</h1>
-          <p>End-to-end ticket booking with secure seat locking and Razorpay.</p>
-        </div>
+
       
 
       <input
