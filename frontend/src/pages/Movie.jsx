@@ -427,13 +427,13 @@ export default function Movie() {
     api
       .get("/bookings/me")
       .then((res) => {
-        const now = new Date();
+        // Show times are India time (IST), so compare against the real instant, not the phone's own clock.
+        const now = Date.now();
         const names = res.data
           .filter((b) => {
             if (b.status !== "CONFIRMED") return false;
-            const [y, m, d] = String(b.show_date).split("-").map(Number);
-            const [hh, mm] = String(b.start_time).split(":").map(Number);
-            return new Date(y, m - 1, d, hh, mm) < now;
+            const startsAt = Date.parse(String(b.show_date).slice(0, 10) + "T" + String(b.start_time).slice(0, 5) + ":00+05:30");
+            return startsAt < now;
           })
           .map((b) => b.theatre_name);
         setVisited([...new Set(names)]);
