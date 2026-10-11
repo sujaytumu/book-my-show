@@ -393,6 +393,7 @@ export default function Movie() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [movie, setMovie] = useState();
   const [shows, setShows] = useState([]);
+  const [showsLoaded, setShowsLoaded] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
   const [myLocation, setMyLocation] = useState(null);
   const [locationError, setLocationError] = useState("");
@@ -420,6 +421,7 @@ export default function Movie() {
       if (!res.data.upcoming) {
         api.get("/shows", { params: { movieId: id, city: getCity() } }).then((showsRes) => {
           setShows(showsRes.data);
+          setShowsLoaded(true);
           if (showsRes.data.length) setSelectedDate(showsRes.data[0].show_date);
         });
       }
@@ -595,7 +597,9 @@ export default function Movie() {
       {booking ? (
         <div className="book-head">
           <button type="button" className="book-back" onClick={() => navigate(-1)} aria-label="Back">
-            ‹
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 5l-7 7 7 7" />
+            </svg>
           </button>
           <div>
             <b>{movie.title}</b>
@@ -605,7 +609,9 @@ export default function Movie() {
       ) : (
       <>
       <button type="button" className="mv-back" onClick={() => navigate(-1)} aria-label="Back">
-        ‹
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M15 5l-7 7 7 7" />
+        </svg>
       </button>
       <div className="details card">
         <img src={movie.poster_url} alt={movie.title} />
@@ -726,6 +732,8 @@ export default function Movie() {
         </div>
       )}
 
+      {shows.length > 0 && (
+      <>
       <div className="cinemas-header" id="showtimes">
         <h2>Cinemas</h2>
       </div>
@@ -762,9 +770,20 @@ export default function Movie() {
           </span>
         )}
       </div>
+      </>
+      )}
+
       {locationError && sheet === null && <p className="error">{locationError}</p>}
 
-      {theatreGroups.length === 0 && (
+      {showsLoaded && shows.length === 0 && (
+        <div className="no-cinemas">
+          <b>No cinemas in {getCity()} yet</b>
+          <span>Shows for this movie aren't available in your city right now.</span>
+          <Link to="/city">Change city</Link>
+        </div>
+      )}
+
+      {shows.length > 0 && theatreGroups.length === 0 && (
         <p>
           {hasShowsForDate ? "No shows match your filters." : "No shows scheduled for this date."}
           {hasShowsForDate && (priceBands.length > 0 || formats.length > 0 || langFilter.length > 0 || favOnly) && (
