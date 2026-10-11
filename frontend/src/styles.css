@@ -609,3 +609,13 @@ img.cast-photo{object-fit:cover;object-position:top;background:#eee}
 .cp-list li button{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid #e6e6ea;border-radius:0;margin-left:18px;width:calc(100% - 18px);padding:22px 0;font-size:18px;font-weight:300;color:#222;text-transform:none;letter-spacing:0}
 .cp-empty{padding:22px 18px;color:var(--gray)}
 @media(max-width:640px){.city-page{margin:-16px -14px 0}.hero-row,.poster-row,.rec-row{margin-left:-14px;margin-right:-14px;padding-left:14px;padding-right:14px}.home-head{padding:18px 14px 6px}}
+.cp-empty-cell{background:#fff;border-right:1px solid #e6e6ea;border-bottom:1px solid #e6e6ea;min-height:110px}
+.cp-grid button svg{width:52px;height:52px}
+.loc-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;display:flex;align-items:flex-end;justify-content:center}
+.loc-sheet{width:min(520px,100%);background:#fff;border-radius:22px 22px 0 0;padding:10px 22px 26px;text-align:center}
+.loc-sheet .grab{display:block;width:56px;height:5px;border-radius:3px;background:#e0e0e4;margin:0 auto 18px}
+.loc-ic{display:inline-flex;width:64px;height:64px;border-radius:50%;background:#fdecef;color:#e0415a;align-items:center;justify-content:center}
+.loc-sheet h2{font-size:20px;font-weight:600;margin:14px 0 6px}
+.loc-sheet p{color:var(--gray);margin:0 0 18px;font-size:14px}
+.loc-allow{width:100%;background:#e0415a;border:0;border-radius:10px;color:#fff;height:48px;font-size:16px;font-weight:600;text-transform:none;letter-spacing:0}
+.loc-manual{width:100%;background:none;border:0;color:#e0415a;font-size:15px;padding:14px 0 0;text-transform:none;letter-spacing:0;font-weight:500}

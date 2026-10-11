@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { NavLink, Route, Routes, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { NavLink, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { api } from "./api";
 import Nav from "./components/Nav";
 import Home from "./pages/Home";
@@ -12,7 +12,7 @@ import Admin from "./pages/Admin";
 import Profile from "./pages/Profile";
 import Search from "./pages/Search";
 import City from "./pages/City";
-import { IcHome, IcSearch, IcTicket, IcUser } from "./components/Icons";
+import { IcTarget, IcHome, IcSearch, IcTicket, IcUser } from "./components/Icons";
 import { alreadyAsked, detectCity, markAsked, setCity } from "./location";
 
 const TAB_PAGES = ["/", "/coming-soon", "/search", "/bookings", "/profile"];
@@ -38,7 +38,50 @@ function TabBar() {
   );
 }
 
+function LocationPrompt({ onDone }) {
+  const navigate = useNavigate();
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+  async function allow() {
+    setBusy(true);
+    try {
+      setCity(await detectCity());
+      onDone();
+    } catch (e) {
+      setMsg(e.message);
+      markAsked();
+      setBusy(false);
+    }
+  }
+  function manual() {
+    markAsked();
+    onDone();
+    navigate("/city");
+  }
+  return (
+    <div className="loc-overlay">
+      <div className="loc-sheet">
+        <i className="grab" />
+        <span className="loc-ic">
+          <IcTarget width={34} height={34} />
+        </span>
+        <h2>Allow location access</h2>
+        <p>We use your location to show movies and cinemas in your city.</p>
+        {msg && <p className="cp-msg">{msg}</p>}
+        <button type="button" className="loc-allow" onClick={allow} disabled={busy}>
+          {busy ? "Detecting…" : "Allow location"}
+        </button>
+        <button type="button" className="loc-manual" onClick={manual}>
+          Select city manually
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
+  const { pathname } = useLocation();
+  const [askLoc, setAskLoc] = useState(() => !alreadyAsked());
   // The backend is on Render's free tier and spins down after ~15 min idle;
   // waking it back up takes 60-90s. Ping it in the background the instant the
   // app loads so it's likely already awake by the time someone submits a form.
@@ -46,13 +89,7 @@ export default function App() {
     api.get("/health").catch(() => {});
   }, []);
 
-  // First visit: ask for the real location (the browser shows its permission prompt) and pick the nearest city.
-  useEffect(() => {
-    if (alreadyAsked()) return;
-    detectCity()
-      .then(setCity)
-      .catch(markAsked);
-  }, []);
+
 
   return (
     <>
@@ -73,6 +110,7 @@ export default function App() {
         </Routes>
       </main>
       <TabBar />
+      {askLoc && ["/", "/coming-soon"].includes(pathname) && <LocationPrompt onDone={() => setAskLoc(false)} />}
     </>
   );
 }

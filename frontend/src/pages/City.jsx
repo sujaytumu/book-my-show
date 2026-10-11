@@ -63,12 +63,15 @@ export default function City() {
           <div className="cp-grid">
             {POPULAR.map((c) => (
               <button type="button" key={c} className={c === current ? "on" : ""} onClick={() => choose(c)}>
-                <IcCity />
+                <IcCity name={c} />
                 <span>
                   {c === current && <i className="cp-dot" />}
                   {c}
                 </span>
               </button>
+            ))}
+            {Array.from({ length: (4 - (POPULAR.length % 4)) % 4 }, (_, k) => (
+              <div key={"e" + k} className="cp-empty-cell" />
             ))}
           </div>
           <h2 className="cp-h">OTHER CITIES</h2>
