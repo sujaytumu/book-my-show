@@ -26,10 +26,16 @@ const GEO = [
   ["Faridabad", 28.4089, 77.3178], ["Thane", 19.2183, 72.9781], ["Navi Mumbai", 19.033, 73.0297], ["Goa", 15.4909, 73.8278],
   ["Puducherry", 11.9416, 79.8083], ["Raipur", 21.2514, 81.6296], ["Jabalpur", 23.1815, 79.9864], ["Gwalior", 26.2183, 78.1828],
   ["Jammu", 32.7266, 74.857], ["Srinagar", 34.0837, 74.7973], ["Shimla", 31.1048, 77.1734], ["Siliguri", 26.7271, 88.3953],
+  ["Ajmer", 26.4499, 74.6399], ["Allahabad", 25.4358, 81.8463], ["Ambala", 30.3782, 76.7767], ["Asansol", 23.6739, 86.9524],
+  ["Bhilai", 21.2094, 81.4285], ["Bikaner", 28.0229, 73.3119], ["Bokaro", 23.6693, 86.1511], ["Durgapur", 23.5204, 87.3119],
+  ["Erode", 11.341, 77.7172], ["Gandhinagar", 23.2156, 72.6369], ["Haridwar", 29.9457, 78.1642], ["Jamshedpur", 22.8046, 86.2029],
+  ["Kolhapur", 16.705, 74.2433], ["Kota", 25.2138, 75.8648], ["Ludhiana", 30.901, 75.8573], ["Moradabad", 28.8386, 78.7733],
+  ["Panaji", 15.4909, 73.8278], ["Rourkela", 22.2604, 84.8536], ["Sangli", 16.8524, 74.5815], ["Solapur", 17.6599, 75.9064],
+  ["Thanjavur", 10.787, 79.1378], ["Udupi", 13.3409, 74.7421], ["Ujjain", 23.1765, 75.7885], ["Vasai-Virar", 19.4259, 72.8225],
   ["Mathura", 27.4924, 77.6737], ["Meerut", 28.9845, 77.7064], ["Bareilly", 28.367, 79.4304], ["Gorakhpur", 26.7606, 83.3732],
 ];
 
-export const ALL_CITIES = GEO.map((g) => g[0]);
+export const ALL_CITIES = [...new Set(GEO.map((g) => g[0]))];
 export const OTHER_CITIES = ALL_CITIES.filter((c) => !POPULAR.includes(c)).sort();
 
 export function getCity() {
