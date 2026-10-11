@@ -730,3 +730,31 @@ img.cast-photo{object-fit:cover;object-position:top;background:#eee}
 .sk-line.w60{width:60%}
 .sk-h{margin:28px 0 14px}
 .sk-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+
+/* ---------- Showtimes page: one consistent, tidy scale ---------- */
+.book-head{padding:12px 14px 10px;gap:10px}
+.book-head b{font-size:15px;font-weight:600;line-height:1.2}
+.book-head small{font-size:10px;color:var(--gray)}
+.book-head .book-back svg{width:22px;height:22px}
+.movie-page .date-pill{flex:1 0 19%;padding:9px 2px;font-size:9px;letter-spacing:.4px;line-height:1.2;text-transform:uppercase}
+.movie-page .date-pill b{font-size:17px;margin:3px 0 2px;font-weight:700}
+.lf-row{padding:12px 16px;font-size:11px}
+.lf-row button{font-size:11px}
+.movie-page .mv-toolbar{padding:10px 16px}
+.movie-page .mv-tool,.movie-page .mv-tool:hover{font-size:11px;padding:6px 14px;gap:6px}
+.movie-page .mv-tool svg{width:15px;height:15px}
+.mv-badge{font-size:8px;min-width:15px;height:15px;line-height:15px}
+.movie-page .slot-legend{font-size:8.5px;margin:12px 0 10px;gap:4px 14px}
+.movie-page .slot-legend .lg{width:10px;height:10px}
+.theatre-block{padding:14px;margin-bottom:12px}
+.theatre-block-header{align-items:center;gap:10px;flex-wrap:nowrap}
+.th-logo{width:38px;height:38px;font-size:16px;border-radius:9px}
+.theatre-block h3,.theatre-block-header h3{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;font-size:12px;font-weight:600;margin:0;line-height:1.25}
+.theatre-block .info-btn{margin:0;width:15px;height:15px;font-size:8px}
+.theatre-block .visited-tag{margin:0;padding:2px 7px;font-size:7.5px}
+.theatre-address{font-size:9.5px;margin:3px 0 0}
+.theatre-block .distance-tag{font-size:8px;padding:3px 8px}
+.theatre-block .fav-btn svg{width:20px;height:20px}
+.time-slots{gap:8px;margin-top:12px}
+.time-slot{padding:7px 12px;min-width:84px;font-size:10.5px;border-radius:6px}
+.time-slot small{font-size:8px;margin-top:2px}

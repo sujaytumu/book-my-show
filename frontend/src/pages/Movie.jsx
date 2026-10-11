@@ -817,8 +817,8 @@ export default function Movie() {
         <button className="mv-tool" onClick={() => setSheet("filter")}>
           <FilterIcon />
           <span>Filters</span>
-          {priceBands.length + formats.length + langFilter.length + (favOnly ? 1 : 0) > 0 && (
-            <span className="mv-badge">{priceBands.length + formats.length + langFilter.length + (favOnly ? 1 : 0)}</span>
+          {priceBands.length + langFilter.length + (favOnly ? 1 : 0) > 0 && (
+            <span className="mv-badge">{priceBands.length + langFilter.length + (favOnly ? 1 : 0)}</span>
           )}
         </button>
       </div>
