@@ -338,6 +338,18 @@ function loadRazorpayScript() {
 
 
 
+function fmtShowDate(d) {
+  const iso = String(d).slice(0, 10);
+  const day = new Date(iso + "T00:00:00Z");
+  return day.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" }).replace(/^(\w+)\s/, "$1, ");
+}
+
+function fmtTime12(t) {
+  const [hh, mm] = String(t).split(":");
+  const h = parseInt(hh, 10);
+  return String(h % 12 || 12).padStart(2, "0") + ":" + mm + " " + (h < 12 ? "AM" : "PM");
+}
+
 export default function Show() {
 
   const { id } = useParams();
@@ -377,6 +389,15 @@ export default function Show() {
   const fitted = useRef(false); // auto-fit the 15-seat rows to the screen width once
   const anchor = useRef(null); // keeps the point between the fingers steady while zooming
   const [seatMsg, setSeatMsg] = useState("");
+  const [siblings, setSiblings] = useState([]); // other showtimes of this movie at this cinema on this day
+  useEffect(() => {
+    if (!show?.movie_id) return;
+    const d = String(show.show_date).slice(0, 10);
+    api
+      .get("/shows", { params: { movieId: show.movie_id, date: d } })
+      .then((res) => setSiblings(res.data.filter((x) => x.theatre_name === show.theatre_name)))
+      .catch(() => {});
+  }, [show?.movie_id, show?.show_date, show?.theatre_name]);
   const [couponCode, setCouponCode] = useState(""); // typed or picked coupon, validated by the server on Review Booking
   const [offers, setOffers] = useState([]); // active offers from the server
   const [secsLeft, setSecsLeft] = useState(null); // countdown while the seats are held for payment
@@ -726,6 +747,23 @@ export default function Show() {
   const classPrices = show?.class_prices || {};
   const rowClass = {};
   sections.forEach((sec) => sec.rows.forEach((l) => (rowClass[l] = sec.label)));
+  // "Bestseller": the most central available seats (middle rows, middle columns) that can still fit the party together.
+  const bestSet = new Set();
+  {
+    const mid = (rowLetters.length - 1) / 2;
+    const cands = [];
+    rowLetters.forEach((letter, ri) => {
+      const row = rowMap[letter];
+      row.forEach((seat, ci) => {
+        const win = row.slice(ci, ci + qty);
+        if (win.length < qty || !win.every((x) => x.status === "AVAILABLE")) return;
+        const score = Math.abs(ri - (mid + 0.5)) * 1.4 + Math.abs(ci + (qty - 1) / 2 - (row.length - 1) / 2) * 0.8;
+        cands.push({ score, win });
+      });
+    });
+    cands.sort((a, b) => a.score - b.score);
+    cands.slice(0, 6).forEach((c) => c.win.forEach((x) => bestSet.add(x.seat_number)));
+  }
   const selectedTotal = selected.reduce(
     (sum, sn) => sum + Number(classPrices[rowClass[sn.charAt(0)]] ?? show?.price ?? 0),
     0
@@ -736,47 +774,56 @@ export default function Show() {
     <>
 
       {show && (
-
-        <div className="show-header">
-
-          <div className="show-header-text">
-
-            <h1>{show.movie_title}</h1>
-
-            <p>
-
-            {show.theatre_name} / {show.screen_name} · {show.show_date} · {show.start_time?.slice(0, 5)}{show.format ? " · " + show.format : ""} · from ₹{show.price}
-
-          </p>
-
-          </div>
-
-          {!hold && (
-
-            <button
-              type="button"
-              className="qty-chip"
-              title="Number of tickets"
-              aria-label={"Number of tickets: " + qty}
-              onClick={() => {
-                setQtyDraft(qty);
-                setQtyOpen(true);
-              }}
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4z" />
-                <path d="M13 6v12" strokeDasharray="2 2" />
-              </svg>
-              <b>{qty}</b>
+        <div className="bms-head">
+          <div className="bms-head-top">
+            <button type="button" className="bms-back" onClick={() => navigate(-1)} aria-label="Back">
+              ‹
             </button>
-
+            <div className="bms-head-text">
+              <h1>{show.movie_title}</h1>
+              <p>
+                {show.theatre_name}
+                {show.screen_name ? " · " + show.screen_name : ""}
+              </p>
+            </div>
+          </div>
+          <div className="bms-head-row">
+            <span className="bms-date">{fmtShowDate(show.show_date)}</span>
+            {!hold && (
+              <button
+                type="button"
+                className="bms-qty"
+                aria-label={"Number of tickets: " + qty}
+                onClick={() => {
+                  setQtyDraft(qty);
+                  setQtyOpen(true);
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 20h9" />
+                  <path d="M16.500 3.500a2.100 2.100 0 0 1 3 3L7 19l-4 1 1-4z" />
+                </svg>
+                {qty} {qty === 1 ? "Ticket" : "Tickets"}
+              </button>
+            )}
+          </div>
+          {!hold && siblings.length > 1 && (
+            <div className="bms-times">
+              {siblings.map((x) => (
+                <button
+                  type="button"
+                  key={x.id}
+                  className={"bms-time" + (String(x.id) === String(id) ? " on" : "")}
+                  onClick={() => String(x.id) !== String(id) && navigate("/show/" + x.id)}
+                >
+                  {fmtTime12(x.start_time)}
+                  <small>{x.format || "STANDARD"}</small>
+                </button>
+              ))}
+            </div>
           )}
-
         </div>
-
       )}
-
-
 
       {loadError && <p className="error">{loadError}</p>}
 
@@ -787,26 +834,27 @@ export default function Show() {
         <>
 
           {qtyOpen && (
-            <div className="qty-overlay" onClick={() => setQtyOpen(false)}>
+            <div className="qty-overlay sheet-mode" onClick={() => setQtyOpen(false)}>
               <div className="qty-modal" onClick={(e) => e.stopPropagation()}>
+                <i className="grab" />
                 <h2>How many seats?</h2>
                 <div className="qty-grid">
                   {Array.from({ length: MAX_SEATS }, (_, n) => n + 1).map((n) => (
-                    <button
-                      type="button"
-                      key={n}
-                      className={qtyDraft === n ? "on" : ""}
-                      onClick={() => setQtyDraft(n)}
-                    >
+                    <button type="button" key={n} className={qtyDraft === n ? "on" : ""} onClick={() => setQtyDraft(n)}>
                       {n}
-                      {qtyDraft === n && <i className="tick">✓</i>}
                     </button>
                   ))}
                 </div>
                 {show?.class_prices && (
-                  <p className="hint">
-                    ₹{Math.min(...Object.values(show.class_prices))} – ₹{Math.max(...Object.values(show.class_prices))} per ticket, depending on the class
-                  </p>
+                  <div className="qty-classes">
+                    {Object.entries(show.class_prices).map(([name, price]) => (
+                      <div key={name}>
+                        <small>{name.toUpperCase()} ROWS</small>
+                        <b>₹{price}</b>
+                        <em>AVAILABLE</em>
+                      </div>
+                    ))}
+                  </div>
                 )}
                 <button type="button" className="qty-go" onClick={confirmQty}>
                   Select Seats
@@ -830,7 +878,7 @@ export default function Show() {
                       {rowMap[letter].map((seat, idx) => (
                         <button
                           className={
-                            (selected.includes(seat.seat_number) ? "selected" : seat.status.toLowerCase()) +
+                            (selected.includes(seat.seat_number) ? "selected" : seat.status.toLowerCase() + (bestSet.has(seat.seat_number) ? " best" : "")) +
                             ((idx + 1) % 5 === 0 && idx < rowMap[letter].length - 1 ? " aisle" : "")
                           }
                           title={seat.seat_number}
@@ -851,6 +899,10 @@ export default function Show() {
           {/* SCREEN is kept below the seats as requested. */}
           <div className="screen">SCREEN</div>
           <div className="seat-legend">
+            <span>
+              <i className="lg best" />
+              Bestseller
+            </span>
             <span>
               <i className="lg available" />
               Available
