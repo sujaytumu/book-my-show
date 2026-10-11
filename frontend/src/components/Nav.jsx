@@ -87,7 +87,7 @@ export default function Nav() {
     navigate("/");
   }
 
-  if (pathname === "/search" || pathname === "/city" || pathname.startsWith("/movie/") || pathname.startsWith("/show/")) return null;
+  if (pathname === "/search" || pathname === "/city" || pathname === "/coming-soon" || pathname === "/now-showing" || pathname.startsWith("/movie/") || pathname.startsWith("/show/")) return null;
   const right = (
       <div className="nav-right">
         {user ? (
@@ -124,7 +124,7 @@ export default function Nav() {
             )}
           </div>
         ) : (
-          pathname === "/" || pathname === "/coming-soon" ? (
+          pathname === "/" ? (
             <Link to="/login" className="home-person" aria-label="Login">
               <IcUser width={26} height={26} />
             </Link>
@@ -137,7 +137,7 @@ export default function Nav() {
         )}
       </div>
   );
-  if (pathname === "/" || pathname === "/coming-soon") {
+  if (pathname === "/") {
     return (
       <header className="home-head">
         <div>
