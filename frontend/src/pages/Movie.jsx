@@ -162,7 +162,7 @@
 
 
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { api, currentUser } from "../api";
 import { haversineKm } from "../components/TheatreMap";
 import Reviews from "../components/Reviews";
@@ -259,20 +259,11 @@ function movieTags(movie) {
   return [...new Set(tags.map((t) => t.trim()).filter(Boolean))];
 }
 
-// Fixed "Book tickets" bar at the bottom. Scrolls to the cinemas list and hides itself once that list is on screen.
-function StickyBook() {
-  const [visible, setVisible] = useState(true);
-  useEffect(() => {
-    const target = document.getElementById("showtimes");
-    if (!target || typeof IntersectionObserver === "undefined") return;
-    const obs = new IntersectionObserver(([entry]) => setVisible(!entry.isIntersecting), { threshold: 0.05 });
-    obs.observe(target);
-    return () => obs.disconnect();
-  }, []);
-  if (!visible) return null;
+// Fixed full-width "Book tickets" bar at the bottom of the movie details page.
+function StickyBook({ onClick }) {
   return (
     <div className="sticky-book">
-      <button type="button" onClick={() => document.getElementById("showtimes")?.scrollIntoView({ behavior: "smooth", block: "start" })}>
+      <button type="button" onClick={onClick}>
         Book tickets
       </button>
     </div>
@@ -398,6 +389,7 @@ function classPriceList(theatreType) {
 export default function Movie() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [movie, setMovie] = useState();
   const [shows, setShows] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
@@ -591,8 +583,26 @@ export default function Movie() {
     return day.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
   }
 
+  const booking = !movie.upcoming && searchParams.get("book") === "1";
+  const openBooking = () => {
+    setSearchParams({ book: "1" });
+    window.scrollTo(0, 0);
+  };
+
   return (
     <div className="movie-page">
+      {booking ? (
+        <div className="book-head">
+          <button type="button" className="book-back" onClick={() => navigate(-1)} aria-label="Back">
+            ‹
+          </button>
+          <div>
+            <b>{movie.title}</b>
+            <small>{[movie.language, movie.genre].filter(Boolean).join(" · ")}</small>
+          </div>
+        </div>
+      ) : (
+      <>
       <div className="details card">
         <img src={movie.poster_url} alt={movie.title} />
         <section>
@@ -672,6 +682,9 @@ export default function Movie() {
         </div>
       )}
 
+      </>
+      )}
+
       {movie.upcoming ? (
         <>
           <div className="card coming-soon-panel">
@@ -682,6 +695,7 @@ export default function Movie() {
         </>
       ) : (
         <>
+          {booking && (<>
           {dates.length > 0 && (
         <div className="date-strip">
           {dates.map((d) => {
@@ -821,9 +835,12 @@ export default function Movie() {
         </div>
       ))}
 
+        </>)}
+        {!booking && (<>
         <div id="ratings"><Reviews movieId={id} /></div>
         <MoreMovies currentId={id} upcoming={false} />
-        <StickyBook />
+        <StickyBook onClick={openBooking} />
+        </>)}
         </>
       )}
 
