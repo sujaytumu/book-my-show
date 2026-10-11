@@ -493,3 +493,7 @@ img.cast-photo{object-fit:cover;object-position:top;background:#eee}
 .offer-chip small{color:var(--gray);font-size:9.6px}
 .offer-chip.on{background:#e3f6e8;border-style:solid}
 .fare-discount{color:#15803d;font-weight:700}
+.book-head{display:flex;align-items:center;gap:12px;padding:6px 2px 14px}
+.book-head b{display:block;font-size:17px}
+.book-head small{color:var(--gray-light)}
+.book-back{border:0;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.15);width:36px;height:36px;border-radius:50%;font-size:26px;line-height:1;cursor:pointer}
