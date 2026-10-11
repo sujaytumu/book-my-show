@@ -38,7 +38,9 @@
 
 
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { getCity } from "../location";
+import { IcUser } from "./Icons";
 import { currentUser, logout } from "../api";
 
 // "Sujay Tumu" -> "ST", "Sujay" -> "S"
@@ -51,6 +53,13 @@ function initials(name) {
 
 export default function Nav() {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const [city, setCityState] = useState(getCity());
+  useEffect(() => {
+    const f = () => setCityState(getCity());
+    window.addEventListener("bms-city", f);
+    return () => window.removeEventListener("bms-city", f);
+  }, []);
   const user = currentUser();
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
@@ -78,12 +87,9 @@ export default function Nav() {
     navigate("/");
   }
 
-  return (
-    <nav>
-      <Link to="/" className="logo">
-        BMS
-      </Link>
-      <div>
+  if (pathname === "/search" || pathname === "/city") return null;
+  const right = (
+      <div className="nav-right">
         {user ? (
           <div className="nav-user" ref={menuRef}>
             <button
@@ -118,12 +124,38 @@ export default function Nav() {
             )}
           </div>
         ) : (
-          <>
-            <Link to="/login">Login</Link>
-            <Link to="/register">Register</Link>
-          </>
+          pathname === "/" || pathname === "/coming-soon" ? (
+            <Link to="/login" className="home-person" aria-label="Login">
+              <IcUser width={26} height={26} />
+            </Link>
+          ) : (
+            <>
+              <Link to="/login">Login</Link>
+              <Link to="/register">Register</Link>
+            </>
+          )
         )}
       </div>
+  );
+  if (pathname === "/" || pathname === "/coming-soon") {
+    return (
+      <header className="home-head">
+        <div>
+          <h1>It All Starts Here!</h1>
+          <Link to="/city" className="home-city">
+            {city} <span>›</span>
+          </Link>
+        </div>
+        {right}
+      </header>
+    );
+  }
+  return (
+    <nav>
+      <Link to="/" className="logo">
+        BMS
+      </Link>
+      {right}
     </nav>
   );
 }

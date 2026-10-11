@@ -1,0 +1,71 @@
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { api } from "../api";
+import { IcBack } from "../components/Icons";
+
+export default function Search() {
+  const navigate = useNavigate();
+  const [movies, setMovies] = useState([]);
+  const [q, setQ] = useState("");
+
+  useEffect(() => {
+    api.get("/movies").then((res) => setMovies(res.data)).catch(() => {});
+  }, []);
+
+  const telugu = useMemo(() => movies.filter((m) => m.language === "Telugu"), [movies]);
+  const running = telugu.filter((m) => !m.upcoming).sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0));
+  const needle = q.trim().toLowerCase();
+  const results = needle ? telugu.filter((m) => m.title.toLowerCase().includes(needle)) : null;
+
+  return (
+    <div className="search-page">
+      <div className="sp-bar">
+        <button type="button" onClick={() => navigate(-1)} aria-label="Back">
+          <IcBack />
+        </button>
+        <input autoFocus placeholder="Search for latest movies" value={q} onChange={(e) => setQ(e.target.value)} />
+      </div>
+
+      {results ? (
+        <>
+          <h2 className="sp-h">Movies</h2>
+          <div className="sp-grid">
+            {results.map((m) => (
+              <Link key={m.id} to={"/movie/" + m.id} className="sp-item">
+                <img src={m.poster_url} alt="" />
+                <span>
+                  <b>{m.title}</b>
+                  <small>{m.upcoming ? "Coming Soon" : "Movies"}</small>
+                </span>
+              </Link>
+            ))}
+          </div>
+          {results.length === 0 && <p className="empty-note">No movies match "{q}".</p>}
+        </>
+      ) : (
+        <>
+          <h2 className="sp-h">Trending Now</h2>
+          <div className="sp-grid">
+            {running.slice(0, 10).map((m) => (
+              <Link key={m.id} to={"/movie/" + m.id} className="sp-item">
+                <img src={m.poster_url} alt="" />
+                <span>
+                  <b>{m.title}</b>
+                  <small>Movies</small>
+                </span>
+              </Link>
+            ))}
+          </div>
+          <h2 className="sp-h">Recommended For You</h2>
+          <div className="rec-row">
+            {running.slice(0, 8).map((m) => (
+              <Link key={m.id} to={"/movie/" + m.id} className="rec-big">
+                <img src={m.poster_url} alt={m.title} loading="lazy" />
+              </Link>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}

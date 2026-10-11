@@ -1,0 +1,11 @@
+const base = { width: 24, height: 24, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round" };
+export const IcHome = (p) => (<svg {...base} {...p}><path d="M3 11l9-8 9 8" /><path d="M5 10v10h14V10" /><path d="M10 20v-6h4v6" /></svg>);
+export const IcSearch = (p) => (<svg {...base} {...p}><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.500-3.500" /></svg>);
+export const IcTicket = (p) => (<svg {...base} {...p}><path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4z" /><path d="M13 6v12" strokeDasharray="2 2" /></svg>);
+export const IcUser = (p) => (<svg {...base} {...p}><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 3.500-7 8-7s8 3 8 7" /></svg>);
+export const IcReel = (p) => (<svg {...base} {...p}><circle cx="12" cy="12" r="9" /><circle cx="12" cy="7.500" r="1.600" /><circle cx="12" cy="16.500" r="1.600" /><circle cx="7.500" cy="12" r="1.600" /><circle cx="16.500" cy="12" r="1.600" /></svg>);
+export const IcClap = (p) => (<svg {...base} {...p}><rect x="3" y="9" width="18" height="12" rx="2" /><path d="M3 9l3-5 4 1-3 5M10 5l4 1-3 4M14 6l4 1-3 3" /></svg>);
+export const IcFilm = (p) => (<svg {...base} {...p}><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M10 9.500v5l4-2.500z" /><path d="M3 9h2M3 15h2M19 9h2M19 15h2" /></svg>);
+export const IcBack = (p) => (<svg {...base} {...p}><path d="M15 5l-7 7 7 7" /></svg>);
+export const IcTarget = (p) => (<svg {...base} {...p}><circle cx="12" cy="12" r="7" /><circle cx="12" cy="12" r="2.500" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" /></svg>);
+export const IcCity = (p) => (<svg {...base} viewBox="0 0 44 44" width={44} height={44} strokeWidth={1.4} {...p}><path d="M4 40V22l8-6 8 6v18" /><path d="M20 40V18l8-8 8 8v22" /><path d="M2 40h40" /><path d="M9 40v-8a3 3 0 0 1 6 0v8M25 40v-8a3 3 0 0 1 6 0v8" /><path d="M28 10V5" /></svg>);

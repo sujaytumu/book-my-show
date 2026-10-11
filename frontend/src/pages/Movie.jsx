@@ -167,6 +167,7 @@ import { api, currentUser } from "../api";
 import { haversineKm } from "../components/TheatreMap";
 import Reviews from "../components/Reviews";
 import { isWatchlisted, toggleWatchlist } from "../watchlist";
+import { getCity } from "../location";
 
 // Sold-out (housefull) showtimes are hidden from the list. Set this to false to
 // show them instead as greyed-out, unclickable "Housefull" slots.
@@ -417,7 +418,7 @@ export default function Movie() {
     api.get("/movies/" + id).then((res) => {
       setMovie(res.data);
       if (!res.data.upcoming) {
-        api.get("/shows", { params: { movieId: id } }).then((showsRes) => {
+        api.get("/shows", { params: { movieId: id, city: getCity() } }).then((showsRes) => {
           setShows(showsRes.data);
           if (showsRes.data.length) setSelectedDate(showsRes.data[0].show_date);
         });

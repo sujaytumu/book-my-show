@@ -68,7 +68,8 @@ public class CatalogController {
     // ShowWindowScheduler is what keeps the *future* end of the window rolling
     // forward daily so this doesn't just shrink down to nothing over time.
     @GetMapping("/api/shows")
-    public List<Map<String, Object>> shows(@RequestParam long movieId, @RequestParam(required = false) String date) {
+    public List<Map<String, Object>> shows(@RequestParam long movieId, @RequestParam(required = false) String date,
+                                           @RequestParam(required = false) String city) {
         String sql = "select sh.*,t.id theatre_id,t.theatre_type,t.name theatre_name,t.address theatre_address,t.latitude,t.longitude," +
                 
                 "s.name screen_name," +
@@ -79,10 +80,18 @@ public class CatalogController {
                 "join screens s on s.id=sh.screen_id join theatres t on t.id=s.theatre_id " +
                 "where sh.movie_id=? and t.active=true and sh.show_date>=(now() at time zone 'Asia/Kolkata')::date " +
                 "and (sh.show_date + sh.start_time) > (now() at time zone 'Asia/Kolkata') ";
-        if (date == null) {
-            return db.queryForList(sql + "order by t.name,show_date,start_time", movieId);
+        java.util.List<Object> args = new java.util.ArrayList<>();
+        args.add(movieId);
+        // Optional city filter (the city picked in the app); no city = every cinema, as before.
+        if (city != null && !city.isBlank()) {
+            sql += "and exists(select 1 from cities c where c.id=t.city_id and lower(c.name)=lower(?)) ";
+            args.add(city.trim());
         }
-        return db.queryForList(sql + "and show_date=? order by t.name,start_time", movieId, LocalDate.parse(date));
+        if (date == null) {
+            return db.queryForList(sql + "order by t.name,show_date,start_time", args.toArray());
+        }
+        args.add(LocalDate.parse(date));
+        return db.queryForList(sql + "and show_date=? order by t.name,start_time", args.toArray());
     }
 
     @GetMapping("/api/shows/{id}")

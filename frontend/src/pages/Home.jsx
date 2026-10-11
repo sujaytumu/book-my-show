@@ -1,103 +1,125 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
+import { IcClap, IcFilm, IcReel, IcSearch } from "../components/Icons";
 
-const MAIN_LANGUAGES = ["Telugu", "Hindi", "Tamil", "Kannada", "Malayalam", "English"];
-
-function MovieCard({ movie }) {
+function Poster({ movie }) {
   return (
-    <Link className="card movie" to={"/movie/" + movie.id}>
-      <img src={movie.poster_url} alt={movie.title} loading="lazy" />
-      <h3>{movie.title}</h3>
-      <p>
-        {movie.language} · {movie.genre}
-      </p>
-      {movie.upcoming ? <b className="coming-soon-tag">Coming Soon</b> : <b>★ {movie.rating}</b>}
+    <Link className="poster-card" to={"/movie/" + movie.id}>
+      <div className="pc-img">
+        <img src={movie.poster_url} alt={movie.title} loading="lazy" />
+        {movie.upcoming ? (
+          <span className="pc-rate soon">Coming Soon</span>
+        ) : (
+          <span className="pc-rate">
+            <i>★</i> {Number(movie.rating || 0).toFixed(1)}/10
+          </span>
+        )}
+      </div>
+      <b>{movie.title}</b>
+      <small>{movie.genre}</small>
     </Link>
   );
 }
 
 export default function Home({ mode = "now-showing" }) {
-  const isComingSoon = mode === "coming-soon";
+  const isSoon = mode === "coming-soon";
   const [movies, setMovies] = useState([]);
-  const [query, setQuery] = useState("");
-  const [language, setLanguage] = useState("All");
 
   useEffect(() => {
-    api.get("/movies").then((res) => setMovies(res.data));
-    setQuery("");
-    setLanguage("All");
+    api.get("/movies").then((res) => setMovies(res.data)).catch(() => {});
+    window.scrollTo(0, 0);
   }, [mode]);
 
-  async function search(value) {
-    setQuery(value);
-    const res = await api.get("/movies", { params: { q: value } });
-    setMovies(res.data);
-  }
-
-  // Only the active view's movies - never both sets at once.
-  const inView = movies.filter((m) => !!m.upcoming === isComingSoon);
-  // Always offer the main Indian film languages (like BMS), plus any other language that has movies.
-  const languages = useMemo(
-    () => ["All", ...new Set([...inView.map((m) => m.language).filter(Boolean), ...MAIN_LANGUAGES])],
-    [inView]
-  );
-  const filtered = language === "All" ? inView : inView.filter((m) => m.language === language);
+  // Telugu movies only.
+  const telugu = useMemo(() => movies.filter((m) => m.language === "Telugu"), [movies]);
+  const running = telugu.filter((m) => !m.upcoming);
+  const soon = telugu.filter((m) => m.upcoming);
+  const hero = [...running].sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0)).slice(0, 5);
 
   return (
-    <>
-
-      
-
-      
-
-      <input
-        className="search"
-        placeholder="Search movies..."
-        value={query}
-        onChange={(e) => search(e.target.value)}
-      />
-
-      {languages.length > 1 && (
-        <div className="chip-row lang-row">
-          {languages.map((lang) => (
-            <button
-              key={lang}
-              className={"chip" + (language === lang ? " active" : "")}
-              onClick={() => setLanguage(lang)}
-            >
-              {lang}
-              {lang !== "All" && <small>{inView.filter((m) => m.language === lang).length}</small>}
-            </button>
-          ))}
-        </div>
-      )}
-
-      <Link to={isComingSoon ? "/" : "/coming-soon"} className="cta-banner">
-        <div>
-          <b>{isComingSoon ? "Now Showing" : "Coming Soon"}</b>
-          <span>{isComingSoon ? "Browse movies in cinemas near you" : "Explore upcoming movies"}</span>
-        </div>
-        <span>→</span>
-      </Link>
-
-      <div className="section-header">
-        <h2 className="section-title">{isComingSoon ? "Coming Soon" : "Now Showing"}</h2>
-        <span className="section-count">{filtered.length} movies</span>
+    <div className="home-page">
+      <div className="home-tabs">
+        <Link to="/" className={!isSoon ? "on" : ""}>
+          <IcReel width={34} height={34} />
+          Movies
+        </Link>
+        <Link to="/coming-soon" className={isSoon ? "on" : ""}>
+          <IcClap width={34} height={34} />
+          Coming Soon
+        </Link>
+        <Link to="/search">
+          <IcSearch width={34} height={34} />
+          Search
+        </Link>
+        <a href="#top-rated" onClick={(e) => { e.preventDefault(); document.getElementById("top-rated")?.scrollIntoView({ behavior: "smooth" }); }}>
+          <IcFilm width={34} height={34} />
+          Top Rated
+        </a>
       </div>
-      <div className="grid">
-        {filtered.map((movie) => (
-          <MovieCard movie={movie} key={movie.id} />
-        ))}
-      </div>
-      {filtered.length === 0 && (
-        <p className="empty-note">
-          No {isComingSoon ? "upcoming" : "running"} {language} movies right now.{" "}
-          <button className="ghost" onClick={() => setLanguage("All")}>
-            Show all
-          </button>
-        </p>
+
+      {isSoon ? (
+        <>
+          <h2 className="hp-h">Coming Soon</h2>
+          <div className="poster-grid">
+            {soon.map((m) => (
+              <Poster movie={m} key={m.id} />
+            ))}
+          </div>
+          {soon.length === 0 && <p className="empty-note">No upcoming Telugu movies right now.</p>}
+        </>
+      ) : (
+        <>
+          {hero.length > 0 && (
+            <div className="hero-row">
+              {hero.map((m) => (
+                <Link key={m.id} to={"/movie/" + m.id} className="hero-card">
+                  <img src={m.poster_url} alt={m.title} />
+                  <div>
+                    <b>{m.title}</b>
+                    <span>{m.genre}</span>
+                    <em>Book now</em>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+
+          <div className="hp-head">
+            <h2 className="hp-h">Recommended Movies</h2>
+            <Link to="/search">See All ›</Link>
+          </div>
+          <div className="poster-row">
+            {running.map((m) => (
+              <Poster movie={m} key={m.id} />
+            ))}
+          </div>
+          {running.length === 0 && <p className="empty-note">No Telugu movies running right now.</p>}
+
+          {soon.length > 0 && (
+            <>
+              <div className="hp-head">
+                <h2 className="hp-h">Coming Soon</h2>
+                <Link to="/coming-soon">See All ›</Link>
+              </div>
+              <div className="poster-row">
+                {soon.map((m) => (
+                  <Poster movie={m} key={m.id} />
+                ))}
+              </div>
+            </>
+          )}
+
+          <div className="hp-head" id="top-rated">
+            <h2 className="hp-h">Top Rated</h2>
+          </div>
+          <div className="poster-row">
+            {hero.map((m) => (
+              <Poster movie={m} key={m.id} />
+            ))}
+          </div>
+        </>
       )}
-    </>
+    </div>
   );
 }
