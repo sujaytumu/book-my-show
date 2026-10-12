@@ -27,3 +27,5 @@ alter table shows add column if not exists language varchar(40);
 create table if not exists coupons(code varchar(30) primary key,description varchar(200) not null,percent int not null,max_discount numeric(10,2) not null,min_amount numeric(10,2) not null default 0,first_booking_only boolean not null default false,active boolean not null default true);
 alter table bookings add column if not exists coupon_code varchar(30);
 alter table bookings add column if not exists discount_amount numeric(10,2) not null default 0;
+alter table movies add column if not exists release_date date;
+alter table theatres add column if not exists cancellable boolean not null default true;

@@ -297,10 +297,13 @@ export default function Bookings() {
                     Download ticket
                   </button>
                 )}
-                {b.status === "CONFIRMED" && bucket === "upcoming" && (
+                {b.status === "CONFIRMED" && bucket === "upcoming" && b.cancellable !== false && (
                   <button className="bk-btn danger" onClick={() => cancel(b.id)}>
                     Cancel booking
                   </button>
+                )}
+                {b.status === "CONFIRMED" && bucket === "upcoming" && b.cancellable === false && (
+                  <span className="bk-noc">Non-cancellable</span>
                 )}
               </div>
             </div>

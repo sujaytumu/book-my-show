@@ -604,3 +604,10 @@ insert into coupons(code,description,percent,max_discount,min_amount,first_booki
   ('MOVIE20','20% off up to Rs 150 on orders of Rs 500 or more',20,150,500,false),
   ('FIRST15','15% off up to Rs 120 on your first booking (min Rs 150)',15,120,150,true)
 on conflict (code) do nothing;
+
+-- Release dates are written into the descriptions ("Released 2 October 2026" / "Releasing 11 June 2027").
+update movies set release_date = to_date((regexp_match(description,'Releas(?:ed|ing) (\d{1,2} (?:January|February|March|April|May|June|July|August|September|October|November|December) \d{4})'))[1],'FMDD FMMonth YYYY')
+where release_date is null and description ~ 'Releas(ed|ing) \d{1,2} (January|February|March|April|May|June|July|August|September|October|November|December) \d{4}';
+
+-- Cancellation policy per cinema (like BMS: some cinemas are non-cancellable).
+update theatres set cancellable=false where name in ('AMB Cinemas','Prasads Multiplex');

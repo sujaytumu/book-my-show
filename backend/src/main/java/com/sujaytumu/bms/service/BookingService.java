@@ -182,7 +182,7 @@ public class BookingService {
     public List<Map<String, Object>> myBookings(String email) {
         return db.queryForList("""
                 select b.id, b.reference, b.status, b.amount, b.created_at, m.title,
-                       sh.show_date, sh.start_time, t.name theatre_name,
+                       sh.show_date, sh.start_time, t.name theatre_name, t.cancellable,
                        string_agg(bs.seat_number, ', ' order by bs.seat_number) seats
                 from bookings b
                 join users u on u.id = b.user_id
@@ -192,7 +192,7 @@ public class BookingService {
                 join theatres t on t.id = sc.theatre_id
                 join booking_seats bs on bs.booking_id = b.id
                 where u.email = ?
-                group by b.id, m.title, sh.show_date, sh.start_time, t.name
+                group by b.id, m.title, sh.show_date, sh.start_time, t.name, t.cancellable
                 order by b.created_at desc
                 """, email);
     }
@@ -221,11 +221,12 @@ public class BookingService {
         int updated = db.update(
                 "update bookings b set status='CANCELLED' " +
                         "where b.id=? and b.user_id=(select id from users where email=?) and b.status='CONFIRMED' " +
-                        "and (select (sh.show_date + sh.start_time) from shows sh where sh.id=b.show_id) > now()",
+                        "and (select (sh.show_date + sh.start_time) from shows sh where sh.id=b.show_id) > now() " +
+                        "and (select t.cancellable from shows sh join screens sc on sc.id=sh.screen_id join theatres t on t.id=sc.theatre_id where sh.id=b.show_id)",
                 bookingId, email);
         if (updated == 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Booking cannot be cancelled (already cancelled, unpaid, or the show has started)");
+                    "Booking cannot be cancelled (already cancelled, unpaid, the show has started, or this cinema does not allow cancellation)");
         }
         // Free the seats so they become bookable by anyone again.
         db.update("update show_seats ss set status='AVAILABLE',locked_by=null,locked_until=null " +

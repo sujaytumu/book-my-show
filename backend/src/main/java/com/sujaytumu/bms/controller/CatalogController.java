@@ -29,9 +29,9 @@ public class CatalogController {
     @GetMapping("/api/movies")
     public List<Map<String, Object>> movies(@RequestParam(required = false) String q) {
         if (q == null || q.isBlank()) {
-            return db.queryForList("select * from movies where active=true order by title");
+            return db.queryForList("select m.*,(select count(*) from reviews r where r.movie_id=m.id) votes from movies m where m.active=true order by m.title");
         }
-        return db.queryForList("select * from movies where active=true and title ilike ? order by title", "%" + q + "%");
+        return db.queryForList("select m.*,(select count(*) from reviews r where r.movie_id=m.id) votes from movies m where m.active=true and m.title ilike ? order by m.title", "%" + q + "%");
     }
 
     @GetMapping("/api/movies/{id}")
@@ -70,7 +70,7 @@ public class CatalogController {
     @GetMapping("/api/shows")
     public List<Map<String, Object>> shows(@RequestParam long movieId, @RequestParam(required = false) String date,
                                            @RequestParam(required = false) String city) {
-        String sql = "select sh.*,t.id theatre_id,t.theatre_type,t.name theatre_name,t.address theatre_address,t.latitude,t.longitude," +
+        String sql = "select sh.*,t.id theatre_id,t.theatre_type,t.cancellable,t.name theatre_name,t.address theatre_address,t.latitude,t.longitude," +
                 
                 "s.name screen_name," +
                 "(select count(*) from show_seats ss where ss.show_id=sh.id) total_seats," +

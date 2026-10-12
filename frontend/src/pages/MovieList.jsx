@@ -10,6 +10,18 @@ const IcFilter = () => (
   </svg>
 );
 
+const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+function fmtRelease(d) {
+  if (!d) return "";
+  const [y, m, day] = String(d).slice(0, 10).split("-").map(Number);
+  return day + " " + MON[m - 1] + ", " + y;
+}
+function fmtVotes(n) {
+  n = Number(n || 0);
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, "") + "K+ votes";
+  return n + (n === 1 ? " vote" : " votes");
+}
+
 export default function MovieList({ upcoming = false }) {
   const navigate = useNavigate();
   const [movies, setMovies] = useState([]);
@@ -105,10 +117,13 @@ export default function MovieList({ upcoming = false }) {
           <Link key={m.id} to={"/movie/" + m.id} className="ml-card">
             <img src={m.poster_url} alt={m.title} loading="lazy" />
             {upcoming ? (
-              <span className="ml-pill">Coming Soon</span>
+              <span className="ml-pill">{m.release_date ? fmtRelease(m.release_date) : "Coming Soon"}</span>
             ) : (
               <span className="ml-rate">
-                <i>★</i> {Number(m.rating || 0).toFixed(1)}
+                <span>
+                  <i>★</i> {Number(m.rating || 0).toFixed(1)}
+                </span>
+                {Number(m.votes) > 0 && <em>{fmtVotes(m.votes)}</em>}
               </span>
             )}
             <b>{m.title}</b>

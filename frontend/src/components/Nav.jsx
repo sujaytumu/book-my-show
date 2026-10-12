@@ -41,6 +41,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { getCity } from "../location";
 import { IcUser } from "./Icons";
+import { useNotifications } from "../notifications";
 import { currentUser, logout } from "../api";
 
 // "Sujay Tumu" -> "ST", "Sujay" -> "S"
@@ -55,6 +56,7 @@ export default function Nav() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [city, setCityState] = useState(getCity());
+  const { unread } = useNotifications();
   useEffect(() => {
     const f = () => setCityState(getCity());
     window.addEventListener("bms-city", f);
@@ -87,7 +89,7 @@ export default function Nav() {
     navigate("/");
   }
 
-  if (pathname === "/search" || pathname === "/city" || pathname === "/coming-soon" || pathname === "/now-showing" || pathname.startsWith("/movie/") || pathname.startsWith("/show/")) return null;
+  if (pathname === "/search" || pathname === "/city" || pathname === "/notifications" || pathname === "/coming-soon" || pathname === "/now-showing" || pathname.startsWith("/movie/") || pathname.startsWith("/show/")) return null;
   const right = (
       <div className="nav-right">
         {user ? (
@@ -146,7 +148,16 @@ export default function Nav() {
             {city} <span>›</span>
           </Link>
         </div>
-        {right}
+        <div className="home-right">
+          <Link to="/notifications" className="home-bell" aria-label="Notifications">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 8a6 6 0 0 0-12 0c0 7-3 8-3 8h18s-3-1-3-8" />
+              <path d="M13.700 20a2 2 0 0 1-3.400 0" />
+            </svg>
+            {unread > 0 && <i>{unread > 9 ? "9+" : unread}</i>}
+          </Link>
+          {right}
+        </div>
       </header>
     );
   }
