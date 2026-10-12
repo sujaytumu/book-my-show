@@ -302,6 +302,11 @@ export default function Bookings() {
                     Cancel booking
                   </button>
                 )}
+                {(bucket === "past" || b.status === "CANCELLED") && (
+                  <Link className="bk-btn" to={"/search?q=" + encodeURIComponent(b.title)}>
+                    Book again
+                  </Link>
+                )}
                 {b.status === "CONFIRMED" && bucket === "upcoming" && b.cancellable === false && (
                   <span className="bk-noc">Non-cancellable</span>
                 )}
