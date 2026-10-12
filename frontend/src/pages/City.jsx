@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { IcBack, IcCity, IcSearch, IcTarget } from "../components/Icons";
-import { ALL_CITIES, OTHER_CITIES, POPULAR, detectCity, getCity, setCity } from "../location";
+import { ALL_CITIES, OTHER_CITIES, aliasMatch, POPULAR, detectCity, getCity, setCity } from "../location";
 
 export default function City() {
   const navigate = useNavigate();
@@ -28,7 +28,7 @@ export default function City() {
   }
 
   const needle = q.trim().toLowerCase();
-  const found = needle ? ALL_CITIES.filter((c) => c.toLowerCase().includes(needle)).sort() : null;
+  const found = needle ? [...new Set([...ALL_CITIES.filter((c) => c.toLowerCase().includes(needle)), ...aliasMatch(needle).filter((c) => ALL_CITIES.includes(c))])].sort() : null;
 
   return (
     <div className="city-page">
