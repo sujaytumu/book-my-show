@@ -20,7 +20,7 @@ function saveRecent(list) {
 export default function Search() {
   const navigate = useNavigate();
   const [movies, setMovies] = useState([]);
-  const [q, setQ] = useState("");
+  const [q, setQ] = useState(() => new URLSearchParams(window.location.search).get("q") || "");
   const [loading, setLoading] = useState(true);
   const [recent, setRecent] = useState(loadRecent);
   function remember(text) {

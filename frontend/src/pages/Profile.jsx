@@ -137,6 +137,11 @@ export default function Profile() {
         </Link>
       </div>
 
+      <div className="pf-card pf-menu">
+        <Link to="/offers">🏷 Offers &amp; coupons <i>›</i></Link>
+        <Link to="/help">❓ Help &amp; support <i>›</i></Link>
+      </div>
+
       <div className="pf-card">
         <h3>My Watchlist</h3>
         {watchlist.length === 0 && (
