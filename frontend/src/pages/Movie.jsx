@@ -441,6 +441,11 @@ export default function Movie() {
     api.get("/movies/" + id).then((res) => {
       setMovie(res.data);
       if (!res.data.upcoming) {
+        try {
+          localStorage.setItem("bms_last_movie", JSON.stringify({ id: res.data.id, title: res.data.title, poster_url: res.data.poster_url, rating: res.data.rating, genre: res.data.genre }));
+        } catch {}
+      }
+      if (!res.data.upcoming) {
         api.get("/shows", { params: { movieId: id, city: getCity() } }).then((showsRes) => {
           setShows(showsRes.data);
           setShowsLoaded(true);
@@ -900,6 +905,7 @@ export default function Movie() {
                 </button>
                 {visited.includes(group.theatre_name) && <span className="visited-tag">Visited</span>}
               </h3>
+              <p className="th-cancel">Cancellation available</p>
               {group.theatre_address && <p className="theatre-address">{group.theatre_address}</p>}
             </div>
             <div className="theatre-block-side">

@@ -72,6 +72,44 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
+import QRCode from "qrcode";
+
+function TicketModal({ b, poster, onClose }) {
+  const [qr, setQr] = useState("");
+  useEffect(() => {
+    QRCode.toDataURL(String(b.reference), { width: 220, margin: 1 }).then(setQr).catch(() => {});
+  }, [b.reference]);
+  return (
+    <div className="sheet-backdrop" onClick={onClose}>
+      <div className="tk-sheet" onClick={(e) => e.stopPropagation()}>
+        <div className="tk-top">
+          {poster && <img src={poster} alt="" />}
+          <div>
+            <b>{b.title}</b>
+            <small>{b.theatre_name}</small>
+            <small>
+              {fmtDate(b.show_date)} · {fmtTime(b.start_time)}
+            </small>
+          </div>
+        </div>
+        <div className="tk-cut" />
+        <div className="tk-body">
+          <div className="tk-seats">
+            <small>Seats</small>
+            <b>{b.seats}</b>
+          </div>
+          {qr ? <img className="tk-qr" src={qr} alt="Ticket QR code" /> : <div className="tk-qr sk" />}
+          <small className="tk-ref">Booking ID</small>
+          <b className="tk-id">{b.reference}</b>
+          <p>Show this QR code at the cinema entrance.</p>
+        </div>
+        <button type="button" className="tk-close" onClick={onClose}>
+          Close
+        </button>
+      </div>
+    </div>
+  );
+}
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -115,6 +153,7 @@ const TABS = [
 ];
 
 export default function Bookings() {
+  const [ticket, setTicket] = useState(null);
   const [bookings, setBookings] = useState([]);
   const [posters, setPosters] = useState({});
   const [loaded, setLoaded] = useState(false);
@@ -248,6 +287,11 @@ export default function Bookings() {
                 <b>₹{Number(b.amount).toFixed(2)}</b>
               </div>
               <div className="bk-actions">
+                {b.status === "CONFIRMED" && (
+                  <button className="bk-btn" onClick={() => setTicket(b)}>
+                    View ticket
+                  </button>
+                )}
                 {(b.status === "CONFIRMED" || b.status === "CANCELLED") && (
                   <button className="bk-btn primary" onClick={() => downloadTicket(b.id, b.reference)}>
                     Download ticket
@@ -263,6 +307,7 @@ export default function Bookings() {
           </div>
         );
       })}
+      {ticket && <TicketModal b={ticket} poster={posters[ticket.title]} onClose={() => setTicket(null)} />}
     </>
   );
 }
