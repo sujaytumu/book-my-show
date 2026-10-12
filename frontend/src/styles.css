@@ -836,3 +836,19 @@ img.cast-photo{object-fit:cover;object-position:top;background:#eee}
 .nt-empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:60px 20px;color:var(--gray)}
 .nt-empty b{color:var(--ink);font-size:15px}
 .nt-empty a{background:#e0415a;color:#fff;border-radius:8px;padding:9px 22px}
+
+/* ---------- Offers & Help pages ---------- */
+.of-page{max-width:640px;margin:0 auto;padding-bottom:30px}
+.of-hint{margin:6px 16px 10px;color:var(--muted,#666);font-size:9.6px}
+.of-card{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:8px 16px;padding:12px 14px;border:1.5px dashed #1ea83c;border-radius:10px;background:#f4fbf6}
+.of-card p{margin:3px 0 0;font-size:9.6px;color:#444}
+.of-code{color:#15803d;font-size:11px;letter-spacing:.6px}
+.of-card button{flex:none;border:1px solid #15803d;background:#fff;color:#15803d;border-radius:6px;padding:6px 12px;font-weight:700;font-size:9.6px;cursor:pointer}
+.hp-item{margin:0 16px;border-bottom:1px solid #eee}
+.hp-item>button{display:flex;justify-content:space-between;align-items:center;width:100%;padding:14px 0;background:none;border:0;text-align:left;font-weight:700;font-size:10.4px;color:inherit;cursor:pointer;text-transform:none;letter-spacing:0}
+.hp-item>button i{font-style:normal;font-size:14px;color:var(--red)}
+.hp-item p{margin:0 0 14px;font-size:9.6px;color:#555;line-height:1.5}
+.pf-menu{padding:0}
+.pf-menu a{display:flex;justify-content:space-between;padding:14px 16px;font-size:10.4px;font-weight:600;color:inherit;border-bottom:1px solid #eee}
+.pf-menu a:last-child{border-bottom:0}
+.pf-menu i{font-style:normal;color:#999}
