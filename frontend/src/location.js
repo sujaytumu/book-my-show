@@ -32,8 +32,14 @@ const GEO = [
   ["Kolhapur", 16.705, 74.2433], ["Kota", 25.2138, 75.8648], ["Ludhiana", 30.901, 75.8573], ["Moradabad", 28.8386, 78.7733],
   ["Panaji", 15.4909, 73.8278], ["Rourkela", 22.2604, 84.8536], ["Sangli", 16.8524, 74.5815], ["Solapur", 17.6599, 75.9064],
   ["Thanjavur", 10.787, 79.1378], ["Udupi", 13.3409, 74.7421], ["Ujjain", 23.1765, 75.7885], ["Vasai-Virar", 19.4259, 72.8225],
+  ["Darsi", 15.7728, 79.6783],
   ["Mathura", 27.4924, 77.6737], ["Meerut", 28.9845, 77.7064], ["Bareilly", 28.367, 79.4304], ["Gorakhpur", 26.7606, 83.3732],
 ];
+
+const ALIASES = { vizag: "Visakhapatnam", vizianagaram: "Vizianagaram", bezawada: "Vijayawada", bangalore: "Bengaluru", delhi: "Delhi-NCR", bombay: "Mumbai", madras: "Chennai", calcutta: "Kolkata" };
+export function aliasMatch(needle) {
+  return Object.entries(ALIASES).filter(([k]) => k.startsWith(needle)).map(([, v]) => v);
+}
 
 export const ALL_CITIES = [...new Set(GEO.map((g) => g[0]))];
 export const OTHER_CITIES = ALL_CITIES.filter((c) => !POPULAR.includes(c)).sort();

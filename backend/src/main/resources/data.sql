@@ -611,3 +611,67 @@ where release_date is null and description ~ 'Releas(ed|ing) \d{1,2} (January|Fe
 
 -- Cancellation policy per cinema (like BMS: some cinemas are non-cancellable).
 update theatres set cancellable=false where name in ('AMB Cinemas','Prasads Multiplex');
+
+-- ============================================================
+-- Andhra Pradesh cities: Vijayawada, Visakhapatnam (Vizag), Darsi and Ongole, each with
+-- mall multiplexes (3 screens) and single screens (1 screen). Cinema names below are sample
+-- listings - rename / replace them from the Admin page. Same booking flow as everywhere else.
+-- ============================================================
+insert into cities(name) values ('Vijayawada'),('Visakhapatnam'),('Darsi'),('Ongole') on conflict(name) do nothing;
+
+insert into theatres(name,address,city_id,latitude,longitude,theatre_type)
+select v.name,v.address,c.id,v.lat,v.lon,v.typ
+from (values
+  ('Vijayawada','PVR: Trendset Mall','Labbipet, Vijayawada',16.5058,80.6402,'MULTIPLEX'),
+  ('Vijayawada','INOX: Vijayawada Mall','Benz Circle, Vijayawada',16.4998,80.6552,'MULTIPLEX'),
+  ('Vijayawada','Swarna Palace 70MM','Governorpet, Vijayawada',16.5155,80.6179,'SINGLE'),
+  ('Vijayawada','Sri Durga 70MM','Vijayawada',16.5100,80.6300,'SINGLE'),
+  ('Visakhapatnam','INOX: CMR Central Mall','Maharanipeta, Visakhapatnam',17.7231,83.3035,'MULTIPLEX'),
+  ('Visakhapatnam','PVR: Vizag Central Mall','Dwaraka Nagar, Visakhapatnam',17.7289,83.3067,'MULTIPLEX'),
+  ('Visakhapatnam','Jagadamba 70MM','Jagadamba Junction, Visakhapatnam',17.7117,83.3017,'SINGLE'),
+  ('Visakhapatnam','Melody Theatre','Waltair Main Road, Visakhapatnam',17.7186,83.3088,'SINGLE'),
+  ('Darsi','Sri Venkateswara Multiplex','Darsi, Prakasam',15.7728,79.6783,'MULTIPLEX'),
+  ('Darsi','Lakshmi 35MM','Darsi, Prakasam',15.7690,79.6750,'SINGLE'),
+  ('Darsi','Sri Rama 70MM','Darsi, Prakasam',15.7760,79.6810,'SINGLE'),
+  ('Ongole','Sri Vasavi Mall Multiplex','Trunk Road, Ongole',15.5057,80.0499,'MULTIPLEX'),
+  ('Ongole','Surya 70MM','Ongole',15.5030,80.0450,'SINGLE'),
+  ('Ongole','Sri Lakshmi 35MM','Ongole',15.5090,80.0540,'SINGLE')
+) as v(city,name,address,lat,lon,typ)
+join cities c on c.name=v.city
+where not exists(select 1 from theatres t where t.name=v.name);
+
+insert into screens(name,total_seats,theatre_id)
+select 'Screen ' || g, 150, t.id
+from theatres t join cities c on c.id=t.city_id
+cross join generate_series(1,3) g
+where c.name in ('Vijayawada','Visakhapatnam','Darsi','Ongole')
+  and g <= case when t.theatre_type='MULTIPLEX' then 3 else 1 end
+  and not exists(select 1 from screens s where s.theatre_id=t.id and s.name='Screen ' || g);
+
+-- Telugu movies that are running rotate across the new screens in four daily slots.
+-- The daily scheduler then repeats these shows across the rolling 7-day window.
+insert into shows(movie_id,screen_id,show_date,start_time,end_time,price)
+select mv.id, sc.screen_id, current_date+1, sl.st, sl.st + interval '2 hours 30 minutes',
+       case when sc.theatre_type='MULTIPLEX' then 150 else 100 end
+from (
+  select s.id screen_id, t.theatre_type, row_number() over (order by s.id) srn
+  from screens s join theatres t on t.id=s.theatre_id join cities c on c.id=t.city_id
+  where c.name in ('Vijayawada','Visakhapatnam','Darsi','Ongole')
+) sc
+cross join (values (1,time '10:30'),(2,time '14:00'),(3,time '18:30'),(4,time '21:15')) as sl(n,st)
+join (
+  select id, row_number() over (order by id) rn, count(*) over () cnt
+  from movies where active=true and upcoming=false and language='Telugu'
+) mv on mv.rn = ((sc.srn + sl.n) % mv.cnt) + 1
+where not exists(select 1 from shows sh where sh.movie_id=mv.id and sh.screen_id=sc.screen_id and sh.start_time=sl.st);
+
+-- Language, 2D/3D format and the 150-seat layout for the new shows (only fills what is missing).
+update shows sh set language = m.language from movies m where m.id = sh.movie_id and sh.language is null;
+update shows sh set format = case when t.theatre_type = 'MULTIPLEX' and sh.start_time >= time '18:00' then '3D' else '2D' end
+from screens sc join theatres t on t.id = sc.theatre_id
+where sc.id = sh.screen_id and sh.format is null;
+insert into show_seats(show_id,seat_number,seat_type)
+select sh.id, chr(65 + r) || n::text, case when r < 4 then 'PREMIUM' else 'REGULAR' end
+from shows sh cross join generate_series(0,9) r cross join generate_series(1,15) n
+where (select count(*) from show_seats ss where ss.show_id = sh.id) < 150
+on conflict (show_id,seat_number) do nothing;
