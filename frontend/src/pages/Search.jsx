@@ -3,11 +3,33 @@ import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { IcBack } from "../components/Icons";
 
+const RKEY = "bms_recent";
+function loadRecent() {
+  try {
+    return JSON.parse(localStorage.getItem(RKEY) || "[]");
+  } catch {
+    return [];
+  }
+}
+function saveRecent(list) {
+  try {
+    localStorage.setItem(RKEY, JSON.stringify(list));
+  } catch {}
+}
+
 export default function Search() {
   const navigate = useNavigate();
   const [movies, setMovies] = useState([]);
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
+  const [recent, setRecent] = useState(loadRecent);
+  function remember(text) {
+    const t = String(text || "").trim();
+    if (!t) return;
+    const next = [t, ...recent.filter((r) => r.toLowerCase() !== t.toLowerCase())].slice(0, 6);
+    setRecent(next);
+    saveRecent(next);
+  }
 
   useEffect(() => {
     api
@@ -28,7 +50,13 @@ export default function Search() {
         <button type="button" onClick={() => navigate(-1)} aria-label="Back">
           <IcBack />
         </button>
-        <input autoFocus placeholder="Search for latest movies" value={q} onChange={(e) => setQ(e.target.value)} />
+        <input
+          autoFocus
+          placeholder="Search for latest movies"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && remember(q)}
+        />
       </div>
 
       {loading ? (
@@ -51,7 +79,7 @@ export default function Search() {
           <h2 className="sp-h">Movies</h2>
           <div className="sp-grid">
             {results.map((m) => (
-              <Link key={m.id} to={"/movie/" + m.id} className="sp-item">
+              <Link key={m.id} to={"/movie/" + m.id} className="sp-item" onClick={() => remember(m.title)}>
                 <img src={m.poster_url} alt="" />
                 <span>
                   <b>{m.title}</b>
@@ -64,6 +92,29 @@ export default function Search() {
         </>
       ) : (
         <>
+          {recent.length > 0 && (
+            <>
+              <div className="sp-recent-head">
+                <h2 className="sp-h">Recent searches</h2>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRecent([]);
+                    saveRecent([]);
+                  }}
+                >
+                  Clear
+                </button>
+              </div>
+              <div className="sp-recent">
+                {recent.map((r) => (
+                  <button type="button" key={r} onClick={() => setQ(r)}>
+                    {r}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
           <h2 className="sp-h">Trending Now</h2>
           <div className="sp-grid">
             {running.slice(0, 10).map((m) => (

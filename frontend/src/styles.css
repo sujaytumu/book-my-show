@@ -790,3 +790,32 @@ img.cast-photo{object-fit:cover;object-position:top;background:#eee}
 .slot-hint .slot-badge{position:static;width:22px;height:22px;line-height:22px;font-size:12px}
 .slot-hint button{margin-left:auto;width:26px;height:26px;border-radius:50%;border:0;background:#e6e6ea;color:#333;padding:0;font-size:16px;line-height:1}
 @media (max-width:640px){.cine-search,.movie-page .theatre-block{margin-left:-14px;margin-right:-14px;padding-left:14px;padding-right:14px}}
+
+/* ---------- Extra BMS features: ticket QR, recent searches, resume card ---------- */
+.tk-sheet{background:#fff;width:min(340px,92%);border-radius:18px;overflow:hidden;align-self:center;margin:auto;max-height:92vh;overflow-y:auto}
+.sheet-backdrop:has(.tk-sheet){align-items:center}
+.tk-top{display:flex;gap:12px;padding:16px;background:#1e1e24;color:#fff}
+.tk-top img{width:54px;height:80px;object-fit:cover;border-radius:6px}
+.tk-top b{display:block;font-size:14px;margin-bottom:4px}
+.tk-top small{display:block;color:#c9c9d0;font-size:10px;line-height:1.5}
+.tk-cut{height:14px;background:radial-gradient(circle at 0 50%,transparent 7px,#1e1e24 7.5px) left/50% 100% no-repeat,radial-gradient(circle at 100% 50%,transparent 7px,#1e1e24 7.5px) right/50% 100% no-repeat;margin-top:-1px}
+.tk-body{padding:6px 18px 8px;text-align:center}
+.tk-seats small,.tk-ref{display:block;color:var(--gray);font-size:9px;text-transform:uppercase;letter-spacing:.5px}
+.tk-seats b{font-size:15px}
+.tk-qr{width:170px;height:170px;margin:12px auto 8px;display:block}
+.tk-id{font-size:13px;letter-spacing:.5px}
+.tk-body p{color:var(--gray);font-size:10px;margin:8px 0 0}
+.tk-close{display:block;width:calc(100% - 36px);margin:10px 18px 18px;background:#dc3558;border:0;border-radius:10px;color:#fff;padding:11px;font-size:12px;text-transform:none;letter-spacing:0}
+.sp-recent-head{display:flex;justify-content:space-between;align-items:center}
+.sp-recent-head button{background:none;border:0;color:#e0415a;font-size:11px;padding:0;margin-top:14px;text-transform:none;letter-spacing:0}
+.sp-recent{display:flex;gap:8px;flex-wrap:wrap}
+.sp-recent button{background:#fff;border:1.5px solid #dcdce2;border-radius:20px;color:#333;font-size:11px;padding:6px 14px;text-transform:none;letter-spacing:0;font-weight:400}
+.resume-card{background:#eef1f9;border-radius:16px;padding:14px;margin:4px 0 8px}
+.rc-head{display:flex;justify-content:space-between;align-items:center;font-size:14px}
+.rc-head button{width:24px;height:24px;border-radius:50%;border:1.5px solid #999;background:none;color:#555;padding:0;font-size:14px;line-height:1}
+.rc-body{display:flex;gap:12px;padding:12px 0}
+.rc-body img{width:56px;height:84px;object-fit:cover;border-radius:8px}
+.rc-body b{display:block;font-size:15px;margin-bottom:4px}
+.rc-body small{display:block;color:var(--gray);font-size:11px;line-height:1.5}
+.rc-btn{display:block;text-align:center;background:#dc3558;color:#fff;border-radius:10px;padding:11px;font-size:13px;font-weight:500}
+.th-cancel{margin:3px 0 0;font-size:9.5px;color:#15803d}

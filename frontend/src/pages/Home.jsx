@@ -26,6 +26,19 @@ export default function Home({ mode = "now-showing" }) {
   const isSoon = mode === "coming-soon";
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [last, setLast] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("bms_last_movie") || "null");
+    } catch {
+      return null;
+    }
+  });
+  function dismissLast() {
+    try {
+      localStorage.removeItem("bms_last_movie");
+    } catch {}
+    setLast(null);
+  }
 
   useEffect(() => {
     api
@@ -96,6 +109,28 @@ export default function Home({ mode = "now-showing" }) {
                   </div>
                 </Link>
               ))}
+            </div>
+          )}
+
+          {last && (
+            <div className="resume-card">
+              <div className="rc-head">
+                <b>Pick Up Where You Left Off</b>
+                <button type="button" onClick={dismissLast} aria-label="Dismiss">
+                  ×
+                </button>
+              </div>
+              <div className="rc-body">
+                {last.poster_url && <img src={last.poster_url} alt="" />}
+                <div>
+                  <b>{last.title}</b>
+                  <small>Rating: {Number(last.rating || 0).toFixed(1)}</small>
+                  <small>{last.genre}</small>
+                </div>
+              </div>
+              <Link to={"/movie/" + last.id + "?book=1"} className="rc-btn">
+                Resume booking
+              </Link>
             </div>
           )}
 
