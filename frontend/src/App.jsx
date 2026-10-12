@@ -13,6 +13,7 @@ import Profile from "./pages/Profile";
 import Search from "./pages/Search";
 import MovieList from "./pages/MovieList";
 import City from "./pages/City";
+import Notifications from "./pages/Notifications";
 import { IcTarget, IcHome, IcSearch, IcTicket, IcUser } from "./components/Icons";
 import { alreadyAsked, detectCity, markAsked, setCity } from "./location";
 
@@ -108,6 +109,7 @@ export default function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/search" element={<Search />} />
           <Route path="/city" element={<City />} />
+          <Route path="/notifications" element={<Notifications />} />
           <Route path="/admin" element={<Admin />} />
         </Routes>
       </main>

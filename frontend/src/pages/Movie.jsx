@@ -401,6 +401,23 @@ function slotKind(t) {
   return "";
 }
 
+const MON3 = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+function relDate(d) {
+  const [y, m, day] = String(d).slice(0, 10).split("-").map(Number);
+  return day + " " + MON3[m - 1] + ", " + y;
+}
+
+// Cinema "logo": a coloured tile with the brand initials (we have no official logo images).
+function logoStyle(name) {
+  let hsh = 0;
+  for (const ch of String(name)) hsh = (hsh * 31 + ch.charCodeAt(0)) % 360;
+  return { background: "hsl(" + hsh + ",55%,94%)", color: "hsl(" + hsh + ",60%,35%)", borderColor: "hsl(" + hsh + ",45%,82%)" };
+}
+function logoText(name) {
+  const w = String(name).replace(/[:\-].*$/, "").trim().split(/\s+/).filter(Boolean);
+  return ((w[0]?.[0] || "") + (w[1]?.[0] || "")).toUpperCase();
+}
+
 export default function Movie() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -691,6 +708,7 @@ export default function Movie() {
             movie.duration_minutes ? Math.floor(movie.duration_minutes / 60) + "h " + (movie.duration_minutes % 60) + "m" : null,
             String(movie.genre || "").replace(/[/]/g, ", "),
             movie.certificate,
+            movie.release_date ? relDate(movie.release_date) : null,
           ]
             .filter(Boolean)
             .join("  •  ")}
@@ -887,7 +905,7 @@ export default function Movie() {
       {theatreGroups.filter((g) => !cineQuery.trim() || g.theatre_name.toLowerCase().includes(cineQuery.trim().toLowerCase())).map((group) => (
         <div className="theatre-block card" key={group.theatre_name}>
           <div className="theatre-block-header">
-            <span className="th-logo">{String(group.theatre_name).trim().charAt(0).toUpperCase()}</span>
+            <span className="th-logo" style={logoStyle(group.theatre_name)}>{logoText(group.theatre_name)}</span>
             <div className="th-main">
               <h3>
                 {group.theatre_name}
@@ -905,7 +923,11 @@ export default function Movie() {
                 </button>
                 {visited.includes(group.theatre_name) && <span className="visited-tag">Visited</span>}
               </h3>
-              <p className="th-cancel">Cancellation available</p>
+              {group.shows[0]?.cancellable === false ? (
+                <p className="th-cancel no">Non-cancellable</p>
+              ) : (
+                <p className="th-cancel">Cancellation available</p>
+              )}
               {group.theatre_address && <p className="theatre-address">{group.theatre_address}</p>}
             </div>
             <div className="theatre-block-side">
