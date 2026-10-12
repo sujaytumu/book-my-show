@@ -613,29 +613,71 @@ where release_date is null and description ~ 'Releas(ed|ing) \d{1,2} (January|Fe
 update theatres set cancellable=false where name in ('AMB Cinemas','Prasads Multiplex');
 
 -- ============================================================
--- Andhra Pradesh cities: Vijayawada, Visakhapatnam (Vizag), Darsi and Ongole, each with
--- mall multiplexes (3 screens) and single screens (1 screen). Cinema names below are sample
--- listings - rename / replace them from the Admin page. Same booking flow as everywhere else.
 -- ============================================================
-insert into cities(name) values ('Vijayawada'),('Visakhapatnam'),('Darsi'),('Ongole') on conflict(name) do nothing;
+-- Cities beyond Hyderabad: Vijayawada, Visakhapatnam, Darsi, Ongole, Chennai, Bengaluru, Mumbai,
+-- Kolkata and Delhi-NCR. Real cinema names (mall multiplexes = 3 screens, single screens = 1).
+-- Addresses / coordinates are approximate. Same booking flow as everywhere else.
+-- ============================================================
+insert into cities(name) values ('Vijayawada'),('Visakhapatnam'),('Darsi'),('Ongole'),
+  ('Chennai'),('Bengaluru'),('Mumbai'),('Kolkata'),('Delhi-NCR') on conflict(name) do nothing;
+
+-- Earlier sample listings (not real cinemas) are switched off.
+update theatres set active=false where name in
+  ('PVR: Trendset Mall','INOX: Vijayawada Mall','Swarna Palace 70MM','Sri Durga 70MM',
+   'PVR: Vizag Central Mall','Jagadamba 70MM',
+   'Sri Venkateswara Multiplex','Lakshmi 35MM','Sri Rama 70MM',
+   'Sri Vasavi Mall Multiplex','Surya 70MM','Sri Lakshmi 35MM');
 
 insert into theatres(name,address,city_id,latitude,longitude,theatre_type)
 select v.name,v.address,c.id,v.lat,v.lon,v.typ
 from (values
-  ('Vijayawada','PVR: Trendset Mall','Labbipet, Vijayawada',16.5058,80.6402,'MULTIPLEX'),
-  ('Vijayawada','INOX: Vijayawada Mall','Benz Circle, Vijayawada',16.4998,80.6552,'MULTIPLEX'),
-  ('Vijayawada','Swarna Palace 70MM','Governorpet, Vijayawada',16.5155,80.6179,'SINGLE'),
-  ('Vijayawada','Sri Durga 70MM','Vijayawada',16.5100,80.6300,'SINGLE'),
+  ('Vijayawada','INOX: Laila Mall','Laila Mall, Benz Circle, Vijayawada',16.4998,80.6552,'MULTIPLEX'),
+  ('Vijayawada','PVR: Ripples Mall','Ripples Mall, Vijayawada',16.5262,80.6720,'MULTIPLEX'),
+  ('Vijayawada','INOX: LEPL Icon','LEPL Icon Mall, Vijayawada',16.5230,80.6350,'MULTIPLEX'),
+  ('Vijayawada','Sowmya Theatre','Vijayawada',16.5120,80.6330,'SINGLE'),
   ('Visakhapatnam','INOX: CMR Central Mall','Maharanipeta, Visakhapatnam',17.7231,83.3035,'MULTIPLEX'),
-  ('Visakhapatnam','PVR: Vizag Central Mall','Dwaraka Nagar, Visakhapatnam',17.7289,83.3067,'MULTIPLEX'),
-  ('Visakhapatnam','Jagadamba 70MM','Jagadamba Junction, Visakhapatnam',17.7117,83.3017,'SINGLE'),
-  ('Visakhapatnam','Melody Theatre','Waltair Main Road, Visakhapatnam',17.7186,83.3088,'SINGLE'),
-  ('Darsi','Sri Venkateswara Multiplex','Darsi, Prakasam',15.7728,79.6783,'MULTIPLEX'),
-  ('Darsi','Lakshmi 35MM','Darsi, Prakasam',15.7690,79.6750,'SINGLE'),
-  ('Darsi','Sri Rama 70MM','Darsi, Prakasam',15.7760,79.6810,'SINGLE'),
-  ('Ongole','Sri Vasavi Mall Multiplex','Trunk Road, Ongole',15.5057,80.0499,'MULTIPLEX'),
-  ('Ongole','Surya 70MM','Ongole',15.5030,80.0450,'SINGLE'),
-  ('Ongole','Sri Lakshmi 35MM','Ongole',15.5090,80.0540,'SINGLE')
+  ('Visakhapatnam','Cinepolis: Sreekanya Cineglitz','Waltair Main Road, Visakhapatnam',17.7186,83.3088,'MULTIPLEX'),
+  ('Visakhapatnam','SVC Cinemas: Gokul','Visakhapatnam',17.7120,83.3010,'SINGLE'),
+  ('Visakhapatnam','Melody Theatre','Waltair Main Road, Visakhapatnam',17.7170,83.3050,'SINGLE'),
+  ('Visakhapatnam','Arena Cinemas','Visakhapatnam',17.7300,83.3100,'SINGLE'),
+  ('Darsi','Sri Venkateswara Picture Palace','Darsi, Prakasam',15.7728,79.6783,'SINGLE'),
+  ('Darsi','Siva Shankar Theatre','Darsi, Prakasam',15.7690,79.6750,'SINGLE'),
+  ('Darsi','Srinivasa Picture Palace','Darsi, Prakasam',15.7760,79.6810,'SINGLE'),
+  ('Ongole','Gorantla Cinemas','Ongole',15.5057,80.0499,'SINGLE'),
+  ('Ongole','Krishna Theatre','Ongole',15.5030,80.0450,'SINGLE'),
+  ('Ongole','SV Cinemas','Ongole',15.5090,80.0540,'SINGLE'),
+  ('Chennai','PVR: Sathyam Cinemas','Royapettah, Chennai',13.0540,80.2584,'MULTIPLEX'),
+  ('Chennai','PVR: Grand Galada','Pallavaram, Chennai',12.9689,80.1493,'MULTIPLEX'),
+  ('Chennai','Luxe Cinemas: Phoenix MarketCity','Velachery, Chennai',12.9926,80.2182,'MULTIPLEX'),
+  ('Chennai','Escape Cinemas: Express Avenue','Royapettah, Chennai',13.0587,80.2643,'MULTIPLEX'),
+  ('Chennai','AGS Cinemas: OMR','Navalur, Chennai',12.8460,80.2270,'MULTIPLEX'),
+  ('Chennai','Kasi Theatre','Ashok Nagar, Chennai',13.0377,80.2125,'SINGLE'),
+  ('Chennai','Udhayam Theatre','Ashok Nagar, Chennai',13.0366,80.2101,'SINGLE'),
+  ('Chennai','Rohini Silver Screens','Koyambedu, Chennai',13.0694,80.1948,'SINGLE'),
+  ('Bengaluru','PVR: Forum Mall Koramangala','Koramangala, Bengaluru',12.9346,77.6112,'MULTIPLEX'),
+  ('Bengaluru','INOX: Garuda Mall','Magrath Road, Bengaluru',12.9700,77.6094,'MULTIPLEX'),
+  ('Bengaluru','PVR: Orion Mall','Rajajinagar, Bengaluru',13.0110,77.5550,'MULTIPLEX'),
+  ('Bengaluru','PVR: Phoenix Marketcity','Whitefield, Bengaluru',12.9966,77.6965,'MULTIPLEX'),
+  ('Bengaluru','Kapali Theatre','Gandhinagar, Bengaluru',12.9790,77.5740,'SINGLE'),
+  ('Bengaluru','Triveni Theatre','Malleshwaram, Bengaluru',13.0108,77.5700,'SINGLE'),
+  ('Bengaluru','Navarang Theatre','Rajajinagar, Bengaluru',12.9990,77.5560,'SINGLE'),
+  ('Mumbai','PVR: Icon Phoenix Palladium','Lower Parel, Mumbai',18.9937,72.8258,'MULTIPLEX'),
+  ('Mumbai','INOX: R-City Ghatkopar','Ghatkopar West, Mumbai',19.0997,72.9166,'MULTIPLEX'),
+  ('Mumbai','PVR: Juhu','Juhu, Mumbai',19.1075,72.8263,'MULTIPLEX'),
+  ('Mumbai','Maratha Mandir','Mumbai Central, Mumbai',18.9690,72.8205,'SINGLE'),
+  ('Mumbai','Gaiety Galaxy','Bandra West, Mumbai',19.0590,72.8370,'SINGLE'),
+  ('Kolkata','INOX: South City Mall','Prince Anwar Shah Rd, Kolkata',22.5013,88.3622,'MULTIPLEX'),
+  ('Kolkata','PVR: Mani Square','EM Bypass, Kolkata',22.5767,88.4020,'MULTIPLEX'),
+  ('Kolkata','Priya Cinema','Rashbehari Ave, Kolkata',22.5191,88.3534,'SINGLE'),
+  ('Kolkata','Metro Cinema','Esplanade, Kolkata',22.5622,88.3510,'SINGLE'),
+  ('Kolkata','New Empire','Humayun Place, Kolkata',22.5614,88.3524,'SINGLE'),
+  ('Delhi-NCR','PVR: Select Citywalk','Saket, New Delhi',28.5285,77.2191,'MULTIPLEX'),
+  ('Delhi-NCR','PVR: Priya Vasant Vihar','Vasant Vihar, New Delhi',28.5600,77.1580,'MULTIPLEX'),
+  ('Delhi-NCR','INOX: Nehru Place','Nehru Place, New Delhi',28.5491,77.2514,'MULTIPLEX'),
+  ('Delhi-NCR','PVR: Plaza','Connaught Place, New Delhi',28.6320,77.2178,'MULTIPLEX'),
+  ('Delhi-NCR','Liberty Cinema','Karol Bagh, New Delhi',28.6420,77.2150,'SINGLE'),
+  ('Delhi-NCR','Delite Diamond','Asaf Ali Road, New Delhi',28.6410,77.2400,'SINGLE'),
+  ('Delhi-NCR','Amba Cinema','New Delhi',28.6500,77.2000,'SINGLE')
 ) as v(city,name,address,lat,lon,typ)
 join cities c on c.name=v.city
 where not exists(select 1 from theatres t where t.name=v.name);
@@ -644,7 +686,8 @@ insert into screens(name,total_seats,theatre_id)
 select 'Screen ' || g, 150, t.id
 from theatres t join cities c on c.id=t.city_id
 cross join generate_series(1,3) g
-where c.name in ('Vijayawada','Visakhapatnam','Darsi','Ongole')
+where c.name in ('Vijayawada','Visakhapatnam','Darsi','Ongole','Chennai','Bengaluru','Mumbai','Kolkata','Delhi-NCR')
+  and t.active=true
   and g <= case when t.theatre_type='MULTIPLEX' then 3 else 1 end
   and not exists(select 1 from screens s where s.theatre_id=t.id and s.name='Screen ' || g);
 
@@ -656,7 +699,8 @@ select mv.id, sc.screen_id, current_date+1, sl.st, sl.st + interval '2 hours 30 
 from (
   select s.id screen_id, t.theatre_type, row_number() over (order by s.id) srn
   from screens s join theatres t on t.id=s.theatre_id join cities c on c.id=t.city_id
-  where c.name in ('Vijayawada','Visakhapatnam','Darsi','Ongole')
+  where t.active=true
+    and c.name in ('Vijayawada','Visakhapatnam','Darsi','Ongole','Chennai','Bengaluru','Mumbai','Kolkata','Delhi-NCR')
 ) sc
 cross join (values (1,time '10:30'),(2,time '14:00'),(3,time '18:30'),(4,time '21:15')) as sl(n,st)
 join (
