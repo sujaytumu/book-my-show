@@ -34,7 +34,8 @@ public class BookingService {
 
     @Transactional
     public Map<String, Object> holdSeats(String email, long showId, List<String> rawSeatNumbers,
-                                          String contactEmail, String contactPhone, String couponCode) {
+                                          String contactEmail, String contactPhone, String couponCode,
+                                          List<Map<String, Object>> food) {
         List<String> seatNumbers = rawSeatNumbers.stream().distinct().toList();
         if (seatNumbers.isEmpty() || seatNumbers.size() > MAX_SEATS_PER_BOOKING) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -114,7 +115,25 @@ public class BookingService {
         }
         double convenienceFee = round2(subtotal * 0.03);
         double gst = round2(convenienceFee * 0.18);
-        double total = round2(subtotal - discount + convenienceFee + gst);
+        // Optional snacks: priced from the food_items table (never trusted from the client); no fee/GST added.
+        double foodTotal = 0;
+        List<String> foodLines = new java.util.ArrayList<>();
+        if (food != null) {
+            for (Map<String, Object> line : food) {
+                if (line.get("id") == null || line.get("qty") == null) continue;
+                int qty = Math.min(((Number) line.get("qty")).intValue(), 20);
+                if (qty <= 0) continue;
+                List<Map<String, Object>> item = db.queryForList(
+                        "select name, price from food_items where id=? and active=true",
+                        ((Number) line.get("id")).longValue());
+                if (item.isEmpty()) continue;
+                foodTotal += ((Number) item.get(0).get("price")).doubleValue() * qty;
+                foodLines.add(qty + " x " + item.get(0).get("name"));
+            }
+        }
+        foodTotal = round2(foodTotal);
+        String foodSummary = foodLines.isEmpty() ? null : String.join(", ", foodLines);
+        double total = round2(subtotal - discount + convenienceFee + gst + foodTotal);
 
         String finalContactEmail = (contactEmail == null || contactEmail.isBlank())
                 ? (String) user.get("email") : contactEmail.trim();
@@ -125,10 +144,10 @@ public class BookingService {
 
         long bookingId = db.queryForObject(
                 "insert into bookings(user_id,show_id,reference,status,amount,ticket_subtotal,convenience_fee," +
-                        "gst_amount,contact_email,contact_phone,expires_at,coupon_code,discount_amount) " +
-                        "values(?,?,?,'PENDING',?,?,?,?,?,?,?,?,?) returning id",
+                        "gst_amount,contact_email,contact_phone,expires_at,coupon_code,discount_amount,food_amount,food_summary) " +
+                        "values(?,?,?,'PENDING',?,?,?,?,?,?,?,?,?,?,?) returning id",
                 Long.class, userId, showId, reference, total, subtotal, convenienceFee, gst,
-                finalContactEmail, finalContactPhone, Timestamp.from(expiresAt), appliedCoupon, discount);
+                finalContactEmail, finalContactPhone, Timestamp.from(expiresAt), appliedCoupon, discount, foodTotal, foodSummary);
 
         for (String seatNumber : seatNumbers) {
             db.update("insert into booking_seats(booking_id,seat_number) values(?,?)", bookingId, seatNumber);
@@ -141,6 +160,8 @@ public class BookingService {
         result.put("reference", reference);
         result.put("ticketSubtotal", subtotal);
         result.put("discount", discount);
+        result.put("foodAmount", foodTotal);
+        if (foodSummary != null) result.put("foodSummary", foodSummary);
         if (appliedCoupon != null) result.put("couponCode", appliedCoupon);
         result.put("convenienceFee", convenienceFee);
         result.put("gst", gst);
@@ -182,7 +203,7 @@ public class BookingService {
     public List<Map<String, Object>> myBookings(String email) {
         return db.queryForList("""
                 select b.id, b.reference, b.status, b.amount, b.created_at, m.title,
-                       sh.show_date, sh.start_time, t.name theatre_name, t.cancellable,
+                       sh.show_date, sh.start_time, t.name theatre_name, t.cancellable, b.food_summary,
                        string_agg(bs.seat_number, ', ' order by bs.seat_number) seats
                 from bookings b
                 join users u on u.id = b.user_id

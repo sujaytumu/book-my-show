@@ -400,6 +400,8 @@ export default function Show() {
   }, [show?.movie_id, show?.show_date, show?.theatre_name]);
   const [couponCode, setCouponCode] = useState(""); // typed or picked coupon, validated by the server on Review Booking
   const [offers, setOffers] = useState([]); // active offers from the server
+  const [foodMenu, setFoodMenu] = useState([]); // snacks from the server
+  const [foodQty, setFoodQty] = useState({}); // { itemId: qty }
   const [secsLeft, setSecsLeft] = useState(null); // countdown while the seats are held for payment
 
 
@@ -446,6 +448,10 @@ export default function Show() {
     api
       .get("/coupons")
       .then((res) => setOffers(res.data))
+      .catch(() => {});
+    api
+      .get("/food")
+      .then((res) => setFoodMenu(res.data))
       .catch(() => {});
   }, []);
 
@@ -599,6 +605,7 @@ export default function Show() {
 
         contactPhone: contactPhone.trim() || null,
         couponCode: couponCode.trim() || null,
+        food: Object.entries(foodQty).filter(([, q]) => q > 0).map(([fid, q]) => ({ id: +fid, qty: q })),
 
       });
 
@@ -951,6 +958,36 @@ export default function Show() {
 
               />
 
+              {foodMenu.length > 0 && (
+                <>
+                  <h3 className="offers-title">Grab a bite</h3>
+                  <div className="food-list">
+                    {foodMenu.map((f) => {
+                      const q = foodQty[f.id] || 0;
+                      return (
+                        <div className="food-row" key={f.id}>
+                          <span className={"food-dot " + (f.veg ? "veg" : "nonveg")} />
+                          <div>
+                            <b>{f.name}</b>
+                            <small>{f.description}</small>
+                            <em>₹{Number(f.price).toFixed(0)}</em>
+                          </div>
+                          {q === 0 ? (
+                            <button type="button" className="food-add" onClick={() => setFoodQty({ ...foodQty, [f.id]: 1 })}>ADD</button>
+                          ) : (
+                            <span className="food-step">
+                              <button type="button" onClick={() => setFoodQty({ ...foodQty, [f.id]: q - 1 })}>−</button>
+                              {q}
+                              <button type="button" onClick={() => setFoodQty({ ...foodQty, [f.id]: Math.min(q + 1, 10) })}>+</button>
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+
               <h3 className="offers-title">Offers</h3>
               <input
                 type="text"
@@ -1039,6 +1076,13 @@ export default function Show() {
             <span>₹{hold.ticketSubtotal.toFixed(2)}</span>
 
           </div>
+
+          {hold.foodAmount > 0 && (
+            <div className="fare-row">
+              <span>Food &amp; beverages</span>
+              <span>₹{hold.foodAmount.toFixed(2)}</span>
+            </div>
+          )}
 
           {hold.discount > 0 && (
             <div className="fare-row fare-discount">

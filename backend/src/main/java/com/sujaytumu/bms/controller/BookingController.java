@@ -33,7 +33,9 @@ public class BookingController {
         String contactEmail = body.get("contactEmail") == null ? null : body.get("contactEmail").toString();
         String contactPhone = body.get("contactPhone") == null ? null : body.get("contactPhone").toString();
         String couponCode = body.get("couponCode") == null ? null : body.get("couponCode").toString();
-        return bookingService.holdSeats(auth.getName(), showId, seatNumbers, contactEmail, contactPhone, couponCode);
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> food = body.get("food") instanceof List<?> l ? (List<Map<String, Object>>) l : null;
+        return bookingService.holdSeats(auth.getName(), showId, seatNumbers, contactEmail, contactPhone, couponCode, food);
     }
 
     @GetMapping("/me")

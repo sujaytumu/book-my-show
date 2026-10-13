@@ -112,6 +112,12 @@ public class CatalogController {
         return db.queryForList("select code, description from coupons where active=true order by code");
     }
 
+    /** Snacks and drinks that can be added to a booking. */
+    @GetMapping("/api/food")
+    public List<Map<String, Object>> food() {
+        return db.queryForList("select id, name, description, price, veg from food_items where active=true order by id");
+    }
+
     @GetMapping("/api/shows/{id}/seats")
     public List<Map<String, Object>> seats(@PathVariable long id) {
         return db.queryForList(
