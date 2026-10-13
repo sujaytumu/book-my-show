@@ -61,6 +61,14 @@ public class PaymentController {
         return Map.of("status", "success");
     }
 
+    /** Pays the booking from the user's wallet balance. */
+    @PostMapping("/wallet-pay/{bookingId}")
+    public Map<String, String> walletPay(Authentication auth, @PathVariable long bookingId) {
+        bookingService.payWithWallet(auth.getName(), bookingId);
+        emailTicket(auth.getName(), bookingId);
+        return Map.of("status", "success");
+    }
+
     @PostMapping("/verify")
     public Map<String, String> verify(Authentication auth, @RequestBody Map<String, String> body) throws Exception {
         String orderId = body.get("razorpayOrderId");

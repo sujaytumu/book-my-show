@@ -402,6 +402,8 @@ export default function Show() {
   const [offers, setOffers] = useState([]); // active offers from the server
   const [foodMenu, setFoodMenu] = useState([]); // snacks from the server
   const [foodQty, setFoodQty] = useState({}); // { itemId: qty }
+  const [walletBal, setWalletBal] = useState(null); // wallet balance, loaded when the review sheet opens
+  const [useWallet, setUseWallet] = useState(false);
   const [secsLeft, setSecsLeft] = useState(null); // countdown while the seats are held for payment
 
 
@@ -660,6 +662,13 @@ export default function Show() {
     setPending(true);
 
     try {
+
+      if (useWallet) {
+        await api.post("/payments/wallet-pay/" + hold.bookingId);
+        openTicketInNewTab(hold.bookingId);
+        navigate("/bookings");
+        return;
+      }
 
       if (mode === "mock") {
 
@@ -1125,6 +1134,21 @@ export default function Show() {
 
             </p>
 
+          )}
+
+          {walletBal !== null && (
+            <label className={"wallet-pay" + (walletBal < hold.amount ? " low" : "")}>
+              <input
+                type="checkbox"
+                checked={useWallet}
+                disabled={walletBal < hold.amount}
+                onChange={(e) => setUseWallet(e.target.checked)}
+              />
+              <span>
+                Pay with Wallet <b>₹{walletBal.toFixed(2)}</b>
+                {walletBal < hold.amount && <small> · not enough balance, <a href="/wallet">add money</a></small>}
+              </span>
+            </label>
           )}
 
           <div className="bar">
