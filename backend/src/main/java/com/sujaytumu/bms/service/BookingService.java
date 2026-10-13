@@ -266,7 +266,7 @@ public class BookingService {
     public Map<String, Object> bookingDetail(String email, long bookingId) {
         return db.queryForMap("""
                 select b.id, b.reference, b.status, b.amount, b.ticket_subtotal, b.convenience_fee, b.gst_amount,
-                       b.coupon_code, b.discount_amount, b.contact_email, b.contact_phone, b.created_at, m.title,
+                       b.coupon_code, b.discount_amount, b.food_amount, b.food_summary, b.contact_email, b.contact_phone, b.created_at, m.title,
                        sh.show_date, sh.start_time, t.name theatre_name, u.email user_email, u.name user_name,
                        string_agg(bs.seat_number, ', ' order by bs.seat_number) seats
                 from bookings b
