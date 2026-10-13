@@ -275,6 +275,8 @@ export default function Bookings() {
               </div>
             </div>
 
+            {b.food_summary && <p className="bk-food">🍿 {b.food_summary}</p>}
+
             <div className="bk-divider" />
 
             <div className="bk-foot">

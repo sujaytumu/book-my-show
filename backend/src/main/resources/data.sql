@@ -719,3 +719,16 @@ select sh.id, chr(65 + r) || n::text, case when r < 4 then 'PREMIUM' else 'REGUL
 from shows sh cross join generate_series(0,9) r cross join generate_series(1,15) n
 where (select count(*) from show_seats ss where ss.show_id = sh.id) < 150
 on conflict (show_id,seat_number) do nothing;
+
+-- Food & beverages offered on the seat page (added to the total, no convenience fee).
+insert into food_items(name,description,price,veg) values
+ ('Salted Popcorn (Regular)','Freshly popped, 85 g',180,true),
+ ('Caramel Popcorn (Large)','Sweet caramel, 130 g',260,true),
+ ('Cheese Nachos','Nachos with cheese dip',220,true),
+ ('Veg Puff','Baked, 1 pc',70,true),
+ ('Chicken Puff','Baked, 1 pc',90,false),
+ ('French Fries','Salted, 100 g',150,true),
+ ('Pepsi (500 ml)','Chilled soft drink',120,true),
+ ('Cold Coffee','Iced, 300 ml',160,true),
+ ('Combo: Popcorn + 2 Pepsi','Regular popcorn and two 500 ml Pepsi',390,true)
+on conflict(name) do nothing;
