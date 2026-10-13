@@ -97,6 +97,7 @@ function TicketModal({ b, poster, onClose }) {
           <div className="tk-seats">
             <small>Seats</small>
             <b>{b.seats}</b>
+            {b.food_summary && <small>🍿 {b.food_summary}</small>}
           </div>
           {qr ? <img className="tk-qr" src={qr} alt="Ticket QR code" /> : <div className="tk-qr sk" />}
           <small className="tk-ref">Booking ID</small>
