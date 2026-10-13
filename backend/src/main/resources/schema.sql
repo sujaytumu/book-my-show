@@ -29,3 +29,6 @@ alter table bookings add column if not exists coupon_code varchar(30);
 alter table bookings add column if not exists discount_amount numeric(10,2) not null default 0;
 alter table movies add column if not exists release_date date;
 alter table theatres add column if not exists cancellable boolean not null default true;
+create table if not exists food_items(id bigserial primary key,name varchar(120) not null unique,description varchar(200),price numeric(10,2) not null,veg boolean not null default true,active boolean not null default true);
+alter table bookings add column if not exists food_amount numeric(10,2) not null default 0;
+alter table bookings add column if not exists food_summary text;

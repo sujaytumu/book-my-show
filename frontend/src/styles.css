@@ -852,3 +852,19 @@ img.cast-photo{object-fit:cover;object-position:top;background:#eee}
 .pf-menu a{display:flex;justify-content:space-between;padding:14px 16px;font-size:10.4px;font-weight:600;color:inherit;border-bottom:1px solid #eee}
 .pf-menu a:last-child{border-bottom:0}
 .pf-menu i{font-style:normal;color:#999}
+
+/* ---------- Food & beverages ---------- */
+.food-list{display:flex;flex-direction:column;gap:2px}
+.food-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #eee}
+.food-row>div{flex:1;display:flex;flex-direction:column;gap:1px}
+.food-row b{font-size:10.4px}
+.food-row small{font-size:8.8px;color:#777}
+.food-row em{font-style:normal;font-size:10px;font-weight:700}
+.food-dot{flex:none;width:12px;height:12px;border:1.5px solid #1ea83c;border-radius:2px;position:relative}
+.food-dot::after{content:"";position:absolute;inset:2px;border-radius:50%;background:#1ea83c}
+.food-dot.nonveg{border-color:#b3261e}.food-dot.nonveg::after{background:#b3261e}
+.food-add,.food-step{flex:none;border:1px solid var(--red);color:var(--red);background:#fff;border-radius:6px;font-weight:700;font-size:9.6px}
+.food-add{padding:5px 16px;cursor:pointer}
+.food-step{display:flex;align-items:center;gap:10px;padding:2px 8px}
+.food-step button{border:0;background:none;color:var(--red);font-size:14px;font-weight:700;cursor:pointer;padding:2px 4px}
+.bk-food{font-size:9px;color:#666;margin:4px 0 0}
