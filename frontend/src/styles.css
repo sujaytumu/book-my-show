@@ -868,3 +868,18 @@ img.cast-photo{object-fit:cover;object-position:top;background:#eee}
 .food-step{display:flex;align-items:center;gap:10px;padding:2px 8px}
 .food-step button{border:0;background:none;color:var(--red);font-size:14px;font-weight:700;cursor:pointer;padding:2px 4px}
 .bk-food{font-size:9px;color:#666;margin:4px 0 0}
+
+/* ---------- Wallet ---------- */
+.wl-balance{margin:10px 16px;padding:18px;border-radius:12px;background:linear-gradient(135deg,#f84464,#c2185b);color:#fff;display:flex;flex-direction:column;gap:4px}
+.wl-balance small{opacity:.85;font-size:9.6px}.wl-balance b{font-size:24px}
+.wl-add{margin:0 16px 8px}.wl-add h3,.wl-h{font-size:10.4px;margin:14px 16px 8px}.wl-add h3{margin-left:0}
+.wl-chips{display:flex;gap:8px}
+.wl-chips button,.wl-custom button{border:1px solid var(--red);background:#fff;color:var(--red);border-radius:6px;padding:7px 14px;font-weight:700;font-size:9.6px;cursor:pointer}
+.wl-custom{display:flex;gap:8px;margin-top:10px}.wl-custom input{flex:1;min-width:0}
+.wl-msg{margin:8px 0 0;color:#15803d;font-size:9.6px;font-weight:600}
+.wl-note{margin:8px 0 0;color:#777;font-size:8.8px}
+.wl-tx{display:flex;justify-content:space-between;align-items:center;margin:0 16px;padding:11px 0;border-bottom:1px solid #eee}
+.wl-tx div{display:flex;flex-direction:column;gap:2px}.wl-tx b{font-size:10.4px}.wl-tx small{font-size:8.8px;color:#777}
+.wl-tx .pos{color:#15803d;font-weight:700}.wl-tx .neg{color:#b3261e;font-weight:700}
+.wallet-pay{display:flex;align-items:center;gap:10px;margin:10px 0;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:10px}
+.wallet-pay input{width:auto;flex:none}.wallet-pay.low{opacity:.75}.wallet-pay a{color:var(--red);font-weight:700}
