@@ -282,7 +282,6 @@ public class BookingService {
     }
 
     @Transactional
-    @Transactional
     public void cancel(String email, long bookingId) {
         int updated = db.update(
                 "update bookings b set status='CANCELLED' " +
