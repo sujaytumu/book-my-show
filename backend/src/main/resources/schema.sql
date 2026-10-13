@@ -32,3 +32,6 @@ alter table theatres add column if not exists cancellable boolean not null defau
 create table if not exists food_items(id bigserial primary key,name varchar(120) not null unique,description varchar(200),price numeric(10,2) not null,veg boolean not null default true,active boolean not null default true);
 alter table bookings add column if not exists food_amount numeric(10,2) not null default 0;
 alter table bookings add column if not exists food_summary text;
+alter table users add column if not exists wallet_balance numeric(12,2) not null default 0;
+create table if not exists wallet_txns(id bigserial primary key,user_id bigint not null references users(id),amount numeric(12,2) not null,kind varchar(20) not null,note varchar(200),created_at timestamptz not null default now());
+create index if not exists idx_wallet_txns_user on wallet_txns(user_id,created_at desc);

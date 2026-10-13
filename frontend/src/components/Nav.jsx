@@ -89,7 +89,7 @@ export default function Nav() {
     navigate("/");
   }
 
-  if (pathname === "/search" || pathname === "/city" || pathname === "/notifications" || pathname === "/offers" || pathname === "/help" || pathname === "/coming-soon" || pathname === "/now-showing" || pathname.startsWith("/movie/") || pathname.startsWith("/show/")) return null;
+  if (pathname === "/search" || pathname === "/city" || pathname === "/notifications" || pathname === "/offers" || pathname === "/help" || pathname === "/wallet" || pathname === "/coming-soon" || pathname === "/now-showing" || pathname.startsWith("/movie/") || pathname.startsWith("/show/")) return null;
   const right = (
       <div className="nav-right">
         {user ? (

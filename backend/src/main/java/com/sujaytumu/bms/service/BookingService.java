@@ -200,6 +200,50 @@ public class BookingService {
         db.update("update show_seats set status='BOOKED',locked_by=null,locked_until=null where locked_by=?", bookingId);
     }
 
+    /** Pays a pending booking from the wallet: debit (only if funds suffice) and confirm in one transaction. */
+    @Transactional
+    public void payWithWallet(String email, long bookingId) {
+        Map<String, Object> booking = bookingForPayment(email, bookingId);
+        if (!holdStillValid(bookingId)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Seat hold expired");
+        }
+        long userId = ((Number) booking.get("user_id")).longValue();
+        double amount = ((Number) booking.get("amount")).doubleValue();
+        int debited = db.update(
+                "update users set wallet_balance = wallet_balance - ? where id=? and wallet_balance >= ?",
+                amount, userId, amount);
+        if (debited == 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Not enough wallet balance - add money first");
+        }
+        db.update("insert into wallet_txns(user_id,amount,kind,note) values(?,?,'PAYMENT',?)",
+                userId, -amount, "Booking " + booking.get("reference"));
+        confirmBooking(bookingId, "WALLET-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+    }
+
+    public Map<String, Object> wallet(String email) {
+        Map<String, Object> user = db.queryForMap("select id, wallet_balance from users where email=?", email);
+        List<Map<String, Object>> txns = db.queryForList(
+                "select amount, kind, note, created_at from wallet_txns where user_id=? order by created_at desc, id desc limit 20",
+                user.get("id"));
+        Map<String, Object> out = new java.util.LinkedHashMap<>();
+        out.put("balance", user.get("wallet_balance"));
+        out.put("transactions", txns);
+        return out;
+    }
+
+    /** Demo top-up (no real payment gateway involved). */
+    @Transactional
+    public Map<String, Object> addMoney(String email, double amount) {
+        if (amount < 1 || amount > 10000) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Enter an amount between Rs 1 and Rs 10,000");
+        }
+        amount = round2(amount);
+        long userId = db.queryForObject("select id from users where email=?", Long.class, email);
+        db.update("update users set wallet_balance = wallet_balance + ? where id=?", amount, userId);
+        db.update("insert into wallet_txns(user_id,amount,kind,note) values(?,?,'TOPUP','Money added (demo)')", userId, amount);
+        return wallet(email);
+    }
+
     public List<Map<String, Object>> myBookings(String email) {
         return db.queryForList("""
                 select b.id, b.reference, b.status, b.amount, b.created_at, m.title,
@@ -238,6 +282,7 @@ public class BookingService {
     }
 
     @Transactional
+    @Transactional
     public void cancel(String email, long bookingId) {
         int updated = db.update(
                 "update bookings b set status='CANCELLED' " +
@@ -249,6 +294,12 @@ public class BookingService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Booking cannot be cancelled (already cancelled, unpaid, the show has started, or this cinema does not allow cancellation)");
         }
+        // Refund the full amount to the wallet.
+        Map<String, Object> paid = db.queryForMap(
+                "select user_id, amount, reference from bookings where id=?", bookingId);
+        db.update("update users set wallet_balance = wallet_balance + ? where id=?", paid.get("amount"), paid.get("user_id"));
+        db.update("insert into wallet_txns(user_id,amount,kind,note) values(?,?,'REFUND',?)",
+                paid.get("user_id"), paid.get("amount"), "Refund for " + paid.get("reference"));
         // Free the seats so they become bookable by anyone again.
         db.update("update show_seats ss set status='AVAILABLE',locked_by=null,locked_until=null " +
                         "from bookings b join booking_seats bs on bs.booking_id=b.id " +

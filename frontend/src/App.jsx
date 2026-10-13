@@ -16,6 +16,7 @@ import City from "./pages/City";
 import Notifications from "./pages/Notifications";
 import Offers from "./pages/Offers";
 import Help from "./pages/Help";
+import Wallet from "./pages/Wallet";
 import { IcTarget, IcHome, IcSearch, IcTicket, IcUser } from "./components/Icons";
 import { alreadyAsked, detectCity, markAsked, setCity } from "./location";
 
@@ -114,6 +115,7 @@ export default function App() {
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/offers" element={<Offers />} />
           <Route path="/help" element={<Help />} />
+          <Route path="/wallet" element={<Wallet />} />
           <Route path="/admin" element={<Admin />} />
         </Routes>
       </main>

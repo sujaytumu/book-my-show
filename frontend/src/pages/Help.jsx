@@ -5,7 +5,7 @@ import { IcBack } from "../components/Icons";
 const FAQ = [
   ["How do I book tickets?", "Open a movie, tap Book tickets, choose a cinema and showtime, pick your seats and pay. Your ticket appears under Bookings."],
   ["How long are my seats held?", "Seats are held for 10 minutes once you review your booking. If the timer runs out, select the seats again."],
-  ["Can I cancel a booking?", "Yes, from Bookings, unless the cinema is marked Non-cancellable. Cancelled seats are released straight away."],
+  ["Can I cancel a booking?", "Yes, from Bookings, unless the cinema is marked Non-cancellable. Cancelled seats are released straight away and the amount is refunded to your Wallet."],
   ["How do I change my show?", "Cancel the booking (if the cinema allows it) and use Book again on that ticket to pick a new showtime."],
   ["How do I use a coupon?", "Copy a code from the Offers page and enter it at the payment step. The discount shows in the price breakup."],
   ["I did not get my ticket", "Open Bookings and tap View ticket or Download ticket. The QR code works from the app."],

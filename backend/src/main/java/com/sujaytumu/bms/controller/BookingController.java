@@ -60,4 +60,19 @@ public class BookingController {
                         ContentDisposition.attachment().filename(detail.get("reference") + ".pdf").build().toString())
                 .body(pdf);
     }
+
+    @GetMapping("/wallet")
+    public Map<String, Object> wallet(Authentication auth) {
+        return bookingService.wallet(auth.getName());
+    }
+
+    @PostMapping("/wallet/add")
+    public Map<String, Object> addMoney(Authentication auth, @RequestBody Map<String, Object> body) {
+        Object amt = body.get("amount");
+        if (!(amt instanceof Number)) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.BAD_REQUEST, "Enter an amount");
+        }
+        return bookingService.addMoney(auth.getName(), ((Number) amt).doubleValue());
+    }
 }
