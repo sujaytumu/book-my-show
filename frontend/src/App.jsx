@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { NavLink, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { Navigate, NavLink, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { api } from "./api";
 import Nav from "./components/Nav";
 import Home from "./pages/Home";
@@ -17,6 +17,8 @@ import Notifications from "./pages/Notifications";
 import Offers from "./pages/Offers";
 import Help from "./pages/Help";
 import Wallet from "./pages/Wallet";
+import Forgot from "./pages/Forgot";
+import UpdateBanner from "./components/UpdateBanner";
 import { IcTarget, IcHome, IcSearch, IcTicket, IcUser } from "./components/Icons";
 import { seedHomeBelow } from "./nav";
 import { alreadyAsked, detectCity, markAsked, setCity } from "./location";
@@ -109,11 +111,19 @@ export default function App() {
 
 
 
+  // First open: nothing but Login / Register until the user is signed in.
+  const PUBLIC = ["/login", "/register", "/forgot"];
+  const isPublic = PUBLIC.includes(pathname);
+  const signedIn = !!localStorage.getItem("token");
+  if (!signedIn && !isPublic) return <Navigate to="/login" replace />;
+
   return (
     <>
+      <UpdateBanner />
       <Nav />
       <main>
         <Routes>
+          <Route path="/forgot" element={<Forgot />} />
           <Route path="/" element={<Home mode="now-showing" />} />
           <Route path="/coming-soon" element={<MovieList upcoming />} />
           <Route path="/now-showing" element={<MovieList />} />
@@ -133,7 +143,7 @@ export default function App() {
         </Routes>
       </main>
       <TabBar />
-      {askLoc && pathname === "/" && <LocationPrompt onDone={() => setAskLoc(false)} />}
+      {signedIn && askLoc && pathname === "/" && <LocationPrompt onDone={() => setAskLoc(false)} />}
     </>
   );
 }
