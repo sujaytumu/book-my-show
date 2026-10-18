@@ -933,3 +933,40 @@ img.cast-avatar{display:block}
 /* ---------- "New version available" banner ---------- */
 .update-banner{position:fixed;left:12px;right:12px;top:10px;z-index:200;display:flex;align-items:center;justify-content:space-between;gap:12px;background:#222;color:#fff;border-radius:12px;padding:10px 14px;font-size:10.4px;box-shadow:0 6px 20px rgba(0,0,0,.3)}
 .update-banner button{flex:none;width:auto;margin:0;background:#e0415a;color:#fff;border:0;border-radius:8px;padding:7px 16px;font-weight:700;font-size:10.4px;cursor:pointer;text-transform:none;letter-spacing:0}
+
+/* ---------- Home (movies) - compact, BMS-like proportions ---------- */
+.home-tabs{padding:6px 0 10px}
+.home-tabs a{gap:4px;font-size:9.6px;padding:4px 2px;border-bottom-width:2px}
+.home-tabs a svg{width:26px;height:26px}
+.hero-row{margin-bottom:16px}
+.hero-card{flex:0 0 84%;aspect-ratio:16/7.5;border-radius:12px}
+.hero-card div{left:14px;bottom:10px;right:14px;gap:1px}
+.hero-card b{font-size:13.6px;font-weight:600}
+.hero-card span{font-size:9px}
+.hero-card em{margin-top:5px;padding:4px 11px;font-size:9px;border-radius:5px}
+.resume-card{padding:10px 12px;border-radius:14px;margin:0 0 6px}
+.rc-head{font-size:11.5px}
+.rc-head b{font-weight:600}
+.rc-head button{width:20px;height:20px;font-size:12px}
+.rc-body{gap:10px;padding:8px 0}
+.rc-body img{width:40px;height:60px;border-radius:6px}
+.rc-body b{font-size:12.5px;margin-bottom:2px;font-weight:600}
+.rc-body small{font-size:9.6px;line-height:1.4}
+.rc-btn{padding:8px;font-size:11px;border-radius:8px;font-weight:600}
+.hp-head{margin:18px 0 10px}
+.hp-h{font-size:15px;font-weight:600;margin:0}
+.hp-head a{font-size:10.4px;color:#e0415a;font-weight:500}
+.poster-row .poster-card{flex:0 0 118px}
+.poster-card b{font-size:11.2px;font-weight:500;margin-top:2px;display:block}
+.poster-card small{font-size:9px;color:#6b7280}
+.pc-meta{font-size:10px;margin:7px 0 3px}
+.pc-img img{border-radius:10px}
+
+/* ---------- One-tap saved login ---------- */
+.one-tap{display:flex;align-items:center;gap:12px;padding:12px;border:1.5px solid #e0415a;border-radius:12px;background:#fff5f6;margin-bottom:6px}
+.one-tap div{flex:1;min-width:0;display:flex;flex-direction:column}
+.one-tap b{font-size:11.5px}.one-tap small{font-size:9.6px;color:#666;overflow:hidden;text-overflow:ellipsis}
+.ot-av{flex:none;width:34px;height:34px;border-radius:50%;background:#e0415a;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px}
+.auth .one-tap button{width:auto;margin:0;padding:8px 16px;font-size:10.4px}
+.save-card{text-align:center}.save-note{font-size:10.4px;color:#555;line-height:1.5;margin:6px 0 14px}
+.ghost-btn,.auth .ghost-btn{background:none;border:0;color:#666;margin-top:6px;box-shadow:none}

@@ -35,4 +35,20 @@ public class AuthController {
     public Map<String, Object> reset(@RequestBody Map<String, String> body) {
         return userService.resetPassword(body.get("email"), body.get("otp"), body.get("newPassword"));
     }
+
+    @PostMapping("/api/auth/remember")
+    public Map<String, Object> remember(@RequestBody Map<String, String> body) {
+        return userService.rememberDevice(body.get("email"), body.get("password"));
+    }
+
+    @PostMapping("/api/auth/device-login")
+    public Map<String, Object> deviceLogin(@RequestBody Map<String, String> body) {
+        return userService.deviceLogin(body.get("deviceToken"));
+    }
+
+    @PostMapping("/api/auth/forget-device")
+    public Map<String, Object> forgetDevice(@RequestBody Map<String, String> body) {
+        userService.forgetDevice(body.get("deviceToken"));
+        return Map.of("message", "Removed");
+    }
 }
