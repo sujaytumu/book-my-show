@@ -1,0 +1,40 @@
+name: sync-apk
+# Every push to main is merged into feature/android-apk and the APK/update bundle is rebuilt,
+# so the "Update" popup inside the installed app always offers the latest main.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: write
+concurrency:
+  group: sync-apk
+  cancel-in-progress: false
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/android-apk
+          fetch-depth: 0
+      - name: Merge main into feature/android-apk
+        id: merge
+        run: |
+          git config user.name "sujaytumu"
+          git config user.email "sujaytumu123@gmail.com"
+          git fetch origin main
+          if git merge-base --is-ancestor origin/main HEAD; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Already up to date."
+          else
+            git merge origin/main -m "Merge main into feature/android-apk"
+            git push origin HEAD:feature/android-apk
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Build the APK and update bundle
+        if: steps.merge.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run android-apk.yml --ref feature/android-apk --repo "$GITHUB_REPOSITORY"
