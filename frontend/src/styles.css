@@ -1034,3 +1034,28 @@ main{padding-bottom:104px}
 .rc-body img{box-shadow:0 3px 8px rgba(0,0,0,.2)}
 .rc-body small:first-of-type{color:#e0415a;font-weight:700}
 .hp-h{font-size:19px}
+
+/* ---------- Sticky book bar (proper placement) ---------- */
+.sticky-book{background:#fff;box-shadow:0 -6px 18px rgba(0,0,0,.12);padding:10px 14px calc(10px + env(safe-area-inset-bottom));pointer-events:auto}
+.sb-inner{display:flex;align-items:center;gap:12px;max-width:520px;margin:0 auto}
+.sb-info{flex:1;min-width:0}
+.sb-info b{display:block;font-size:14px}
+.sb-info small{color:var(--gray);font-size:11.5px}
+.sticky-book button{display:block;width:auto;flex:none;margin:0;padding:12px 26px;box-shadow:0 4px 12px rgba(220,53,88,.3)}
+.movie-page,.mv-page{padding-bottom:90px}
+
+/* ---------- Home extras ---------- */
+.quick-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:0 0 14px}
+.quick-row a{display:flex;flex-direction:column;align-items:center;gap:6px;color:#333}
+.quick-row span{width:50px;height:50px;border-radius:16px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.08);display:flex;align-items:center;justify-content:center;font-size:23px}
+.quick-row small{font-size:11.5px;font-weight:600}
+.offer-banner{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 16px;padding:14px 16px;border-radius:16px;color:#fff;background:linear-gradient(120deg,#e0415a,#ff7a45)}
+.offer-banner small{font-size:10px;font-weight:800;letter-spacing:1px;opacity:.9}
+.offer-banner b{display:block;font-size:17px;margin:2px 0}
+.offer-banner span{font-size:12px;opacity:.95}
+.offer-banner em{font-style:normal;background:#fff;color:#e0415a;font-weight:700;font-size:12.5px;padding:7px 14px;border-radius:20px;flex:none}
+.trend-row{display:flex;gap:6px;overflow-x:auto;margin:0 -14px;padding:0 14px 8px;scrollbar-width:none}
+.trend-row::-webkit-scrollbar{display:none}
+.trend-card{position:relative;flex:0 0 150px;height:170px;display:flex;align-items:flex-end}
+.trend-n{font-size:120px;font-weight:900;line-height:.8;color:#fff;-webkit-text-stroke:3px #c9c9d2;letter-spacing:-8px;margin-right:-14px;z-index:1}
+.trend-card img{width:104px;height:156px;object-fit:cover;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,.25)}
