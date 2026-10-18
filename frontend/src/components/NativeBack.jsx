@@ -9,7 +9,15 @@ export default function NativeBack() {
   useEffect(() => {
     const cap = window.Capacitor;
     if (!cap || !cap.isNativePlatform || !cap.isNativePlatform()) return undefined;
-    const app = cap.Plugins && cap.Plugins.App;
+    // Capacitor only exposes a plugin on Capacitor.Plugins after it has been registered from JS, so register the
+    // built-in "App" plugin here (the native side is already part of every Capacitor app).
+    let app = null;
+    try {
+      app = cap.registerPlugin ? cap.registerPlugin("App") : null;
+    } catch (e) {
+      app = null;
+    }
+    if (!app && cap.Plugins) app = cap.Plugins.App;
     if (!app || !app.addListener) return undefined;
     let handle = null;
     let gone = false;
