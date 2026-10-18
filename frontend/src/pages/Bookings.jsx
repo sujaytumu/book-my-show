@@ -72,6 +72,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
+import { isNativeApp, shareTicketNative } from "../ticket";
 import QRCode from "qrcode";
 
 function TicketModal({ b, poster, onClose }) {
@@ -197,7 +198,9 @@ export default function Bookings() {
   async function downloadTicket(id, reference) {
     try {
       const res = await api.get("/bookings/" + id + "/ticket", { responseType: "blob" });
-      const url = window.URL.createObjectURL(new Blob([res.data], { type: "application/pdf" }));
+      const pdf = new Blob([res.data], { type: "application/pdf" });
+      if (isNativeApp()) return await shareTicketNative(pdf, reference + ".pdf");
+      const url = window.URL.createObjectURL(pdf);
       const link = document.createElement("a");
       link.href = url;
       link.download = reference + ".pdf";

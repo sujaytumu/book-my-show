@@ -15,3 +15,11 @@ frontend/.env
 .vscode/
 *.iml
 .DS_Store
+
+# Capacitor / Android build output
+frontend/android/app/build/
+frontend/android/.gradle/
+frontend/android/local.properties
+frontend/android/app/src/main/assets/public/
+frontend/android/app/src/main/assets/capacitor.config.json
+frontend/android/app/src/main/assets/capacitor.plugins.json
