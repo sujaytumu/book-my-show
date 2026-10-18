@@ -23,10 +23,9 @@ jobs:
       - run: npm ci
       - name: Build web app
         env:
-          # Set repo variable VITE_API_URL = https://<your-render-api>.onrender.com/api
-          VITE_API_URL: ${{ vars.VITE_API_URL }}
+          # Optional override: repo variable VITE_API_URL. Defaults to the Render API below.
+          VITE_API_URL: ${{ vars.VITE_API_URL || 'https://book-my-show-api-qx31.onrender.com/api' }}
         run: |
-          test -n "$VITE_API_URL" || { echo "::error::Repo variable VITE_API_URL is not set"; exit 1; }
           npm run build
       - run: npx cap sync android
       - name: Build debug APK
