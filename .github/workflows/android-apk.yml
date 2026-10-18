@@ -11,6 +11,8 @@ jobs:
     defaults:
       run:
         working-directory: frontend
+    env:
+      BUILD_NUMBER: ${{ github.run_number }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -25,11 +27,22 @@ jobs:
       - run: npm ci
       - name: Build web app
         env:
-          # Optional override: repo variable VITE_API_URL. Defaults to the Render API below.
           VITE_API_URL: ${{ vars.VITE_API_URL || 'https://book-my-show-api-qx31.onrender.com/api' }}
-        run: |
-          npm run build
+          VITE_BUILD_ID: ${{ github.run_number }}
+        run: npm run build
       - run: npx cap sync android
+      - name: Load permanent signing key
+        env:
+          KS: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          KSPW: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          if [ -n "$KS" ]; then
+            echo "$KS" | base64 -d > "$RUNNER_TEMP/bms.keystore"
+            echo "KEYSTORE_PATH=$RUNNER_TEMP/bms.keystore" >> "$GITHUB_ENV"
+            echo "KEYSTORE_PASSWORD=$KSPW" >> "$GITHUB_ENV"
+          else
+            echo "::warning::No ANDROID_KEYSTORE_B64 secret: APK is signed with a random key, so it will NOT install over a previous build."
+          fi
       - name: Build debug APK
         working-directory: frontend/android
         run: |
@@ -43,15 +56,16 @@ jobs:
             tail -40 build.log
           fi
           exit $code
-      - uses: actions/upload-artifact@v4
-        with:
-          name: book-my-show-debug-apk
-          path: frontend/android/app/build/outputs/apk/debug/app-debug.apk
-      - name: Publish APK to a public download link (GitHub Release)
-        working-directory: frontend/android/app/build/outputs/apk/debug
+      - name: Bundle web build for in-app updates
+        run: |
+          cd dist && zip -qr ../bundle.zip . && cd ..
+          cp android/app/build/outputs/apk/debug/app-debug.apk book-my-show.apk
+          NATIVE=$(grep -oP 'NATIVE_VERSION = \K[0-9]+' src/appVersion.js)
+          echo "{\"build\":\"${{ github.run_number }}\",\"native\":$NATIVE}" > release-body.json
+          cat release-body.json
+      - name: Publish release (APK + update bundle)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          cp app-debug.apk book-my-show.apk
           gh release delete apk-latest --yes --cleanup-tag --repo "$GITHUB_REPOSITORY" || true
-          gh release create apk-latest book-my-show.apk --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease --title "Latest Android APK" --notes "Debug APK built from commit $GITHUB_SHA"
+          gh release create apk-latest book-my-show.apk bundle.zip --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease --title "Latest Android APK" --notes-file release-body.json
