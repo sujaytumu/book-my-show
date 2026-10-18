@@ -1,4 +1,5 @@
 // import { useEffect, useState } from "react";
+import { goBack } from "../nav";
 // import { useNavigate, useParams } from "react-router-dom";
 // import { api, currentUser } from "../api";
 // import TheatreMap, { haversineKm } from "../components/TheatreMap";
@@ -284,7 +285,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
 import { api, currentUser } from "../api";
 
@@ -792,7 +793,7 @@ export default function Show() {
       {show && (
         <div className="bms-head">
           <div className="bms-head-top">
-            <button type="button" className="bms-back" onClick={() => navigate(-1)} aria-label="Back">
+            <button type="button" className="bms-back" onClick={() => goBack(navigate)} aria-label="Back">
               ‹
             </button>
             <div className="bms-head-text">
@@ -1146,7 +1147,7 @@ export default function Show() {
               />
               <span>
                 Pay with Wallet <b>₹{walletBal.toFixed(2)}</b>
-                {walletBal < hold.amount && <small> · not enough balance, <a href="/wallet">add money</a></small>}
+                {walletBal < hold.amount && <small> · not enough balance, <Link to="/wallet">add money</Link></small>}
               </span>
             </label>
           )}

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { goBack } from "../nav";
 import { useNavigate } from "react-router-dom";
 import { IcBack } from "../components/Icons";
 
@@ -18,7 +19,7 @@ export default function Help() {
   return (
     <div className="of-page">
       <div className="ml-top">
-        <button type="button" onClick={() => navigate(-1)} aria-label="Back">
+        <button type="button" onClick={() => goBack(navigate)} aria-label="Back">
           <IcBack width={26} height={26} />
         </button>
         <div>

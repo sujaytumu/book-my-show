@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { goBack } from "../nav";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { IcBack, IcSearch } from "../components/Icons";
@@ -58,7 +59,7 @@ export default function MovieList({ upcoming = false }) {
   return (
     <div className="ml-page">
       <div className="ml-top">
-        <button type="button" onClick={() => navigate(-1)} aria-label="Back">
+        <button type="button" onClick={() => goBack(navigate)} aria-label="Back">
           <IcBack width={26} height={26} />
         </button>
         <div>
