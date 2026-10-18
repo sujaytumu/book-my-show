@@ -18,6 +18,7 @@ import Offers from "./pages/Offers";
 import Help from "./pages/Help";
 import Wallet from "./pages/Wallet";
 import { IcTarget, IcHome, IcSearch, IcTicket, IcUser } from "./components/Icons";
+import { seedHomeBelow } from "./nav";
 import { alreadyAsked, detectCity, markAsked, setCity } from "./location";
 
 const TAB_PAGES = ["/", "/search", "/bookings", "/profile"];
@@ -92,6 +93,18 @@ export default function App() {
   // app loads so it's likely already awake by the time someone submits a form.
   useEffect(() => {
     api.get("/health").catch(() => {});
+  }, []);
+  const navigate = useNavigate();
+  const here = useLocation();
+  useEffect(() => {
+    // First tap in the session: make sure back goes Home before leaving the app.
+    const once = () => {
+      window.removeEventListener("pointerdown", once, true);
+      seedHomeBelow(navigate, here.pathname, here.search);
+    };
+    window.addEventListener("pointerdown", once, true);
+    return () => window.removeEventListener("pointerdown", once, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
 
