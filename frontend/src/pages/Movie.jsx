@@ -1,4 +1,5 @@
 // import { useEffect, useMemo, useState } from "react";
+import { goBack } from "../nav";
 // import { Link, useNavigate, useParams } from "react-router-dom";
 // import { api } from "../api";
 // import { haversineKm } from "../components/TheatreMap";
@@ -645,7 +646,7 @@ export default function Movie() {
     <div className="movie-page">
       {booking ? (
         <div className="book-head">
-          <button type="button" className="book-back" onClick={() => navigate(-1)} aria-label="Back">
+          <button type="button" className="book-back" onClick={() => goBack(navigate)} aria-label="Back">
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M15 5l-7 7 7 7" />
             </svg>
@@ -668,7 +669,7 @@ export default function Movie() {
       ) : (
       <>
       <div className="mv-bar">
-        <button type="button" onClick={() => navigate(-1)} aria-label="Back">
+        <button type="button" onClick={() => goBack(navigate)} aria-label="Back">
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M15 5l-7 7 7 7" />
           </svg>
