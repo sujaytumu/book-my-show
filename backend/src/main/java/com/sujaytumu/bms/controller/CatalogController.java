@@ -127,6 +127,20 @@ public class CatalogController {
         return db.queryForList("select id, name, description, price, veg from food_items where active=true order by id");
     }
 
+    /** Cinemas in a city with what is playing in the coming days (movies as "id:title|id:title"). */
+    @GetMapping("/api/theatres")
+    public List<Map<String, Object>> theatres(@RequestParam(required = false) String city) {
+        String sql = "select t.id, t.name, t.address, t.theatre_type, t.cancellable, c.name city, " +
+                "(select string_agg(distinct m.id || ':' || m.title, '|') from shows sh join screens s on s.id=sh.screen_id " +
+                "join movies m on m.id=sh.movie_id where s.theatre_id=t.id and m.upcoming=false and m.active=true " +
+                "and sh.show_date>=(now() at time zone 'Asia/Kolkata')::date) movies " +
+                "from theatres t left join cities c on c.id=t.city_id where t.active=true ";
+        if (city != null && !city.isBlank()) {
+            return db.queryForList(sql + "and lower(c.name)=lower(?) order by t.name", city.trim());
+        }
+        return db.queryForList(sql + "order by t.name");
+    }
+
     @GetMapping("/api/shows/{id}/seats")
     public List<Map<String, Object>> seats(@PathVariable long id) {
         return db.queryForList(
