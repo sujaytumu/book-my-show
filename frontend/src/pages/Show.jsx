@@ -287,6 +287,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { api, currentUser } from "../api";
+import { isNativeApp, shareTicketNative } from "../ticket";
 
 const MAX_SEATS = 10;
 
@@ -634,6 +635,14 @@ export default function Show() {
   // blocked popup.
 
   async function openTicketInNewTab(bookingId) {
+
+    if (isNativeApp()) {
+      try {
+        const res = await api.get("/bookings/" + bookingId + "/ticket", { responseType: "blob" });
+        await shareTicketNative(new Blob([res.data], { type: "application/pdf" }), "ticket-" + bookingId + ".pdf");
+      } catch (err) {}
+      return;
+    }
 
     const ticketTab = window.open("", "_blank");
 
