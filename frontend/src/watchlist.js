@@ -1,4 +1,4 @@
-import { currentUser } from "./api";
+import { api, currentUser } from "./api";
 
 // "I'm interested" watchlist, remembered in this browser per logged-in account (or guest).
 function key() {
@@ -33,13 +33,38 @@ export function toggleWatchlist(movie) {
   const exists = list.some((m) => String(m.id) === String(movie.id));
   const next = exists
     ? list.filter((m) => String(m.id) !== String(movie.id))
-    : [...list, { id: movie.id, title: movie.title, poster_url: movie.poster_url, language: movie.language }];
+    : [...list, { id: movie.id, title: movie.title, poster_url: movie.poster_url, language: movie.language, release_date: movie.release_date }];
   save(next);
+  if (currentUser()) {
+    (exists ? api.delete("/watchlist/" + movie.id) : api.put("/watchlist/" + movie.id)).catch(() => {});
+  }
   return !exists;
 }
 
 export function removeFromWatchlist(id) {
   const next = loadWatchlist().filter((m) => String(m.id) !== String(id));
   save(next);
+  if (currentUser()) api.delete("/watchlist/" + id).catch(() => {});
   return next;
+}
+
+// Merges this browser's list with the account's server-side list (so it follows you across devices),
+// then returns the merged list. Release reminders are sent for everything on the server list.
+export async function syncWatchlist() {
+  if (!currentUser()) return loadWatchlist();
+  try {
+    const local = loadWatchlist();
+    const { data } = await api.get("/watchlist");
+    const have = new Set(data.map((m) => String(m.id)));
+    for (const m of local) {
+      if (!have.has(String(m.id))) {
+        await api.put("/watchlist/" + m.id);
+        data.push(m);
+      }
+    }
+    save(data.map((m) => ({ id: m.id, title: m.title, poster_url: m.poster_url, language: m.language, release_date: m.release_date, upcoming: m.upcoming })));
+  } catch (e) {
+    // offline - keep the local copy
+  }
+  return loadWatchlist();
 }

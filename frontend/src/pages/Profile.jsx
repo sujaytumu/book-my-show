@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { api, currentUser, logout } from "../api";
-import { loadWatchlist, removeFromWatchlist } from "../watchlist";
+import { loadWatchlist, removeFromWatchlist, syncWatchlist } from "../watchlist";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -46,6 +46,7 @@ export default function Profile() {
 
   useEffect(() => {
     if (!user) return;
+    syncWatchlist().then(setWatchlist);
     api
       .get("/bookings/me")
       .then((res) => setBookings(res.data))
@@ -154,6 +155,8 @@ export default function Profile() {
             <Link className="wl-item" to={"/movie/" + m.id} key={m.id}>
               <img src={m.poster_url} alt={m.title} />
               <span>{m.title}</span>
+              {m.release_date && m.upcoming !== false && <small className="wl-date">Releases {fmtDate(String(m.release_date).slice(0, 10))}</small>}
+              {m.upcoming === false && <small className="wl-date on">Now showing</small>}
               <button
                 className="wl-remove"
                 aria-label={"Remove " + m.title + " from watchlist"}
