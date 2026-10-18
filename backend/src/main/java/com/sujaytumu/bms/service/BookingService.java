@@ -267,17 +267,21 @@ public class BookingService {
         return db.queryForMap("""
                 select b.id, b.reference, b.status, b.amount, b.ticket_subtotal, b.convenience_fee, b.gst_amount,
                        b.coupon_code, b.discount_amount, b.food_amount, b.food_summary, b.contact_email, b.contact_phone, b.created_at, m.title,
-                       sh.show_date, sh.start_time, t.name theatre_name, u.email user_email, u.name user_name,
-                       string_agg(bs.seat_number, ', ' order by bs.seat_number) seats
+                       m.language movie_language, m.certificate, m.genre, m.duration_minutes,
+                       sh.show_date, sh.start_time, sh.end_time, sh.format show_format, sh.language show_language,
+                       sc.name screen_name, t.name theatre_name, t.address theatre_address, ci.name city_name,
+                       u.email user_email, u.name user_name,
+                       string_agg(bs.seat_number, ', ' order by bs.seat_number) seats, count(bs.id) seat_count
                 from bookings b
                 join users u on u.id = b.user_id
                 join shows sh on sh.id = b.show_id
                 join movies m on m.id = sh.movie_id
                 join screens sc on sc.id = sh.screen_id
                 join theatres t on t.id = sc.theatre_id
+                left join cities ci on ci.id = t.city_id
                 join booking_seats bs on bs.booking_id = b.id
                 where b.id = ? and u.email = ?
-                group by b.id, m.title, sh.show_date, sh.start_time, t.name, u.email, u.name
+                group by b.id, m.id, sh.id, sc.id, t.id, ci.id, u.id
                 """, bookingId, email);
     }
 

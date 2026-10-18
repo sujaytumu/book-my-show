@@ -128,6 +128,7 @@ export default function MovieList({ upcoming = false }) {
         {list.map((m) => (
           <Link key={m.id} to={"/movie/" + m.id} className="ml-card">
             <img src={m.poster_url} alt={m.title} loading="lazy" />
+            {!upcoming && Number(m.rating) >= 9 && <i className="ml-promo">TOP RATED</i>}
             {upcoming ? (
               <span className="ml-pill">{m.release_date ? fmtRelease(m.release_date) : "Coming Soon"}</span>
             ) : (
@@ -139,11 +140,25 @@ export default function MovieList({ upcoming = false }) {
               </span>
             )}
             <b>{m.title}</b>
+            {upcoming && Number(m.interested_base) > 0 && (
+              <small className="ml-likes">
+                <i>👍</i> {fmtVotes(m.interested_base).replace("+ votes", "+").replace(" votes", "")} likes
+              </small>
+            )}
             {upcoming && <small>{m.genre}</small>}
           </Link>
         ))}
       </div>
       {!loading && list.length === 0 && <p className="empty-note">No movies found.</p>}
+      {!upcoming && (
+        <Link to="/cinemas" className="browse-cin">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.800 12 21 12 21z" />
+            <circle cx="12" cy="9.5" r="2.5" />
+          </svg>
+          Browse by Cinemas
+        </Link>
+      )}
     </div>
   );
 }

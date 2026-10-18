@@ -785,13 +785,13 @@ export default function Movie() {
           <h2>Top offers for you</h2>
           <div className="mv-offer-row">
             {offers.map((o) => (
-              <div className="mv-offer" key={o.code}>
+              <Link to="/offers" className="mv-offer" key={o.code}>
                 <i>%</i>
                 <span>
                   <b>{o.description}</b>
-                  <small>Use code {o.code}</small>
+                  <small>Use code {o.code} · Tap to view details</small>
                 </span>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
