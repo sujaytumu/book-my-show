@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { goBack } from "../nav";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { IcBack, IcSearch } from "../components/Icons";
@@ -27,6 +28,7 @@ export default function MovieList({ upcoming = false }) {
   const [movies, setMovies] = useState([]);
   const [genre, setGenre] = useState(null);
   const [topRated, setTopRated] = useState(false);
+  const [newOnly, setNewOnly] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -53,12 +55,16 @@ export default function MovieList({ upcoming = false }) {
 
   let list = genre ? base.filter((m) => String(m.genre || "").split(/[,/]/).map((g) => g.trim()).includes(genre)) : base;
   if (topRated) list = [...list].sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0));
-  const filtered = !!(genre || topRated);
+  if (newOnly) {
+    const cutoff = Date.now() - 21 * 86400000;
+    list = list.filter((m) => m.release_date && new Date(String(m.release_date).slice(0, 10)).getTime() >= cutoff);
+  }
+  const filtered = !!(genre || topRated || newOnly);
 
   return (
     <div className="ml-page">
       <div className="ml-top">
-        <button type="button" onClick={() => navigate(-1)} aria-label="Back">
+        <button type="button" onClick={() => goBack(navigate)} aria-label="Back">
           <IcBack width={26} height={26} />
         </button>
         <div>
@@ -79,12 +85,18 @@ export default function MovieList({ upcoming = false }) {
           onClick={() => {
             setGenre(null);
             setTopRated(false);
+            setNewOnly(false);
           }}
           aria-label="Clear filters"
         >
           <IcFilter />
         </button>
         <span className="ml-sep" />
+        {!upcoming && (
+          <button type="button" className={newOnly ? "on" : ""} onClick={() => setNewOnly((v) => !v)}>
+            New Releases
+          </button>
+        )}
         <button type="button" className={topRated ? "on" : ""} onClick={() => setTopRated((v) => !v)}>
           Top Rated
         </button>

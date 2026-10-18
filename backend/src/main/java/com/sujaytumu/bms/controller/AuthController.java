@@ -25,4 +25,14 @@ public class AuthController {
     public Map<String, Object> login(@RequestBody Map<String, String> body) {
         return userService.login(body.get("email"), body.get("password"));
     }
+
+    @PostMapping("/api/auth/forgot")
+    public Map<String, Object> forgot(@RequestBody Map<String, String> body) {
+        return userService.requestPasswordOtp(body.get("email"));
+    }
+
+    @PostMapping("/api/auth/reset")
+    public Map<String, Object> reset(@RequestBody Map<String, String> body) {
+        return userService.resetPassword(body.get("email"), body.get("otp"), body.get("newPassword"));
+    }
 }

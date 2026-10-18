@@ -1,4 +1,5 @@
 // import { useEffect, useState } from "react";
+import { goBack, finishTo } from "../nav";
 // import { useNavigate, useParams } from "react-router-dom";
 // import { api, currentUser } from "../api";
 // import TheatreMap, { haversineKm } from "../components/TheatreMap";
@@ -117,7 +118,7 @@
 //       if (mode === "mock") {
 //         await api.post("/payments/mock-confirm/" + hold.bookingId);
 //         openTicketInNewTab(hold.bookingId);
-//         navigate("/bookings");
+//         finishTo(navigate, "/bookings");
 //         return;
 //       }
 
@@ -138,7 +139,7 @@
 //             razorpaySignature: response.razorpay_signature,
 //           });
 //           openTicketInNewTab(hold.bookingId);
-//           navigate("/bookings");
+//           finishTo(navigate, "/bookings");
 //         },
 //       }).open();
 //     } catch (err) {
@@ -284,7 +285,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
 import { api, currentUser } from "../api";
 import { isNativeApp, shareTicketNative } from "../ticket";
@@ -675,7 +676,7 @@ export default function Show() {
       if (useWallet) {
         await api.post("/payments/wallet-pay/" + hold.bookingId);
         openTicketInNewTab(hold.bookingId);
-        navigate("/bookings");
+        finishTo(navigate, "/bookings");
         return;
       }
 
@@ -685,7 +686,7 @@ export default function Show() {
 
         openTicketInNewTab(hold.bookingId);
 
-        navigate("/bookings");
+        finishTo(navigate, "/bookings");
 
         return;
 
@@ -727,7 +728,7 @@ export default function Show() {
 
           openTicketInNewTab(hold.bookingId);
 
-          navigate("/bookings");
+          finishTo(navigate, "/bookings");
 
         },
 
@@ -801,7 +802,7 @@ export default function Show() {
       {show && (
         <div className="bms-head">
           <div className="bms-head-top">
-            <button type="button" className="bms-back" onClick={() => navigate(-1)} aria-label="Back">
+            <button type="button" className="bms-back" onClick={() => goBack(navigate)} aria-label="Back">
               ‹
             </button>
             <div className="bms-head-text">
@@ -1155,7 +1156,7 @@ export default function Show() {
               />
               <span>
                 Pay with Wallet <b>₹{walletBal.toFixed(2)}</b>
-                {walletBal < hold.amount && <small> · not enough balance, <a href="/wallet">add money</a></small>}
+                {walletBal < hold.amount && <small> · not enough balance, <Link to="/wallet">add money</Link></small>}
               </span>
             </label>
           )}

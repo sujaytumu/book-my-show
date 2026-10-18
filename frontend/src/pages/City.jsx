@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { goBack } from "../nav";
 import { useNavigate } from "react-router-dom";
 import { IcBack, IcCity, IcSearch, IcTarget } from "../components/Icons";
 import { ALL_CITIES, OTHER_CITIES, aliasMatch, POPULAR, detectCity, getCity, setCity } from "../location";
@@ -33,7 +34,7 @@ export default function City() {
   return (
     <div className="city-page">
       <div className="cp-top">
-        <button type="button" className="cp-back" onClick={() => navigate(-1)} aria-label="Back">
+        <button type="button" className="cp-back" onClick={() => goBack(navigate)} aria-label="Back">
           <IcBack />
         </button>
         <h1>{current}</h1>

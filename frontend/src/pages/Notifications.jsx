@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { goBack } from "../nav";
 import { Link, useNavigate } from "react-router-dom";
 import { currentUser } from "../api";
 import { IcBack } from "../components/Icons";
@@ -16,7 +17,7 @@ export default function Notifications() {
   return (
     <div className="nt-page">
       <div className="ml-top">
-        <button type="button" onClick={() => navigate(-1)} aria-label="Back">
+        <button type="button" onClick={() => goBack(navigate)} aria-label="Back">
           <IcBack width={26} height={26} />
         </button>
         <div>

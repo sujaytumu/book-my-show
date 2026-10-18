@@ -3,19 +3,27 @@ import { Link } from "react-router-dom";
 import { api } from "../api";
 import { IcClap, IcFilm, IcReel } from "../components/Icons";
 
+function votesLabel(n) {
+  n = Number(n) || 0;
+  if (n >= 1000) return (Math.floor(n / 100) / 10).toFixed(1).replace(/\.0$/, "") + "K+ votes";
+  return n + " votes";
+}
+
 function Poster({ movie }) {
   return (
     <Link className="poster-card" to={"/movie/" + movie.id}>
       <div className="pc-img">
         <img src={movie.poster_url} alt={movie.title} loading="lazy" />
-        {movie.upcoming ? (
-          <span className="pc-rate soon">Coming Soon</span>
-        ) : (
-          <span className="pc-rate">
-            <i>★</i> {Number(movie.rating || 0).toFixed(1)}/10
-          </span>
-        )}
+        {movie.upcoming && <span className="pc-rate soon">Coming Soon</span>}
       </div>
+      {!movie.upcoming && (
+        <span className="pc-meta">
+          <span>
+            <i>★</i> {Number(movie.rating || 0).toFixed(1)}
+          </span>
+          {Number(movie.votes) > 0 && <em>{votesLabel(movie.votes)}</em>}
+        </span>
+      )}
       <b>{movie.title}</b>
       <small>{movie.genre}</small>
     </Link>

@@ -732,3 +732,6 @@ insert into food_items(name,description,price,veg) values
  ('Cold Coffee','Iced, 300 ml',160,true),
  ('Combo: Popcorn + 2 Pepsi','Regular popcorn and two 500 ml Pepsi',390,true)
 on conflict(name) do nothing;
+
+-- Ranabaali releases on 16 October 2026; the release scheduler moves it to Now Showing automatically.
+update movies set release_date = date '2026-10-16' where title = 'Ranabaali' and release_date is null;
