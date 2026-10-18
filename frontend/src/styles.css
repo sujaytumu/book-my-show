@@ -970,3 +970,43 @@ img.cast-avatar{display:block}
 .auth .one-tap button{width:auto;margin:0;padding:8px 16px;font-size:10.4px}
 .save-card{text-align:center}.save-note{font-size:10.4px;color:#555;line-height:1.5;margin:6px 0 14px}
 .ghost-btn,.auth .ghost-btn{background:none;border:0;color:#666;margin-top:6px;box-shadow:none}
+
+/* ---------- Cast & Crew: compact, one neutral icon ---------- */
+.cast-block{margin-top:18px}
+.cast-block h2{font-size:16px;font-weight:700;margin:0 0 10px}
+.cast-row{display:flex;gap:14px;overflow-x:auto;padding-bottom:4px}
+.cast-item{flex:none;width:72px;text-align:center}
+.cast-avatar{width:60px;height:60px;border-radius:50%;margin:0 auto 6px;background:#e9e9ee;color:#a4a4ae;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;font-size:0}
+.cast-avatar svg{width:44px;height:44px;margin-bottom:-4px}
+.cast-item b{font-size:11.5px;font-weight:600;line-height:1.25;color:var(--ink);display:block}
+.cast-item small{font-size:10.5px;color:var(--gray);display:block;margin-top:1px}
+
+/* ---------- Profile: tidy mobile layout ---------- */
+.pf-wrap{padding:4px 0 110px}
+.pf-hero{flex-direction:row;text-align:left;gap:14px;padding:18px 16px;border-radius:16px;margin-bottom:12px}
+.pf-avatar{width:60px;height:60px;font-size:22px;box-shadow:0 0 0 3px rgba(255,255,255,.25)}
+.pf-who{min-width:0}
+.pf-who h1{font-size:18px;margin:0 0 2px}
+.pf-who p{font-size:12.5px;margin:0 0 8px;word-break:break-all}
+.pf-role{font-size:11px;padding:3px 10px}
+.pf-stats{grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.pf-stat{padding:12px 4px;border-radius:12px}
+.pf-stat b{font-size:16px}
+.pf-stat small{font-size:10px;display:block;margin-top:2px;line-height:1.2}
+.pf-card{padding:14px 16px;margin-bottom:12px;border-radius:14px}
+.pf-card h3{font-size:15px;margin:0 0 6px}
+.pf-row{padding:10px 0;font-size:13px}
+.pf-book b{font-size:13.5px}
+.pf-book small{font-size:11.5px}
+.pf-pill{font-size:10.5px;padding:4px 9px}
+.pf-muted{font-size:12.5px}
+.pf-link{font-size:13px;margin-top:8px}
+.pf-menu{padding:0;overflow:hidden}
+.pf-menu a{align-items:center;padding:13px 16px;font-size:14px}
+.pf-menu span{display:flex;align-items:center;gap:12px}
+.pf-menu em{font-style:normal;width:32px;height:32px;border-radius:10px;background:#f4f4f7;display:flex;align-items:center;justify-content:center;font-size:16px}
+.pf-btn,.pf-btn:hover{display:block;width:100%;padding:12px;font-size:14px;border-radius:12px}
+@media (max-width:560px){
+  .pf-hero{flex-direction:row;text-align:left;padding:16px 14px}
+  .pf-stats{grid-template-columns:repeat(2,1fr)}
+}
