@@ -204,19 +204,21 @@ function castSlug(name) {
     .replace(/^-|-$/g, "");
 }
 
-// Photo from /cast/<name>.jpg (drop files into frontend/public/cast/); falls back to initials.
-function CastAvatar({ person }) {
-  const [broken, setBroken] = useState(false);
-  if (broken) return <div className="cast-avatar">{castInitials(person.name)}</div>;
+// One neutral "unknown person" icon for everyone (no photos available).
+function CastAvatar() {
   return (
-    <img
-      className="cast-avatar cast-photo"
-      src={person.photo || "/cast/" + castSlug(person.name) + ".jpg"}
-      alt={person.name}
-      loading="lazy"
-      onError={() => setBroken(true)}
-    />
+    <div className="cast-avatar" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="currentColor">
+        <circle cx="12" cy="8.2" r="4.2" />
+        <path d="M3.5 21c0-4.7 3.8-7.6 8.5-7.6s8.5 2.9 8.5 7.6z" />
+      </svg>
+    </div>
   );
+}
+
+const CREW_RE = /director|producer|music|composer|writer|story|screenplay|dialogue|cinemat|editor|choreo|lyric|art |action|stunt|vfx|costume|banner|presents/i;
+function isCrew(p) {
+  return CREW_RE.test(String(p.role || ""));
 }
 
 // BMS style: ★ 8.2/10 and "1.2K Votes" (real votes from the Ratings & Reviews below).
@@ -789,19 +791,22 @@ export default function Movie() {
         </div>
       )}
 
-      {parseCast(movie.cast_crew).length > 0 && (
-        <div className="cast-block">
-          <h2>Cast &amp; Crew</h2>
-          <div className="cast-row">
-            {parseCast(movie.cast_crew).map((p) => (
-              <div className="cast-item" key={p.name + p.role}>
-                <CastAvatar person={p} />
-                <b>{p.name}</b>
-                <small>{p.role}</small>
+      {[["Cast", parseCast(movie.cast_crew).filter((p) => !isCrew(p))], ["Crew", parseCast(movie.cast_crew).filter(isCrew)]].map(
+        ([label, list]) =>
+          list.length > 0 && (
+            <div className="cast-block" key={label}>
+              <h2>{label}</h2>
+              <div className="cast-row">
+                {list.map((p) => (
+                  <div className="cast-item" key={p.name + p.role}>
+                    <CastAvatar />
+                    <b>{p.name}</b>
+                    <small>{p.role}</small>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
+          )
       )}
 
       </>
