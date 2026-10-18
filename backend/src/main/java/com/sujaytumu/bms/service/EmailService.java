@@ -77,6 +77,42 @@ public class EmailService {
         }
     }
 
+    /** Plain HTML email without an attachment (used for one-time codes). Best-effort like the ticket email. */
+    public void sendSimple(String toEmail, String subject, String htmlBody) {
+        if (!gmailUsername.isBlank()) {
+            try {
+                MimeMessage message = mailSender.createMimeMessage();
+                MimeMessageHelper helper = new MimeMessageHelper(message, false, "UTF-8");
+                helper.setFrom(gmailUsername, "Book My Show");
+                helper.setTo(toEmail);
+                helper.setSubject(subject);
+                helper.setText(htmlBody, true);
+                mailSender.send(message);
+                System.out.println("[EMAIL] Gmail SMTP simple send SUCCEEDED to=" + toEmail);
+                return;
+            } catch (Exception e) {
+                System.err.println("[EMAIL] Gmail SMTP simple send FAILED to=" + toEmail + " - " + describe(e));
+            }
+        }
+        if (!resendApiKey.isBlank()) {
+            try {
+                String body = "{\"from\": \"" + escape(resendFrom) + "\", \"to\": [\"" + escape(toEmail) + "\"], \"subject\": \""
+                        + escape(subject) + "\", \"html\": \"" + escape(htmlBody) + "\"}";
+                HttpRequest request = HttpRequest.newBuilder(URI.create("https://api.resend.com/emails"))
+                        .header("Authorization", "Bearer " + resendApiKey)
+                        .header("Content-Type", "application/json")
+                        .POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8))
+                        .build();
+                HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+                System.out.println("[EMAIL] Resend simple send status=" + response.statusCode() + " to=" + toEmail);
+            } catch (Exception e) {
+                System.err.println("[EMAIL] Resend simple send FAILED to=" + toEmail + " - " + describe(e));
+            }
+        } else if (gmailUsername.isBlank()) {
+            System.err.println("[EMAIL] No email provider configured - message to " + toEmail + " was not sent.");
+        }
+    }
+
     /** Full exception chain (class + message for the exception and every cause), not just getMessage() which is often null/unhelpful for SMTP auth failures. */
     private String describe(Throwable e) {
         StringBuilder sb = new StringBuilder();
