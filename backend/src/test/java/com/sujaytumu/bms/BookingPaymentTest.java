@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * workflow) because the guarantees rely on row locks and SQL semantics that an in-memory DB would not give.
  */
 @SpringBootTest
-class BookingPaymentIT {
+class BookingPaymentTest {
 
     @Autowired
     JdbcTemplate db;
