@@ -30,17 +30,101 @@ public class ShowWindowScheduler {
 
     @PostConstruct
     public void onStartup() {
+        releaseDueMovies();
+        removeClashingShows();
         topUpWindow();
     }
 
-    /** Runs daily at 00:05 server time. */
+    /** Runs daily at 00:05 server time: new releases first, then the rolling window. */
     @Scheduled(cron = "0 5 0 * * *")
+    public void daily() {
+        releaseDueMovies();
+        removeClashingShows();
+        topUpWindow();
+    }
+
+    /**
+     * Standard release procedure, fully automatic:
+     * 1. A Coming Soon movie whose release_date has arrived becomes Now Showing.
+     * 2. A newly released movie takes most of the screens: about 2/3 of the screens in every
+     *    multiplex and 3 of 4 shows in a single screen. The shows taken over are the oldest
+     *    movies' shows first, but every old movie keeps at least one show per cinema per day,
+     *    so a couple of older films lose most screens and keep a few.
+     * Shows that already have a booking are never touched.
+     */
+    public void releaseDueMovies() {
+        db.update("""
+                update movies set upcoming = false
+                where upcoming = true and active = true and release_date is not null
+                  and release_date <= (now() at time zone 'Asia/Kolkata')::date
+                """);
+        java.util.List<Long> fresh = db.queryForList("""
+                select id from movies
+                where active = true and upcoming = false and release_date is not null
+                  and release_date between (now() at time zone 'Asia/Kolkata')::date - 14
+                                       and (now() at time zone 'Asia/Kolkata')::date
+                  and not exists (select 1 from shows sh where sh.movie_id = movies.id
+                                  and sh.show_date >= (now() at time zone 'Asia/Kolkata')::date)
+                order by release_date, id
+                """, Long.class);
+        for (Long movieId : fresh) {
+            db.update("""
+                    with base as (
+                        select sh.id, t.id theatre_id, sh.show_date, sh.start_time, sh.movie_id, t.theatre_type,
+                               coalesce(m.release_date, date '1900-01-01') rel,
+                               exists(select 1 from bookings b where b.show_id = sh.id
+                                      and b.status in ('PENDING','CONFIRMED')) booked
+                        from shows sh
+                        join screens sc on sc.id = sh.screen_id
+                        join theatres t on t.id = sc.theatre_id
+                        join movies m on m.id = sh.movie_id
+                        where t.active = true
+                          and sh.show_date >= (now() at time zone 'Asia/Kolkata')::date
+                          and m.language = (select language from movies where id = ?)
+                    ), sized as (
+                        select base.*, count(*) over (partition by theatre_id, show_date) n,
+                               row_number() over (partition by theatre_id, show_date, movie_id order by start_time) rn_movie
+                        from base
+                    ), ranked as (
+                        select sized.*, row_number() over (partition by theatre_id, show_date order by rel, movie_id, start_time) pos
+                        from sized
+                        where movie_id <> ? and not booked and rn_movie > 1
+                    )
+                    update shows s set movie_id = ?, language = (select language from movies where id = ?)
+                    from ranked r
+                    where s.id = r.id
+                      and r.pos <= ceil(r.n * case when r.theatre_type = 'MULTIPLEX' then 2.0 / 3 else 0.75 end)
+                    """, movieId, movieId, movieId, movieId);
+        }
+    }
+
+    /**
+     * A screen can only play one film at a time: where older data put two films on the same
+     * screen at the same time, keep the more recent release and drop the other (future, unbooked shows only).
+     */
+    public void removeClashingShows() {
+        db.update("""
+                delete from shows where id in (
+                    select id from (
+                        select sh.id,
+                               row_number() over (partition by sh.screen_id, sh.show_date, sh.start_time
+                                                  order by coalesce(m.release_date, date '1900-01-01') desc, sh.id) rn,
+                               exists(select 1 from bookings b where b.show_id = sh.id
+                                      and b.status in ('PENDING','CONFIRMED')) booked
+                        from shows sh join movies m on m.id = sh.movie_id
+                        where sh.show_date >= (now() at time zone 'Asia/Kolkata')::date
+                    ) x where rn > 1 and not booked
+                )
+                """);
+    }
+
     public void topUpWindow() {
         db.update("""
                 insert into shows(movie_id,screen_id,show_date,start_time,end_time,price,format,language)
                 select r.movie_id, r.screen_id, (now() at time zone 'Asia/Kolkata')::date + d.day_offset, r.start_time, r.end_time,
                        case when t.theatre_type = 'MULTIPLEX' then 150 else 100 end, r.format, r.language
-                from (select distinct movie_id, screen_id, start_time, end_time, price, format, language from shows) r
+                from (select distinct on (screen_id, start_time) movie_id, screen_id, start_time, end_time, price, format, language
+                      from shows order by screen_id, start_time, show_date desc, id desc) r
                 join movies m on m.id = r.movie_id
                 join screens sc on sc.id = r.screen_id
                 join theatres t on t.id = sc.theatre_id
@@ -48,7 +132,7 @@ public class ShowWindowScheduler {
                 where m.active = true and m.upcoming = false and t.active = true
                 and not exists (
                     select 1 from shows sh2
-                    where sh2.movie_id = r.movie_id and sh2.screen_id = r.screen_id
+                    where sh2.screen_id = r.screen_id
                       and sh2.show_date = (now() at time zone 'Asia/Kolkata')::date + d.day_offset and sh2.start_time = r.start_time
                 )
                 """, WINDOW_DAYS - 1);
