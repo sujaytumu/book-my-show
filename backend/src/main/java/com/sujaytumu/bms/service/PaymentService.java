@@ -31,12 +31,17 @@ public class PaymentService {
     private final String razorpaySecret;
     private final HttpClient httpClient = HttpClient.newHttpClient();
 
+    private final String webhookSecret;
+    private final com.fasterxml.jackson.databind.ObjectMapper json = new com.fasterxml.jackson.databind.ObjectMapper();
+
     public PaymentService(JdbcTemplate db,
                            @Value("${razorpay.key}") String razorpayKeyId,
-                           @Value("${razorpay.secret}") String razorpaySecret) {
+                           @Value("${razorpay.secret}") String razorpaySecret,
+                           @Value("${razorpay.webhook-secret:}") String webhookSecret) {
         this.db = db;
         this.razorpayKeyId = razorpayKeyId;
         this.razorpaySecret = razorpaySecret;
+        this.webhookSecret = webhookSecret == null ? "" : webhookSecret;
     }
 
     public boolean isConfigured() {
@@ -48,6 +53,22 @@ public class PaymentService {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Razorpay keys are not configured");
         }
         long amountPaise = Math.round(amountRupees * 100);
+
+        // Retry-safe: if this booking already has an unpaid order, hand the same order back so the customer can
+        // simply try the payment again (a new attempt on the same order) instead of creating duplicate orders.
+        java.util.List<String> existing = db.queryForList(
+                "select p.razorpay_order_id from payments p where p.booking_id=? and p.status in ('CREATED','FAILED') order by p.id desc limit 1",
+                String.class, bookingId);
+        if (!existing.isEmpty()) {
+            db.update("update payments set status='CREATED' where razorpay_order_id=? and status='FAILED'", existing.get(0));
+            return Map.of(
+                    "bookingId", bookingId,
+                    "orderId", existing.get(0),
+                    "amount", amountPaise,
+                    "currency", "INR",
+                    "keyId", razorpayKeyId);
+        }
+
         String body = "{\"amount\":" + amountPaise + ",\"currency\":\"INR\",\"receipt\":\"" + receipt + "\"}";
         String basicAuth = Base64.getEncoder().encodeToString(
                 (razorpayKeyId + ":" + razorpaySecret).getBytes(StandardCharsets.UTF_8));
@@ -57,7 +78,27 @@ public class PaymentService {
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(body))
                 .build();
-        String responseJson = httpClient.send(request, HttpResponse.BodyHandlers.ofString()).body();
+
+        // Up to 3 attempts with backoff for network errors and 5xx/429 from the gateway.
+        String responseJson = null;
+        Exception last = null;
+        for (int attempt = 1; attempt <= 3 && responseJson == null; attempt++) {
+            try {
+                HttpResponse<String> resp = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+                if (resp.statusCode() >= 500 || resp.statusCode() == 429) {
+                    last = new IllegalStateException("Razorpay returned " + resp.statusCode());
+                } else {
+                    responseJson = resp.body();
+                }
+            } catch (java.io.IOException e) {
+                last = e;
+            }
+            if (responseJson == null && attempt < 3) Thread.sleep(400L * attempt);
+        }
+        if (responseJson == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY,
+                    "Payment gateway is not responding, please try again" + (last == null ? "" : ""));
+        }
 
         String orderId = responseJson.replaceAll(".*\"id\"\\s*:\\s*\"([^\"]+)\".*", "$1");
         if (orderId.equals(responseJson)) {
@@ -85,6 +126,64 @@ public class PaymentService {
         return MessageDigest.isEqual(
                 expected.getBytes(StandardCharsets.UTF_8),
                 signature.getBytes(StandardCharsets.UTF_8));
+    }
+
+    /** HMAC_SHA256(rawBody, webhookSecret) as sent in X-Razorpay-Signature. Falls back to the API secret if no webhook secret is set. */
+    public boolean verifyWebhookSignature(String rawBody, String signature) throws Exception {
+        String secret = !webhookSecret.isBlank() ? webhookSecret : razorpaySecret;
+        if (secret.isBlank() || signature == null) return false;
+        Mac mac = Mac.getInstance("HmacSHA256");
+        mac.init(new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
+        String expected = HexFormat.of().formatHex(mac.doFinal(rawBody.getBytes(StandardCharsets.UTF_8)));
+        return MessageDigest.isEqual(expected.getBytes(StandardCharsets.UTF_8), signature.getBytes(StandardCharsets.UTF_8));
+    }
+
+    /** Returns "ok", "duplicate" or "ignored". Throws 400 on a bad signature. */
+    public String handleWebhook(String rawBody, String signature, String eventId, BookingService bookings) throws Exception {
+        if (!verifyWebhookSignature(rawBody, signature)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid webhook signature");
+        }
+        com.fasterxml.jackson.databind.JsonNode root = json.readTree(rawBody);
+        String event = root.path("event").asText("");
+        com.fasterxml.jackson.databind.JsonNode pay = root.path("payload").path("payment").path("entity");
+        String orderId = pay.path("order_id").asText("");
+        String paymentId = pay.path("id").asText("");
+        String dedupeKey = (eventId != null && !eventId.isBlank()) ? eventId : event + ":" + paymentId + ":" + root.path("created_at").asText("");
+        int fresh = db.update("insert into payment_events(event_id,event_type) values(?,?) on conflict (event_id) do nothing",
+                dedupeKey, event);
+        if (fresh == 0) return "duplicate";
+
+        switch (event) {
+            case "payment.captured", "order.paid" -> {
+                if (event.equals("order.paid")) {
+                    com.fasterxml.jackson.databind.JsonNode o = root.path("payload").path("order").path("entity");
+                    if (orderId.isEmpty()) orderId = o.path("id").asText("");
+                }
+                if (orderId.isEmpty()) return "ignored";
+                java.util.List<Long> ids = db.queryForList("select id from bookings where razorpay_order_id=?", Long.class, orderId);
+                if (ids.isEmpty()) return "ignored";
+                markPaid(orderId, paymentId);
+                if (!bookings.confirmBooking(ids.get(0), paymentId)) {
+                    bookings.settleLatePayment(ids.get(0), paymentId);
+                }
+                return "ok";
+            }
+            case "payment.failed" -> {
+                if (orderId.isEmpty()) return "ignored";
+                db.update("update payments set status='FAILED' where razorpay_order_id=? and status='CREATED'", orderId);
+                return "ok";
+            }
+            case "refund.processed" -> {
+                String refundedPayment = root.path("payload").path("refund").path("entity").path("payment_id").asText("");
+                if (!refundedPayment.isEmpty()) {
+                    db.update("update payments set status='REFUNDED' where razorpay_payment_id=?", refundedPayment);
+                }
+                return "ok";
+            }
+            default -> {
+                return "ignored";
+            }
+        }
     }
 
     public void markPaid(String orderId, String paymentId) {
