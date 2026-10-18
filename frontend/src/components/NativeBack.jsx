@@ -1,44 +1,32 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-// Phone back button inside the installed Android app: one step back through the screens you came from,
-// Home if there is nothing behind the current screen, and only on Home (or Login) does it leave the app.
-// Uses the Capacitor runtime's built-in App plugin through window.Capacitor, so no extra package is needed.
+// Phone back button. The Android shell (MainActivity) intercepts the back press and asks the page what to do by
+// calling window.__bmsBack(): returning true means "handled here" (we moved one screen back, or went Home);
+// returning false means "nothing left, leave the app" (only on Home or the Login screen).
 export default function NativeBack() {
   const navigate = useNavigate();
   useEffect(() => {
-    const cap = window.Capacitor;
-    if (!cap || !cap.isNativePlatform || !cap.isNativePlatform()) return undefined;
-    // Capacitor only exposes a plugin on Capacitor.Plugins after it has been registered from JS, so register the
-    // built-in "App" plugin here (the native side is already part of every Capacitor app).
-    let app = null;
-    try {
-      app = cap.registerPlugin ? cap.registerPlugin("App") : null;
-    } catch (e) {
-      app = null;
-    }
-    if (!app && cap.Plugins) app = cap.Plugins.App;
-    if (!app || !app.addListener) return undefined;
-    let handle = null;
-    let gone = false;
-    Promise.resolve(
-      app.addListener("backButton", () => {
-        const st = window.history.state;
-        const idx = st && typeof st.idx === "number" ? st.idx : 0;
-        const path = window.location.pathname;
-        const atRoot = path === "/" || path === "/login" || path === "/register";
-        if (idx > 0) navigate(-1);
-        else if (!atRoot && path !== "/forgot") navigate("/", { replace: true });
-        else if (path === "/forgot") navigate("/login", { replace: true });
-        else if (app.exitApp) app.exitApp();
-      })
-    ).then((h) => {
-      handle = h;
-      if (gone && h && h.remove) h.remove();
-    });
+    window.__bmsBack = () => {
+      const st = window.history.state;
+      const idx = st && typeof st.idx === "number" ? st.idx : 0;
+      const path = window.location.pathname;
+      if (idx > 0) {
+        navigate(-1);
+        return true;
+      }
+      if (path === "/forgot") {
+        navigate("/login", { replace: true });
+        return true;
+      }
+      if (path !== "/" && path !== "/login" && path !== "/register") {
+        navigate("/", { replace: true });
+        return true;
+      }
+      return false;
+    };
     return () => {
-      gone = true;
-      if (handle && handle.remove) handle.remove();
+      delete window.__bmsBack;
     };
   }, [navigate]);
   return null;
