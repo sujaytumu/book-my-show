@@ -39,3 +39,6 @@ alter table movies add column if not exists votes_base int;
 alter table movies add column if not exists interested_base int;
 create table if not exists password_resets(email varchar(160) primary key,otp_hash varchar(100) not null,expires_at timestamptz not null,attempts int not null default 0,sent_at timestamptz not null default now());
 create table if not exists device_logins(id bigserial primary key,user_id bigint not null references users(id) on delete cascade,token_hash varchar(64) not null unique,created_at timestamptz not null default now(),expires_at timestamptz not null);
+create table if not exists user_notifications(id bigserial primary key,user_id bigint not null references users(id) on delete cascade,kind varchar(30) not null,title varchar(160) not null,body text,link varchar(200),created_at timestamptz not null default now());
+create index if not exists idx_user_notifications_user on user_notifications(user_id,created_at desc);
+create table if not exists waitlist(id bigserial primary key,user_id bigint not null references users(id) on delete cascade,show_id bigint not null references shows(id) on delete cascade,seats_wanted int not null default 1,created_at timestamptz not null default now(),notified_at timestamptz,unique(user_id,show_id));
