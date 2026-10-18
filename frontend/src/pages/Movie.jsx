@@ -167,7 +167,7 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { api, currentUser } from "../api";
 import { haversineKm } from "../components/TheatreMap";
 import Reviews from "../components/Reviews";
-import { isWatchlisted, toggleWatchlist } from "../watchlist";
+import { isWatchlisted, syncWatchlist, toggleWatchlist } from "../watchlist";
 import { getCity } from "../location";
 import { IcSearch } from "../components/Icons";
 
@@ -461,7 +461,10 @@ export default function Movie() {
 
   // Is this coming-soon movie already on the viewer's watchlist?
   useEffect(() => {
-    if (movie) setInterested(isWatchlisted(movie.id));
+    if (movie) {
+      setInterested(isWatchlisted(movie.id));
+      syncWatchlist().then(() => setInterested(isWatchlisted(movie.id)));
+    }
   }, [movie]);
 
   useEffect(() => {
