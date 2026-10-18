@@ -37,3 +37,4 @@ create table if not exists wallet_txns(id bigserial primary key,user_id bigint n
 create index if not exists idx_wallet_txns_user on wallet_txns(user_id,created_at desc);
 alter table movies add column if not exists votes_base int;
 alter table movies add column if not exists interested_base int;
+create table if not exists password_resets(email varchar(160) primary key,otp_hash varchar(100) not null,expires_at timestamptz not null,attempts int not null default 0,sent_at timestamptz not null default now());

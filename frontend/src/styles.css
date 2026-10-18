@@ -920,3 +920,16 @@ img.cast-avatar{display:block}
 .pc-flag{position:absolute;top:0;right:0;background:#e0415a;color:#fff;font-style:normal;font-size:7.5px;font-weight:700;padding:3px 8px;border-radius:0 0 0 8px}
 .pc-flag:empty{display:none}
 .pc-img{position:relative}
+
+/* ---------- Login / Register / Forgot ---------- */
+.auth-wrap{max-width:420px;margin:0 auto;padding:36px 16px 24px}
+.auth-brand{text-align:center;margin-bottom:18px;display:flex;flex-direction:column;gap:6px}
+.auth-brand b{font-size:26px;letter-spacing:-.5px;color:#222}.auth-brand b i{color:#e0415a;font-style:normal;padding:0 1px}
+.auth-brand span{color:#6b7280;font-size:10.4px}
+.auth-wrap .auth{margin:0 auto}
+.auth-links{text-align:center;margin:12px 0 0;font-size:10px;color:#555}
+.auth-links a{color:#e0415a;font-weight:600}
+
+/* ---------- "New version available" banner ---------- */
+.update-banner{position:fixed;left:12px;right:12px;top:10px;z-index:200;display:flex;align-items:center;justify-content:space-between;gap:12px;background:#222;color:#fff;border-radius:12px;padding:10px 14px;font-size:10.4px;box-shadow:0 6px 20px rgba(0,0,0,.3)}
+.update-banner button{flex:none;width:auto;margin:0;background:#e0415a;color:#fff;border:0;border-radius:8px;padding:7px 16px;font-weight:700;font-size:10.4px;cursor:pointer;text-transform:none;letter-spacing:0}

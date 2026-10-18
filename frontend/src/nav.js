@@ -11,7 +11,7 @@ export function goBack(navigate) {
 // It is done on a real tap because browsers ignore history entries created without user interaction.
 export function seedHomeBelow(navigate, pathname, search) {
   const idx = window.history.state && typeof window.history.state.idx === "number" ? window.history.state.idx : 0;
-  if (idx !== 0 || pathname === "/") return;
+  if (idx !== 0 || pathname === "/" || ["/login", "/register", "/forgot"].includes(pathname)) return;
   navigate("/", { replace: true });
   navigate(pathname + (search || ""));
 }
