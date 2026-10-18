@@ -138,10 +138,10 @@ export default function Profile() {
       </div>
 
       <div className="pf-card pf-menu">
-        <Link to="/forgot?change=1">🔑 Change password <i>›</i></Link>
-        <Link to="/wallet">👛 Wallet <i>›</i></Link>
-        <Link to="/offers">🏷 Offers &amp; coupons <i>›</i></Link>
-        <Link to="/help">❓ Help &amp; support <i>›</i></Link>
+        <Link to="/forgot?change=1"><span><em>🔑</em>Change password</span><i>›</i></Link>
+        <Link to="/wallet"><span><em>👛</em>Wallet</span><i>›</i></Link>
+        <Link to="/offers"><span><em>🏷️</em>Offers &amp; coupons</span><i>›</i></Link>
+        <Link to="/help"><span><em>❓</em>Help &amp; support</span><i>›</i></Link>
       </div>
 
       <div className="pf-card">
