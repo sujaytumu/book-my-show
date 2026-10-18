@@ -1084,3 +1084,14 @@ main{padding-bottom:104px}
 .cin-can.no{color:#6b7280}
 .cin-movies{display:flex;flex-wrap:wrap;gap:6px}
 .cin-movies a{font-size:12px;border:1px solid #e3b4bd;color:#dc3558;border-radius:16px;padding:4px 11px}
+
+/* ---------- Waitlist card ---------- */
+.wait-card{background:#fff7e8;border:1.5px solid #f3dfb4;border-radius:14px;padding:14px;margin:10px 0}
+.wait-card b{font-size:15px}
+.wait-card p{margin:4px 0 10px;font-size:13px;color:#555}
+.wait-qty{display:flex;align-items:center;gap:6px;margin-bottom:10px;font-size:13px}
+.wait-qty button{width:34px;height:34px;border-radius:50%;border:1.5px solid #d8d8dc;background:#fff;padding:0;font-size:14px}
+.wait-qty button.on{background:#dc3558;border-color:#dc3558;color:#fff}
+.wait-btn{width:100%;padding:12px;border-radius:10px;background:#dc3558;color:#fff;border:0;font-size:14px;font-weight:600}
+.wait-btn:disabled{opacity:.6}
+.nt-item.seats i,.nt-item.release i{background:#fde8ec}
