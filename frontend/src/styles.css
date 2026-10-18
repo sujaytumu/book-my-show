@@ -1095,3 +1095,5 @@ main{padding-bottom:104px}
 .wait-btn{width:100%;padding:12px;border-radius:10px;background:#dc3558;color:#fff;border:0;font-size:14px;font-weight:600}
 .wait-btn:disabled{opacity:.6}
 .nt-item.seats i,.nt-item.release i{background:#fde8ec}
+.wl-date{display:block;font-size:11px;color:#dc3558;font-weight:600;margin-top:2px}
+.wl-date.on{color:#15803d}
