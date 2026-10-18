@@ -108,6 +108,55 @@ public class UserService {
                 "role", user.get("role"));
     }
 
+    private static String sha256(String value) {
+        try {
+            byte[] d = java.security.MessageDigest.getInstance("SHA-256").digest(value.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder();
+            for (byte b : d) sb.append(String.format("%02x", b));
+            return sb.toString();
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    /**
+     * "Save login on this device": after a successful password check, hands the device a random token
+     * (only its hash is stored, valid 90 days) that can sign in again with one tap, even after logout.
+     */
+    public Map<String, Object> rememberDevice(String email, String password) {
+        Map<String, Object> session = login(email, password); // validates the password
+        byte[] raw = new byte[32];
+        random.nextBytes(raw);
+        String token = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(raw);
+        db.update("delete from device_logins where expires_at < now()");
+        db.update("insert into device_logins(user_id,token_hash,expires_at) values(?,?,now() + interval '90 days')",
+                session.get("id"), sha256(token));
+        return Map.of("deviceToken", token, "name", session.get("name"), "email", session.get("email"));
+    }
+
+    /** One-tap login with a saved device token. */
+    public Map<String, Object> deviceLogin(String token) {
+        if (token == null || token.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Saved login not found");
+        }
+        java.util.List<Map<String, Object>> rows = db.queryForList(
+                "select u.id,u.name,u.email,u.role from device_logins d join users u on u.id=d.user_id "
+                        + "where d.token_hash=? and d.expires_at > now()", sha256(token.trim()));
+        if (rows.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Saved login expired. Please log in with your password.");
+        }
+        Map<String, Object> user = rows.get(0);
+        String jwt = jwtService.issue((String) user.get("email"), (String) user.get("role"));
+        return Map.of("token", jwt, "id", user.get("id"), "name", user.get("name"),
+                "email", user.get("email"), "role", user.get("role"));
+    }
+
+    public void forgetDevice(String token) {
+        if (token != null && !token.isBlank()) {
+            db.update("delete from device_logins where token_hash=?", sha256(token.trim()));
+        }
+    }
+
     public Map<String, Object> currentUser(String email) {
         return db.queryForMap("select id,name,email,role from users where email=?", email);
     }
