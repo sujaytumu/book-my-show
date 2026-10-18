@@ -1010,3 +1010,27 @@ img.cast-avatar{display:block}
   .pf-hero{flex-direction:row;text-align:left;padding:16px 14px}
   .pf-stats{grid-template-columns:repeat(2,1fr)}
 }
+
+/* ---------- Eye-catching Home: hero carousel, flags, spacing ---------- */
+main{padding-bottom:104px}
+.hero-card{position:relative;flex:0 0 88%;aspect-ratio:auto;height:176px;border-radius:18px;overflow:hidden;background:#111;box-shadow:0 8px 20px rgba(0,0,0,.18)}
+.hero-card .hc-bg{position:absolute;inset:-20px;width:calc(100% + 40px);height:calc(100% + 40px);object-fit:cover;filter:blur(18px) brightness(.5) saturate(1.3)}
+.hero-card .hc-poster{position:absolute;left:14px;top:14px;bottom:14px;width:auto;height:calc(100% - 28px);aspect-ratio:2/3;object-fit:cover;object-position:center;filter:none;border-radius:10px;box-shadow:0 6px 16px rgba(0,0,0,.5)}
+.hero-card div{position:absolute;left:calc(14px + 100px + 14px);right:12px;top:14px;bottom:14px;display:flex;flex-direction:column;justify-content:center;gap:4px;color:#fff}
+.hero-card b{font-size:18px;font-weight:700;line-height:1.15}
+.hero-card span{font-size:12px;opacity:.9}
+.hero-card .hc-tag{align-self:flex-start;background:#e0415a;border-radius:4px;padding:2px 7px;font-size:9.5px;font-weight:800;letter-spacing:.5px;opacity:1}
+.hero-card .hc-rate{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
+.hero-card .hc-rate i{color:#ffc83d;font-style:normal}
+.hero-card .hc-rate u{text-decoration:none;font-weight:400;opacity:.8;font-size:11px}
+.hero-card em{align-self:flex-start;margin-top:6px;background:#fff;color:#e0415a;border-radius:20px;padding:6px 16px;font-size:12px;font-weight:700}
+.hero-row{margin-bottom:6px}
+.hero-dots{display:flex;justify-content:center;gap:6px;margin:6px 0 14px}
+.hero-dots i{width:6px;height:6px;border-radius:3px;background:#d4d4da;transition:all .25s}
+.hero-dots i.on{width:18px;background:#e0415a}
+.pc-img{box-shadow:0 4px 12px rgba(0,0,0,.12)}
+.pc-flag{top:8px;left:0;right:auto;border-radius:0 6px 6px 0;font-size:9px;padding:3px 8px;background:linear-gradient(90deg,#e0415a,#ff7a45)}
+.resume-card{background:linear-gradient(135deg,#fff1f3,#eef1f9);border:1px solid #f3d5db}
+.rc-body img{box-shadow:0 3px 8px rgba(0,0,0,.2)}
+.rc-body small:first-of-type{color:#e0415a;font-weight:700}
+.hp-h{font-size:19px}
