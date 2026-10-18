@@ -1,5 +1,5 @@
 // import { useEffect, useState } from "react";
-import { goBack } from "../nav";
+import { goBack, finishTo } from "../nav";
 // import { useNavigate, useParams } from "react-router-dom";
 // import { api, currentUser } from "../api";
 // import TheatreMap, { haversineKm } from "../components/TheatreMap";
@@ -118,7 +118,7 @@ import { goBack } from "../nav";
 //       if (mode === "mock") {
 //         await api.post("/payments/mock-confirm/" + hold.bookingId);
 //         openTicketInNewTab(hold.bookingId);
-//         navigate("/bookings");
+//         finishTo(navigate, "/bookings");
 //         return;
 //       }
 
@@ -139,7 +139,7 @@ import { goBack } from "../nav";
 //             razorpaySignature: response.razorpay_signature,
 //           });
 //           openTicketInNewTab(hold.bookingId);
-//           navigate("/bookings");
+//           finishTo(navigate, "/bookings");
 //         },
 //       }).open();
 //     } catch (err) {
@@ -667,7 +667,7 @@ export default function Show() {
       if (useWallet) {
         await api.post("/payments/wallet-pay/" + hold.bookingId);
         openTicketInNewTab(hold.bookingId);
-        navigate("/bookings");
+        finishTo(navigate, "/bookings");
         return;
       }
 
@@ -677,7 +677,7 @@ export default function Show() {
 
         openTicketInNewTab(hold.bookingId);
 
-        navigate("/bookings");
+        finishTo(navigate, "/bookings");
 
         return;
 
@@ -719,7 +719,7 @@ export default function Show() {
 
           openTicketInNewTab(hold.bookingId);
 
-          navigate("/bookings");
+          finishTo(navigate, "/bookings");
 
         },
 

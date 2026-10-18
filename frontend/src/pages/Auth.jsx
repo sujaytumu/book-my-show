@@ -36,7 +36,7 @@ export default function Auth({ register = false }) {
       const res = await api.post("/auth/" + (register ? "register" : "login"), form);
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data));
-      navigate("/");
+      navigate("/", { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || "Something went wrong. Please try again.");
     } finally {
