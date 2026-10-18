@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
 import { IcClap, IcFilm, IcReel } from "../components/Icons";
@@ -9,12 +9,22 @@ function votesLabel(n) {
   return n + " votes";
 }
 
+function flagFor(m) {
+  if (m.release_date) {
+    const days = (Date.now() - new Date(m.release_date + "T00:00:00").getTime()) / 86400000;
+    if (days >= 0 && days <= 10) return "NEW";
+  }
+  if (Number(m.rating) >= 9) return "TOP RATED";
+  return "";
+}
+
 function Poster({ movie }) {
   return (
     <Link className="poster-card" to={"/movie/" + movie.id}>
       <div className="pc-img">
         <img src={movie.poster_url} alt={movie.title} loading="lazy" />
         {movie.upcoming && <span className="pc-rate soon">Coming Soon</span>}
+        {!movie.upcoming && flagFor(movie) && <i className="pc-flag">{flagFor(movie)}</i>}
       </div>
       {!movie.upcoming && (
         <span className="pc-meta">
@@ -61,7 +71,25 @@ export default function Home({ mode = "now-showing" }) {
   const telugu = useMemo(() => movies.filter((m) => m.language === "Telugu"), [movies]);
   const running = telugu.filter((m) => !m.upcoming);
   const soon = telugu.filter((m) => m.upcoming);
+  const heroRef = useRef(null);
+  const [heroIdx, setHeroIdx] = useState(0);
+  function onHeroScroll(e) {
+    const el = e.currentTarget;
+    const w = el.firstChild ? el.firstChild.getBoundingClientRect().width + 12 : 1;
+    setHeroIdx(Math.round(el.scrollLeft / w));
+  }
   const hero = [...running].sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0)).slice(0, 5);
+  useEffect(() => {
+    if (hero.length < 2) return undefined;
+    const t = setInterval(() => {
+      const el = heroRef.current;
+      if (!el || !el.firstChild) return;
+      const w = el.firstChild.getBoundingClientRect().width + 12;
+      const next = (Math.round(el.scrollLeft / w) + 1) % hero.length;
+      el.scrollTo({ left: next * w, behavior: "smooth" });
+    }, 4500);
+    return () => clearInterval(t);
+  }, [hero.length]);
 
   return (
     <div className="home-page">
@@ -106,18 +134,31 @@ export default function Home({ mode = "now-showing" }) {
       ) : (
         <>
           {hero.length > 0 && (
-            <div className="hero-row">
-              {hero.map((m) => (
-                <Link key={m.id} to={"/movie/" + m.id} className="hero-card">
-                  <img src={m.poster_url} alt={m.title} />
-                  <div>
-                    <b>{m.title}</b>
-                    <span>{m.genre}</span>
-                    <em>Book now</em>
-                  </div>
-                </Link>
-              ))}
-            </div>
+            <>
+              <div className="hero-row" ref={heroRef} onScroll={onHeroScroll}>
+                {hero.map((m) => (
+                  <Link key={m.id} to={"/movie/" + m.id} className="hero-card">
+                    <img className="hc-bg" src={m.poster_url} alt="" />
+                    <img className="hc-poster" src={m.poster_url} alt={m.title} />
+                    <div>
+                      <span className="hc-tag">NOW SHOWING</span>
+                      <b>{m.title}</b>
+                      <span>{m.genre}</span>
+                      <span className="hc-rate">
+                        <i>★</i> {Number(m.rating || 0).toFixed(1)}
+                        {Number(m.votes) > 0 && <u>{votesLabel(m.votes)} votes</u>}
+                      </span>
+                      <em>Book now</em>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+              <div className="hero-dots">
+                {hero.map((m, i) => (
+                  <i key={m.id} className={i === heroIdx ? "on" : ""} />
+                ))}
+              </div>
+            </>
           )}
 
           {last && (
@@ -132,7 +173,7 @@ export default function Home({ mode = "now-showing" }) {
                 {last.poster_url && <img src={last.poster_url} alt="" />}
                 <div>
                   <b>{last.title}</b>
-                  <small>Rating: {Number(last.rating || 0).toFixed(1)}</small>
+                  <small>★ {Number(last.rating || 0).toFixed(1)}</small>
                   <small>{last.genre}</small>
                 </div>
               </div>
