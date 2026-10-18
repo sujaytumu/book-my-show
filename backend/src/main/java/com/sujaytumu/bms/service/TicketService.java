@@ -40,105 +40,234 @@ public class TicketService {
 
     public byte[] generateTicketPdf(Map<String, Object> booking) throws IOException {
         try (PDDocument doc = new PDDocument(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            PDPage page = new PDPage(PDRectangle.A5);
+            PDPage page = new PDPage(PDRectangle.A4);
             doc.addPage(page);
             PDFont bold = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
             PDFont regular = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
 
-            float pageWidth = page.getMediaBox().getWidth();
-            float pageHeight = page.getMediaBox().getHeight();
-            float margin = 36;
-            float contentWidth = pageWidth - 2 * margin;
+            float pw = page.getMediaBox().getWidth();
+            float ph = page.getMediaBox().getHeight();
+            float margin = 40;
+            float cw = pw - 2 * margin;
 
             try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
-                // --- Red header band ---
-                float headerHeight = 76;
-                fillRect(cs, 0, pageHeight - headerHeight, pageWidth, headerHeight, BMS_RED);
-                drawText(cs, bold, 22, margin, pageHeight - 34, Color.WHITE, "BOOK MY SHOW");
-                drawText(cs, regular, 11, margin, pageHeight - 54, Color.WHITE, "E-TICKET / BOOKING CONFIRMATION");
+                // --- Header band ---
+                float headerH = 84;
+                fillRect(cs, 0, ph - headerH, pw, headerH, BMS_RED);
+                drawText(cs, bold, 26, margin, ph - 42, Color.WHITE, "BOOK MY SHOW");
+                drawText(cs, regular, 11, margin, ph - 62, Color.WHITE, "E-TICKET  |  BOOKING CONFIRMATION");
+                String status = str(booking.get("status"));
+                float sw = bold.getStringWidth(status) / 1000 * 10 + 22;
+                fillRect(cs, pw - margin - sw, ph - 52, sw, 22, Color.WHITE);
+                drawText(cs, bold, 10, pw - margin - sw + 11, ph - 45, "CONFIRMED".equals(status) ? GREEN : BMS_RED, status);
 
-                float y = pageHeight - headerHeight - 30;
+                float y = ph - headerH - 36;
 
-                // --- Status badge (top-right of body) ---
-                String status = String.valueOf(booking.get("status"));
-                Color statusColor = "CONFIRMED".equals(status) ? GREEN : GRAY;
-                float badgeWidth = bold.getStringWidth(status) / 1000 * 10 + 20;
-                fillRoundRect(cs, margin + contentWidth - badgeWidth, y - 4, badgeWidth, 20, statusColor);
-                drawText(cs, bold, 10, margin + contentWidth - badgeWidth + 10, y + 2, Color.WHITE, status);
-
-                // --- Movie + theatre ---
-                drawText(cs, bold, 17, margin, y, DARK, String.valueOf(booking.get("title")));
+                // --- Movie ---
+                drawText(cs, bold, 22, margin, y, DARK, str(booking.get("title")));
                 y -= 20;
-                drawText(cs, regular, 11, margin, y, GRAY, String.valueOf(booking.get("theatre_name")));
-                y -= 18;
-                drawDivider(cs, margin, y, contentWidth);
-                y -= 26;
-
-                // --- Two columns: details (left) + QR code (right) ---
-                float qrSize = 92;
-                float detailsWidth = contentWidth - qrSize - 20;
-                float detailTop = y;
-
-                y = detailRow(cs, bold, regular, margin, y, "Booking Ref", String.valueOf(booking.get("reference")));
-                y = detailRow(cs, bold, regular, margin, y, "Date", String.valueOf(booking.get("show_date")));
-                y = detailRow(cs, bold, regular, margin, y, "Time", timeOnly(String.valueOf(booking.get("start_time"))));
-                y = detailRow(cs, bold, regular, margin, y, "Seats", String.valueOf(booking.get("seats")));
-                Object phone = booking.get("contact_phone");
-                if (phone != null && !phone.toString().isBlank()) {
-                    y = detailRow(cs, bold, regular, margin, y, "Phone", phone.toString());
+                StringBuilder meta = new StringBuilder();
+                appendMeta(meta, booking.get("show_language") != null ? booking.get("show_language") : booking.get("movie_language"));
+                appendMeta(meta, booking.get("show_format"));
+                appendMeta(meta, booking.get("certificate"));
+                Object dur = booking.get("duration_minutes");
+                if (dur instanceof Number) {
+                    int mins = ((Number) dur).intValue();
+                    appendMeta(meta, (mins / 60) + "h " + (mins % 60) + "m");
                 }
-
-                PDImageXObject qr = generateQrImage(doc, String.valueOf(booking.get("reference")));
-                float qrX = margin + detailsWidth + 20;
-                cs.drawImage(qr, qrX, detailTop - qrSize + 14, qrSize, qrSize);
-                drawText(cs, regular, 8, qrX + 6, detailTop - qrSize, GRAY, "SCAN AT ENTRY");
-
-                y = Math.min(y, detailTop - qrSize) - 14;
-                drawDivider(cs, margin, y, contentWidth);
+                appendMeta(meta, booking.get("genre"));
+                drawText(cs, regular, 11, margin, y, GRAY, meta.toString());
                 y -= 22;
 
-                // --- Price breakdown ---
-                drawText(cs, bold, 11, margin, y, DARK, "Fare Breakdown");
+                // --- Venue box ---
+                fillRect(cs, margin, y - 62, cw, 66, PANEL);
+                drawText(cs, bold, 9, margin + 14, y - 14, GRAY, "VENUE");
+                drawText(cs, bold, 14, margin + 14, y - 31, DARK, str(booking.get("theatre_name")));
+                String addr = str(booking.get("theatre_address"));
+                Object city = booking.get("city_name");
+                if (city != null && !addr.contains(city.toString())) {
+                    addr = addr.isEmpty() ? city.toString() : addr + ", " + city;
+                }
+                drawText(cs, regular, 10, margin + 14, y - 46, GRAY, fit(regular, 10, addr, cw - 28));
+                y -= 92;
+
+                // --- Date / Time / Screen / Tickets grid ---
+                float colW = cw / 4;
+                String[] labels = {"DATE", "SHOW TIME", "SCREEN", "TICKETS"};
+                Object cnt = booking.get("seat_count");
+                String[] values = {
+                        prettyDate(str(booking.get("show_date"))),
+                        prettyTime(str(booking.get("start_time"))),
+                        str(booking.get("screen_name")),
+                        cnt == null ? "" : String.valueOf(cnt)
+                };
+                for (int i = 0; i < 4; i++) {
+                    drawText(cs, bold, 9, margin + i * colW, y, GRAY, labels[i]);
+                    drawText(cs, bold, 12, margin + i * colW, y - 16, DARK, fit(bold, 12, values[i], colW - 8));
+                }
+                y -= 46;
+
+                // --- Seats highlight ---
+                drawText(cs, bold, 9, margin, y, GRAY, "SEATS");
                 y -= 20;
-                y = priceRow(cs, regular, margin, y, contentWidth, "Ticket Price", booking.get("ticket_subtotal"), DARK, false);
+                drawText(cs, bold, 18, margin, y, BMS_RED, fit(bold, 18, str(booking.get("seats")), cw));
+                y -= 26;
+
+                // --- Tear line ---
+                dashedLine(cs, margin, y, cw);
+                y -= 26;
+
+                // --- QR + booking info ---
+                float qrSize = 120;
+                PDImageXObject qr = generateQrImage(doc, str(booking.get("reference")));
+                cs.drawImage(qr, margin + cw - qrSize, y - qrSize + 14, qrSize, qrSize);
+                drawText(cs, regular, 8, margin + cw - qrSize + 22, y - qrSize + 2, GRAY, "SCAN AT ENTRY");
+                float iy = y;
+                iy = infoRow(cs, bold, regular, margin, iy, "BOOKING ID", str(booking.get("reference")));
+                iy = infoRow(cs, bold, regular, margin, iy, "BOOKED BY", str(booking.get("user_name")));
+                Object phone = booking.get("contact_phone");
+                if (phone != null && !phone.toString().isBlank()) {
+                    iy = infoRow(cs, bold, regular, margin, iy, "PHONE", phone.toString());
+                }
+                Object created = booking.get("created_at");
+                if (created != null) {
+                    String c = created.toString();
+                    iy = infoRow(cs, bold, regular, margin, iy, "BOOKED ON", c.length() >= 16 ? c.substring(0, 16).replace('T', ' ') : c);
+                }
+                y = Math.min(iy, y - qrSize) - 6;
+
+                Object food = booking.get("food_summary");
+                if (food != null && !food.toString().isBlank()) {
+                    drawText(cs, bold, 9, margin, y, GRAY, "FOOD & BEVERAGES");
+                    y -= 15;
+                    drawText(cs, regular, 11, margin, y, DARK, fit(regular, 11, food.toString(), cw));
+                    y -= 22;
+                }
+
+                drawDivider(cs, margin, y, cw);
+                y -= 22;
+
+                // --- Fare breakdown ---
+                drawText(cs, bold, 12, margin, y, DARK, "Payment Summary");
+                y -= 20;
+                y = priceRow(cs, regular, margin, y, cw, "Ticket Price", booking.get("ticket_subtotal"), DARK, false);
                 Object couponDiscount = booking.get("discount_amount");
                 if (couponDiscount instanceof Number && ((Number) couponDiscount).doubleValue() > 0) {
-                    y = priceRow(cs, regular, margin, y, contentWidth, "Coupon " + booking.get("coupon_code"),
-                            -((Number) couponDiscount).doubleValue(), DARK, false);
+                    y = priceRow(cs, regular, margin, y, cw, "Coupon " + str(booking.get("coupon_code")),
+                            -((Number) couponDiscount).doubleValue(), GREEN, false);
                 }
                 Object foodAmount = booking.get("food_amount");
                 if (foodAmount instanceof Number && ((Number) foodAmount).doubleValue() > 0) {
-                    y = priceRow(cs, regular, margin, y, contentWidth, "Food & Beverages",
-                            ((Number) foodAmount).doubleValue(), DARK, false);
+                    y = priceRow(cs, regular, margin, y, cw, "Food & Beverages", foodAmount, DARK, false);
                 }
-                y = priceRow(cs, regular, margin, y, contentWidth, "Convenience Fee", booking.get("convenience_fee"), DARK, false);
-                y = priceRow(cs, regular, margin, y, contentWidth, "GST (18% on fee)", booking.get("gst_amount"), DARK, false);
-                y -= 4;
-                drawDivider(cs, margin, y, contentWidth);
-                y -= 18;
-                y = priceRow(cs, bold, margin, y, contentWidth, "Total Paid", booking.get("amount"), BMS_RED, true);
+                y = priceRow(cs, regular, margin, y, cw, "Convenience Fee", booking.get("convenience_fee"), DARK, false);
+                y = priceRow(cs, regular, margin, y, cw, "GST (18% on fee)", booking.get("gst_amount"), DARK, false);
+                y -= 2;
+                drawDivider(cs, margin, y, cw);
+                y -= 20;
+                y = priceRow(cs, bold, margin, y, cw, "Total Paid", booking.get("amount"), BMS_RED, true);
 
-                // --- Contact + footer ---
-                y -= 14;
                 Object contactEmail = booking.get("contact_email");
                 if (contactEmail != null) {
-                    drawText(cs, regular, 9, margin, y, GRAY, "Sent to: " + contactEmail);
-                    y -= 16;
+                    drawText(cs, regular, 9, margin, y, GRAY, "Confirmation sent to: " + contactEmail);
+                    y -= 14;
                 }
-                drawDivider(cs, margin, y, contentWidth);
-                y -= 16;
-                drawText(cs, regular, 9, margin, y, GRAY,
-                        "Please carry a valid photo ID. This ticket is non-transferable.");
-                y -= 14;
-                drawText(cs, regular, 9, margin, y, GRAY,
-                        "Show the QR code or booking reference at the theatre entrance for scanning.");
+                y -= 10;
 
-                fillRect(cs, 0, 0, pageWidth, 8, BMS_RED);
+                // --- Terms ---
+                fillRect(cs, margin, y - 112, cw, 116, PANEL);
+                drawText(cs, bold, 10, margin + 14, y - 16, DARK, "Important information");
+                String[] terms = {
+                        "Show this QR code or the booking ID at the cinema entrance.",
+                        "Carry a valid photo ID. The ticket is non-transferable.",
+                        "Please arrive 15 minutes before the show starts.",
+                        "Outside food and beverages are not allowed inside the screen.",
+                        "Cancellation and refund (to wallet) is allowed only before the show starts,",
+                        "and only where the cinema permits cancellation.",
+                        "For help, open Help & support in the app."
+                };
+                float ty = y - 32;
+                for (String t : terms) {
+                    drawText(cs, regular, 9, margin + 14, ty, GRAY, t);
+                    ty -= 13;
+                }
+
+                fillRect(cs, 0, 0, pw, 10, BMS_RED);
+                drawText(cs, regular, 8, margin, 22, GRAY, "This is a computer generated ticket and does not require a signature.");
             }
 
             doc.save(out);
             return out.toByteArray();
         }
+    }
+
+    private static final Color PANEL = new Color(246, 246, 248);
+
+    private String str(Object o) {
+        return safe(o == null ? "" : String.valueOf(o));
+    }
+
+    /** Standard PDF fonts only cover Latin-1; replace anything else so showText never throws. */
+    private String safe(String s) {
+        StringBuilder sb = new StringBuilder();
+        for (char c : s.toCharArray()) {
+            if (c == '\u20B9') sb.append("Rs.");
+            else if (c >= 32 && c < 127) sb.append(c);
+            else if (c >= 161 && c <= 255) sb.append(c);
+            else sb.append(' ');
+        }
+        return sb.toString();
+    }
+
+    private void appendMeta(StringBuilder sb, Object v) {
+        if (v == null || v.toString().isBlank()) return;
+        if (sb.length() > 0) sb.append("  |  ");
+        sb.append(safe(v.toString()));
+    }
+
+    private String fit(PDFont font, float size, String text, float maxWidth) throws IOException {
+        String t = safe(text);
+        while (t.length() > 3 && font.getStringWidth(t) / 1000 * size > maxWidth) {
+            t = t.substring(0, t.length() - 4) + "...";
+        }
+        return t;
+    }
+
+    private String prettyDate(String d) {
+        String[] mon = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+        try {
+            java.time.LocalDate ld = java.time.LocalDate.parse(d.substring(0, 10));
+            String dow = ld.getDayOfWeek().getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.ENGLISH);
+            return dow + ", " + ld.getDayOfMonth() + " " + mon[ld.getMonthValue() - 1] + " " + ld.getYear();
+        } catch (Exception e) {
+            return d;
+        }
+    }
+
+    private String prettyTime(String t) {
+        try {
+            int h = Integer.parseInt(t.substring(0, 2));
+            return (h % 12 == 0 ? 12 : h % 12) + ":" + t.substring(3, 5) + (h >= 12 ? " PM" : " AM");
+        } catch (Exception e) {
+            return t;
+        }
+    }
+
+    private float infoRow(PDPageContentStream cs, PDFont bold, PDFont regular, float x, float y,
+                          String label, String value) throws IOException {
+        drawText(cs, bold, 9, x, y, GRAY, label);
+        drawText(cs, regular, 12, x, y - 14, DARK, value);
+        return y - 32;
+    }
+
+    private void dashedLine(PDPageContentStream cs, float x, float y, float width) throws IOException {
+        cs.setStrokingColor(new Color(190, 190, 190));
+        cs.setLineWidth(1f);
+        cs.setLineDashPattern(new float[] {4f, 4f}, 0f);
+        cs.moveTo(x, y);
+        cs.lineTo(x + width, y);
+        cs.stroke();
+        cs.setLineDashPattern(new float[] {}, 0f);
     }
 
     private float detailRow(PDPageContentStream cs, PDFont bold, PDFont regular, float x, float y,
@@ -173,7 +302,7 @@ public class TicketService {
         cs.beginText();
         cs.setFont(font, size);
         cs.newLineAtOffset(x, y);
-        cs.showText(text == null ? "" : text);
+        cs.showText(safe(text == null ? "" : text));
         cs.endText();
     }
 
