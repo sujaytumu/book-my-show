@@ -16,6 +16,7 @@ import City from "./pages/City";
 import Notifications from "./pages/Notifications";
 import Offers from "./pages/Offers";
 import Help from "./pages/Help";
+import Cinemas from "./pages/Cinemas";
 import Wallet from "./pages/Wallet";
 import Forgot from "./pages/Forgot";
 import UpdateBanner from "./components/UpdateBanner";
@@ -141,6 +142,7 @@ export default function App() {
           <Route path="/offers" element={<Offers />} />
           <Route path="/help" element={<Help />} />
           <Route path="/wallet" element={<Wallet />} />
+          <Route path="/cinemas" element={<Cinemas />} />
           <Route path="/admin" element={<Admin />} />
         </Routes>
       </main>
