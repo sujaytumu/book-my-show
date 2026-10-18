@@ -26,6 +26,7 @@ export default function UpdatePrompt() {
   const [update, setUpdate] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [fallback, setFallback] = useState(false);
 
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
@@ -56,7 +57,10 @@ export default function UpdatePrompt() {
       const bundle = await CapacitorUpdater.download({ url: update.url, version: update.build });
       await CapacitorUpdater.set({ id: bundle.id }); // reloads the app on the new version
     } catch (e) {
-      setError("Update failed. Check your internet and try again.");
+      // Show the real reason (it is usually not the internet connection).
+      const why = (e && (e.message || e.errorMessage || e.code)) || String(e);
+      setError("Update failed: " + String(why).slice(0, 160));
+      setFallback(true);
       setBusy(false);
     }
   }
@@ -74,6 +78,14 @@ export default function UpdatePrompt() {
         <button onClick={apply} disabled={busy} style={{ background: "#d2232a", color: "#fff", border: 0, borderRadius: 8, padding: "10px 22px", fontSize: 15, fontWeight: 600, width: "100%" }}>
           {busy ? "Updating…" : "Update"}
         </button>
+        {fallback && (
+          <button
+            onClick={() => Browser.open({ url: "https://github.com/sujaytumu/book-my-show/releases/download/apk-latest/book-my-show.apk" })}
+            style={{ background: "#fff", color: "#d2232a", border: "1.5px solid #d2232a", borderRadius: 8, padding: "9px 22px", fontSize: 14, fontWeight: 600, width: "100%", marginTop: 10 }}
+          >
+            Download the full app instead
+          </button>
+        )}
         <button onClick={() => setUpdate(null)} disabled={busy} style={{ background: "none", border: 0, color: "#666", marginTop: 10, fontSize: 13 }}>
           Later
         </button>
