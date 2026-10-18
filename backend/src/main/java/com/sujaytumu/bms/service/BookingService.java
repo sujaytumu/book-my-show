@@ -28,10 +28,12 @@ public class BookingService {
 
     private final JdbcTemplate db;
     private final SeatEvents seatEvents;
+    private final WaitlistService waitlist;
 
-    public BookingService(JdbcTemplate db, SeatEvents seatEvents) {
+    public BookingService(JdbcTemplate db, SeatEvents seatEvents, WaitlistService waitlist) {
         this.db = db;
         this.seatEvents = seatEvents;
+        this.waitlist = waitlist;
     }
 
     @Transactional
@@ -201,6 +203,7 @@ public class BookingService {
     public void confirmBooking(long bookingId, String razorpayPaymentId) {
         db.update("update bookings set status='CONFIRMED',razorpay_payment_id=? where id=?", razorpayPaymentId, bookingId);
         db.update("update show_seats set status='BOOKED',locked_by=null,locked_until=null where locked_by=?", bookingId);
+        db.update("delete from waitlist w using bookings b where b.id=? and w.show_id=b.show_id and w.user_id=b.user_id", bookingId);
         notifyBookingShow(bookingId);
     }
 
@@ -318,6 +321,9 @@ public class BookingService {
                         "where b.id=? and ss.show_id=b.show_id and ss.seat_number=bs.seat_number",
                 bookingId);
         notifyBookingShow(bookingId);
+        for (Long sid : db.queryForList("select show_id from bookings where id=?", Long.class, bookingId)) {
+            waitlist.onSeatsFreed(sid);
+        }
     }
 
     /** Releases seat holds and bookings whose 10-minute window has lapsed. Runs every minute. */
@@ -325,7 +331,10 @@ public class BookingService {
     public void expireStaleHolds() {
         List<Long> freed = db.queryForList("update show_seats set status='AVAILABLE',locked_by=null,locked_until=null " +
                 "where status='LOCKED' and locked_until<now() returning show_id", Long.class);
-        for (Long sid : new java.util.LinkedHashSet<>(freed)) seatEvents.publishAfterCommit(sid);
+        for (Long sid : new java.util.LinkedHashSet<>(freed)) {
+            seatEvents.publishAfterCommit(sid);
+            waitlist.onSeatsFreed(sid);
+        }
         db.update("update bookings set status='EXPIRED' where status='PENDING' and expires_at<now()");
     }
 }

@@ -59,10 +59,20 @@ export function useNotifications() {
   });
   useEffect(() => {
     if (!currentUser()) return;
-    api
-      .get("/bookings/me")
-      .then((res) => setList(buildNotifications(res.data)))
-      .catch(() => {});
+    Promise.all([
+      api.get("/bookings/me").then((r) => r.data).catch(() => []),
+      api.get("/notifications").then((r) => r.data).catch(() => []),
+    ]).then(([bookings, server]) => {
+      const extra = server.map((n) => ({
+        id: "s" + n.id,
+        kind: n.kind,
+        at: Date.parse(n.created_at) || 0,
+        title: n.title,
+        text: n.body,
+        link: n.link,
+      }));
+      setList([...buildNotifications(bookings), ...extra].sort((a, b) => b.at - a.at));
+    });
   }, []);
   const unread = list.filter((n) => n.at > seen).length;
   function markSeen() {
