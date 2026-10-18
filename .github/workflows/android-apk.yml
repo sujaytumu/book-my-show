@@ -3,6 +3,8 @@ on:
   workflow_dispatch:
   push:
     branches: [feature/android-apk]
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -45,3 +47,11 @@ jobs:
         with:
           name: book-my-show-debug-apk
           path: frontend/android/app/build/outputs/apk/debug/app-debug.apk
+      - name: Publish APK to a public download link (GitHub Release)
+        working-directory: frontend/android/app/build/outputs/apk/debug
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp app-debug.apk book-my-show.apk
+          gh release delete apk-latest --yes --cleanup-tag --repo "$GITHUB_REPOSITORY" || true
+          gh release create apk-latest book-my-show.apk --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease --title "Latest Android APK" --notes "Debug APK built from commit $GITHUB_SHA"
