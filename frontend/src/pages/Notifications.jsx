@@ -5,7 +5,7 @@ import { currentUser } from "../api";
 import { IcBack } from "../components/Icons";
 import { useNotifications } from "../notifications";
 
-const ICON = { confirmed: "🎟", reminder: "⏰", cancelled: "✕" };
+const ICON = { confirmed: "🎟", reminder: "⏰", cancelled: "✕", seats: "💺", release: "🎬" };
 
 export default function Notifications() {
   const navigate = useNavigate();
@@ -36,8 +36,8 @@ export default function Notifications() {
         </div>
       ) : (
         list.map((n) => (
-          <div className={"nt-item " + n.kind} key={n.id}>
-            <i>{ICON[n.kind]}</i>
+          <div className={"nt-item " + n.kind} key={n.id} onClick={() => n.link && navigate(n.link)} style={n.link ? { cursor: "pointer" } : undefined}>
+            <i>{ICON[n.kind] || "🔔"}</i>
             <div>
               <b>{n.title}</b>
               <p>{n.text}</p>

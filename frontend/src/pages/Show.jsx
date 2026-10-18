@@ -434,8 +434,27 @@ export default function Show() {
   const holdRef = useRef(null);
   holdRef.current = hold;
   const [liveNote, setLiveNote] = useState("");
+  const [wait, setWait] = useState(null); // { onWaitlist, seats, available }
+  const [waitQty, setWaitQty] = useState(2);
+  const [waitBusy, setWaitBusy] = useState(false);
+  function loadWait() {
+    api.get("/waitlist/" + id).then((res) => setWait(res.data)).catch(() => {});
+  }
+  async function toggleWait() {
+    setWaitBusy(true);
+    try {
+      const res = wait && wait.onWaitlist ? await api.delete("/waitlist/" + id) : await api.post("/waitlist/" + id, { seats: waitQty });
+      setWait(res.data);
+    } catch (e) {
+      setLiveNote((e.response && e.response.data && e.response.data.message) || "Could not update the waitlist");
+    } finally {
+      setWaitBusy(false);
+    }
+  }
   useEffect(() => {
+    loadWait();
     const stop = watchShowSeats(id, () => {
+      loadWait();
       api.get("/shows/" + id + "/seats").then((res) => {
         setSeats(res.data);
         if (holdRef.current) return;
@@ -913,6 +932,30 @@ export default function Show() {
 
           {seatMsg && <p className="notice">{seatMsg}</p>}
           {liveNote && !seatMsg && <p className="notice">{liveNote}</p>}
+          {seats.length > 0 && (seats.every((x) => x.status !== "AVAILABLE") || (wait && wait.onWaitlist)) && (
+            <div className="wait-card">
+              <b>{wait && wait.onWaitlist ? "You're on the waitlist ✓" : "This show is sold out"}</b>
+              <p>
+                {wait && wait.onWaitlist
+                  ? "We'll notify you in the app and by email as soon as " + wait.seats + " seat" + (wait.seats === 1 ? "" : "s") + " open up."
+                  : "Get notified if seats open up (cancellations or unpaid holds)."}
+              </p>
+              {!(wait && wait.onWaitlist) && (
+                <div className="wait-qty">
+                  <span>Seats</span>
+                  {[1, 2, 3, 4, 5, 6].map((n) => (
+                    <button type="button" key={n} className={waitQty === n ? "on" : ""} onClick={() => setWaitQty(n)}>
+                      {n}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <button type="button" className="wait-btn" disabled={waitBusy} onClick={toggleWait}>
+                {wait && wait.onWaitlist ? "Leave waitlist" : "Notify me"}
+              </button>
+            </div>
+          )}
+
 
           {/* Seat map: rows are grouped into the seat classes. Zoom scales seat size; it scrolls when larger than the screen. */}
           <div className="seat-zoom" ref={zoomRef} onTouchStart={onPinchStart} onTouchMove={onPinchMove} onTouchEnd={onPinchEnd} onTouchCancel={onPinchEnd}>
