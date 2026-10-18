@@ -6,7 +6,8 @@ export default function UpdateBanner() {
   const [newer, setNewer] = useState(false);
 
   useEffect(() => {
-    if (typeof __BUILD_ID__ === "undefined") return undefined;
+    // The installed Android app has its own updater (UpdatePrompt); this banner is for the browser / PWA.
+    if (typeof __BUILD_ID__ === "undefined" || (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())) return undefined;
     let stop = false;
     async function check() {
       try {
