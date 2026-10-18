@@ -42,3 +42,4 @@ create table if not exists device_logins(id bigserial primary key,user_id bigint
 create table if not exists user_notifications(id bigserial primary key,user_id bigint not null references users(id) on delete cascade,kind varchar(30) not null,title varchar(160) not null,body text,link varchar(200),created_at timestamptz not null default now());
 create index if not exists idx_user_notifications_user on user_notifications(user_id,created_at desc);
 create table if not exists waitlist(id bigserial primary key,user_id bigint not null references users(id) on delete cascade,show_id bigint not null references shows(id) on delete cascade,seats_wanted int not null default 1,created_at timestamptz not null default now(),notified_at timestamptz,unique(user_id,show_id));
+create table if not exists payment_events(event_id varchar(80) primary key,event_type varchar(60) not null,received_at timestamptz not null default now());

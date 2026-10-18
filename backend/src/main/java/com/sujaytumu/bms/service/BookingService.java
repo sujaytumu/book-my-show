@@ -199,12 +199,63 @@ public class BookingService {
         return count != null && count > 0;
     }
 
+    /**
+     * Idempotent: only a PENDING booking can become CONFIRMED, so a duplicate verify call, a webhook that
+     * arrives after the redirect, or a late payment on an expired booking can never flip seats twice.
+     * Returns true only when this call performed the confirmation.
+     */
     @Transactional
-    public void confirmBooking(long bookingId, String razorpayPaymentId) {
-        db.update("update bookings set status='CONFIRMED',razorpay_payment_id=? where id=?", razorpayPaymentId, bookingId);
+    public boolean confirmBooking(long bookingId, String razorpayPaymentId) {
+        int changed = db.update(
+                "update bookings set status='CONFIRMED',razorpay_payment_id=? where id=? and status='PENDING'",
+                razorpayPaymentId, bookingId);
+        if (changed == 0) return false;
         db.update("update show_seats set status='BOOKED',locked_by=null,locked_until=null where locked_by=?", bookingId);
         db.update("delete from waitlist w using bookings b where b.id=? and w.show_id=b.show_id and w.user_id=b.user_id", bookingId);
         notifyBookingShow(bookingId);
+        return true;
+    }
+
+    /**
+     * A payment succeeded for a booking that is no longer PENDING (the hold lapsed before the money arrived).
+     * If every seat is still free we honour the booking; otherwise the full amount goes back to the wallet.
+     * Returns "CONFIRMED", "REFUNDED" or "IGNORED".
+     */
+    @Transactional
+    public String settleLatePayment(long bookingId, String paymentId) {
+        List<Map<String, Object>> rows = db.queryForList(
+                "select b.status, b.user_id, b.show_id, b.amount, b.reference, (sh.show_date + sh.start_time) > (now() at time zone 'Asia/Kolkata') upcoming " +
+                        "from bookings b join shows sh on sh.id=b.show_id where b.id=? for update of b", bookingId);
+        if (rows.isEmpty()) return "IGNORED";
+        Map<String, Object> b = rows.get(0);
+        String status = (String) b.get("status");
+        if ("CONFIRMED".equals(status) || "REFUNDED".equals(status)) return "IGNORED";
+        if ("PENDING".equals(status)) {
+            return confirmBooking(bookingId, paymentId) ? "CONFIRMED" : "IGNORED";
+        }
+        if ("EXPIRED".equals(status) && Boolean.TRUE.equals(b.get("upcoming"))) {
+            List<Map<String, Object>> seats = db.queryForList(
+                    "select ss.id, ss.status, ss.locked_until from show_seats ss join booking_seats bs on bs.seat_number=ss.seat_number " +
+                            "where bs.booking_id=? and ss.show_id=? for update of ss", bookingId, b.get("show_id"));
+            long expected = db.queryForObject("select count(*) from booking_seats where booking_id=?", Long.class, bookingId);
+            boolean allFree = seats.size() == expected && seats.stream().allMatch(r -> "AVAILABLE".equals(r.get("status")));
+            if (allFree) {
+                db.update("update show_seats ss set status='BOOKED',locked_by=null,locked_until=null from booking_seats bs " +
+                        "where bs.booking_id=? and ss.show_id=? and ss.seat_number=bs.seat_number", bookingId, b.get("show_id"));
+                db.update("update bookings set status='CONFIRMED',razorpay_payment_id=? where id=?", paymentId, bookingId);
+                notifyBookingShow(bookingId);
+                return "CONFIRMED";
+            }
+        }
+        // Seats are gone (or the show started / booking was cancelled): give the money back.
+        db.update("update bookings set status='REFUNDED',razorpay_payment_id=? where id=?", paymentId, bookingId);
+        db.update("update users set wallet_balance = wallet_balance + ? where id=?", b.get("amount"), b.get("user_id"));
+        db.update("insert into wallet_txns(user_id,amount,kind,note) values(?,?,'REFUND',?)",
+                b.get("user_id"), b.get("amount"), "Refund for " + b.get("reference") + " (payment arrived after the seat hold expired)");
+        db.update("insert into user_notifications(user_id,kind,title,body,link) values(?,?,?,?,?)",
+                b.get("user_id"), "cancelled", "Payment refunded to wallet",
+                "Your payment for " + b.get("reference") + " arrived after the seats were released, so it was refunded to your wallet.", "/wallet");
+        return "REFUNDED";
     }
 
     private void notifyBookingShow(long bookingId) {
@@ -229,7 +280,9 @@ public class BookingService {
         }
         db.update("insert into wallet_txns(user_id,amount,kind,note) values(?,?,'PAYMENT',?)",
                 userId, -amount, "Booking " + booking.get("reference"));
-        confirmBooking(bookingId, "WALLET-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        if (!confirmBooking(bookingId, "WALLET-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "This booking can no longer be paid");
+        }
     }
 
     public Map<String, Object> wallet(String email) {
