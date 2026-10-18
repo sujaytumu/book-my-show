@@ -220,7 +220,7 @@ function CastAvatar({ person }) {
 }
 
 // BMS style: ★ 8.2/10 and "1.2K Votes" (real votes from the Ratings & Reviews below).
-function RatingPill({ movieId, fallback }) {
+function RatingPill({ movieId, fallback, total }) {
   const [summary, setSummary] = useState(null);
   useEffect(() => {
     api
@@ -228,14 +228,15 @@ function RatingPill({ movieId, fallback }) {
       .then((res) => setSummary(res.data))
       .catch(() => {});
   }, [movieId]);
-  const votes = summary?.count || 0;
-  const score = votes > 0 ? Number(summary.average) : Number(fallback);
+  const realVotes = summary?.count || 0;
+  const votes = Math.max(Number(total) || 0, realVotes);
+  const score = realVotes > 0 ? Number(summary.average) : Number(fallback);
   if (!score) return null;
   return (
     <a className="rating-pill" href="#ratings">
       <span className="rp-star">★</span>
       <b>{score.toFixed(1)}/10</b>
-      {votes > 0 && <span className="rp-votes">{fmtCount(votes)} {votes === 1 ? "Vote" : "Votes"}</span>}
+      {votes > 0 && <span className="rp-votes">{fmtCount(votes)}{votes >= 1000 ? "+" : ""} {votes === 1 ? "Rating" : "Ratings"}</span>}
     </a>
   );
 }
@@ -703,7 +704,7 @@ export default function Movie() {
       </div>
 
       <div className="mv-info">
-        {!movie.upcoming && <RatingPill movieId={id} fallback={movie.rating} />}
+        {!movie.upcoming && <RatingPill movieId={id} fallback={movie.rating} total={movie.votes} />}
         <p className="mv-meta">
           {[
             movie.duration_minutes ? Math.floor(movie.duration_minutes / 60) + "h " + (movie.duration_minutes % 60) + "m" : null,
@@ -735,12 +736,18 @@ export default function Movie() {
           )}
         </p>
         {movie.upcoming && (
-          <button
-            className={"share-btn interest-btn" + (interested ? " on" : "")}
-            onClick={() => setInterested(toggleWatchlist(movie))}
-          >
-            {interested ? "♥ In your watchlist" : "♡ I'm interested"}
-          </button>
+          <div className="interest-card">
+            <span className="ic-thumb">
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="#1ea83c"><path d="M2 21h4V9H2v12zm20-11c0-1.1-.9-2-2-2h-6.3l1-4.6.03-.3c0-.4-.2-.8-.4-1.1L13.2 1 6.6 7.6C6.2 8 6 8.5 6 9v10c0 1.1.9 2 2 2h9c.8 0 1.5-.5 1.8-1.2l3-7c.1-.2.2-.5.2-.8v-2z" /></svg>
+            </span>
+            <div className="ic-text">
+              <b>{interested ? <><strong>You</strong> and </> : null}{fmtCount(Number(movie.interested_base) || 0)}+ are interested</b>
+              <small>{interested ? "Movie added to your Wishlist in your Profile" : "Tap to get notified when bookings open"}</small>
+            </div>
+            <button type="button" onClick={() => setInterested(toggleWatchlist(movie))}>
+              {interested ? "Undo" : "I'm interested"}
+            </button>
+          </div>
         )}
       </div>
 

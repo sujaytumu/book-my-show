@@ -58,6 +58,7 @@ public class ShowWindowScheduler {
                 where upcoming = true and active = true and release_date is not null
                   and release_date <= (now() at time zone 'Asia/Kolkata')::date
                 """);
+        assignRatings();
         java.util.List<Long> fresh = db.queryForList("""
                 select id from movies
                 where active = true and upcoming = false and release_date is not null
@@ -96,6 +97,18 @@ public class ShowWindowScheduler {
                       and r.pos <= ceil(r.n * case when r.theatre_type = 'MULTIPLEX' then 2.0 / 3 else 0.75 end)
                     """, movieId, movieId, movieId, movieId);
         }
+    }
+
+    /**
+     * Every Now Showing movie gets a rating and a votes figure automatically (random, assigned once and then kept),
+     * and every movie gets an "interested" figure, so nothing shows 0.0 or an empty count.
+     */
+    public void assignRatings() {
+        db.update("update movies set rating = round((6.8 + random() * 2.4)::numeric, 1) "
+                + "where upcoming = false and active = true and (rating is null or rating = 0)");
+        db.update("update movies set votes_base = 800 + floor(random() * 60000)::int "
+                + "where upcoming = false and active = true and votes_base is null");
+        db.update("update movies set interested_base = 5000 + floor(random() * 400000)::int where interested_base is null");
     }
 
     /**

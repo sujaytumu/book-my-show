@@ -29,9 +29,9 @@ public class CatalogController {
     @GetMapping("/api/movies")
     public List<Map<String, Object>> movies(@RequestParam(required = false) String q) {
         if (q == null || q.isBlank()) {
-            return db.queryForList("select m.*,(select count(*) from reviews r where r.movie_id=m.id) votes from movies m where m.active=true order by m.title");
+            return db.queryForList("select m.*,(coalesce(m.votes_base,0) + (select count(*) from reviews r where r.movie_id=m.id)) votes from movies m where m.active=true order by m.title");
         }
-        return db.queryForList("select m.*,(select count(*) from reviews r where r.movie_id=m.id) votes from movies m where m.active=true and m.title ilike ? order by m.title", "%" + q + "%");
+        return db.queryForList("select m.*,(coalesce(m.votes_base,0) + (select count(*) from reviews r where r.movie_id=m.id)) votes from movies m where m.active=true and m.title ilike ? order by m.title", "%" + q + "%");
     }
 
     @GetMapping("/api/movies/{id}")
@@ -55,6 +55,15 @@ public class CatalogController {
         // stable between refreshes), plus every real confirmed booking on top of it.
         int hourOfDay = java.time.LocalTime.now(java.time.ZoneId.of("Asia/Kolkata")).getHour();
         long baseHour = 10 + Math.floorMod(id * 7 + hourOfDay * 3L, 11L);
+        Object vb = movie.get("votes_base");
+        if (vb instanceof Number && ((Number) vb).longValue() > 0) {
+            // Scale with how popular the movie is: tens or hundreds of tickets per hour, like the real app.
+            double wobble = 0.7 + 0.6 * Math.floorMod(id * 7 + hourOfDay * 3L, 11L) / 10.0;
+            baseHour = Math.round(((Number) vb).doubleValue() / 12.0 * wobble);
+        }
+        long votesTotal = (vb instanceof Number ? ((Number) vb).longValue() : 0)
+                + db.queryForObject("select count(*) from reviews where movie_id=?", Long.class, id);
+        movie.put("votes", votesTotal);
         long baseDay = 100 + Math.floorMod(id * 17, 41L);
         movie.put("tickets_last_hour", (lastHour == null ? 0 : lastHour) + baseHour);
         movie.put("tickets_last_day", (sold == null ? 0 : sold) + baseDay);

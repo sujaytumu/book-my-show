@@ -901,3 +901,22 @@ img.cast-photo{object-fit:cover;object-position:top;background:#eee}
 .tabbar{bottom:10px;padding:4px 6px;border-radius:28px}
 .tabbar a{gap:1px;padding:4px;font-size:9px}
 .tabbar svg{width:20px;height:20px}
+
+/* ---------- Details page: interested card + cast tiles (BMS look) ---------- */
+.interest-card{display:flex;align-items:center;gap:12px;margin:12px 0 4px;padding:12px 14px;border-radius:14px;background:linear-gradient(90deg,#eef2f7,#fdf0ef)}
+.ic-thumb{flex:none;display:flex}
+.ic-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.ic-text b{font-size:11.2px;font-weight:500;color:#222}.ic-text b strong{font-size:13.6px;font-weight:700}
+.ic-text small{font-size:9.6px;color:#444;line-height:1.35}
+.interest-card button{flex:none;border:1.5px solid var(--red);background:#fff;color:var(--red);border-radius:8px;padding:8px 14px;font-weight:600;font-size:10.4px;cursor:pointer;text-transform:none;letter-spacing:0}
+.cast-row{gap:12px}
+.cast-item{width:92px}
+.cast-avatar{width:92px;height:92px;border-radius:12px;font-size:16px;margin-bottom:8px;object-fit:cover}
+img.cast-avatar{display:block}
+.cast-item b{font-size:9.6px}.cast-item small{font-size:8.8px}
+/* ---------- Home posters: rating + votes under the poster ---------- */
+.pc-meta{display:flex;justify-content:space-between;align-items:center;margin:8px 0 2px;font-size:10.4px;gap:6px}
+.pc-meta i{color:#e0415a;font-style:normal}.pc-meta em{font-style:normal;color:#6b7280;font-size:9px}
+.pc-flag{position:absolute;top:0;right:0;background:#e0415a;color:#fff;font-style:normal;font-size:7.5px;font-weight:700;padding:3px 8px;border-radius:0 0 0 8px}
+.pc-flag:empty{display:none}
+.pc-img{position:relative}
