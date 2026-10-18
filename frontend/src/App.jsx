@@ -19,6 +19,7 @@ import Help from "./pages/Help";
 import Wallet from "./pages/Wallet";
 import Forgot from "./pages/Forgot";
 import UpdateBanner from "./components/UpdateBanner";
+import NativeBack from "./components/NativeBack";
 import { IcTarget, IcHome, IcSearch, IcTicket, IcUser } from "./components/Icons";
 import { seedHomeBelow } from "./nav";
 import { alreadyAsked, detectCity, markAsked, setCity } from "./location";
@@ -120,6 +121,7 @@ export default function App() {
   return (
     <>
       <UpdateBanner />
+      <NativeBack />
       <Nav />
       <main>
         <Routes>
