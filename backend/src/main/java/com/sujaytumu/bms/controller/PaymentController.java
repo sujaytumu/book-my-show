@@ -82,14 +82,30 @@ public class PaymentController {
         }
 
         long bookingId = ((Number) booking.get("id")).longValue();
-        if (!bookingService.holdStillValid(bookingId)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Seat hold expired");
-        }
-
-        bookingService.confirmBooking(bookingId, paymentId);
+        // The signature proves the money was paid, so never answer "hold expired" without sorting out the payment:
+        // confirm if the seats are still ours, recover them if free, otherwise refund to the wallet.
         paymentService.markPaid(orderId, paymentId);
+        if (!bookingService.confirmBooking(bookingId, paymentId)) {
+            String outcome = bookingService.settleLatePayment(bookingId, paymentId);
+            if ("REFUNDED".equals(outcome)) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "Your seat hold expired and the seats were taken - the payment was refunded to your wallet");
+            }
+        }
         emailTicket(auth.getName(), bookingId);
         return Map.of("status", "success");
+    }
+
+    /**
+     * Razorpay server-to-server webhook (payment.captured / order.paid / payment.failed / refund.processed).
+     * Signature-checked on the raw body, de-duplicated by event id, and safe to receive repeatedly or out of order.
+     */
+    @PostMapping("/webhook")
+    public Map<String, String> webhook(@RequestBody String rawBody,
+                                       @RequestHeader(value = "X-Razorpay-Signature", required = false) String signature,
+                                       @RequestHeader(value = "X-Razorpay-Event-Id", required = false) String eventId) throws Exception {
+        String result = paymentService.handleWebhook(rawBody, signature, eventId, bookingService);
+        return Map.of("status", result);
     }
 
     /** Best-effort: a failed/unset email integration never fails the booking itself. */
