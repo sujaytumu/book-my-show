@@ -32,7 +32,15 @@ jobs:
         working-directory: frontend/android
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+          set +e
+          ./gradlew assembleDebug --no-daemon --stacktrace > build.log 2>&1
+          code=$?
+          if [ $code -ne 0 ]; then
+            msg=$(grep -n -i -E "what went wrong|error:|exception|not found|failed|license|sdk" build.log | head -25 | sed 's/%/%25/g' | tr '\n' '|')
+            echo "::error title=Gradle failed::$msg"
+            tail -40 build.log
+          fi
+          exit $code
       - uses: actions/upload-artifact@v4
         with:
           name: book-my-show-debug-apk
