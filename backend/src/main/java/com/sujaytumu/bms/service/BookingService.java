@@ -27,9 +27,11 @@ public class BookingService {
     private static final long HOLD_SECONDS = 600; // 10 minutes
 
     private final JdbcTemplate db;
+    private final SeatEvents seatEvents;
 
-    public BookingService(JdbcTemplate db) {
+    public BookingService(JdbcTemplate db, SeatEvents seatEvents) {
         this.db = db;
+        this.seatEvents = seatEvents;
     }
 
     @Transactional
@@ -155,6 +157,7 @@ public class BookingService {
                     bookingId, Timestamp.from(expiresAt), showId, seatNumber);
         }
 
+        seatEvents.publishAfterCommit(showId);
         Map<String, Object> result = new java.util.LinkedHashMap<>();
         result.put("bookingId", bookingId);
         result.put("reference", reference);
@@ -198,6 +201,12 @@ public class BookingService {
     public void confirmBooking(long bookingId, String razorpayPaymentId) {
         db.update("update bookings set status='CONFIRMED',razorpay_payment_id=? where id=?", razorpayPaymentId, bookingId);
         db.update("update show_seats set status='BOOKED',locked_by=null,locked_until=null where locked_by=?", bookingId);
+        notifyBookingShow(bookingId);
+    }
+
+    private void notifyBookingShow(long bookingId) {
+        List<Long> shows = db.queryForList("select show_id from bookings where id=?", Long.class, bookingId);
+        for (Long sid : shows) seatEvents.publishAfterCommit(sid);
     }
 
     /** Pays a pending booking from the wallet: debit (only if funds suffice) and confirm in one transaction. */
@@ -308,13 +317,15 @@ public class BookingService {
                         "from bookings b join booking_seats bs on bs.booking_id=b.id " +
                         "where b.id=? and ss.show_id=b.show_id and ss.seat_number=bs.seat_number",
                 bookingId);
+        notifyBookingShow(bookingId);
     }
 
     /** Releases seat holds and bookings whose 10-minute window has lapsed. Runs every minute. */
     @Transactional
     public void expireStaleHolds() {
-        db.update("update show_seats set status='AVAILABLE',locked_by=null,locked_until=null " +
-                "where status='LOCKED' and locked_until<now()");
+        List<Long> freed = db.queryForList("update show_seats set status='AVAILABLE',locked_by=null,locked_until=null " +
+                "where status='LOCKED' and locked_until<now() returning show_id", Long.class);
+        for (Long sid : new java.util.LinkedHashSet<>(freed)) seatEvents.publishAfterCommit(sid);
         db.update("update bookings set status='EXPIRED' where status='PENDING' and expires_at<now()");
     }
 }

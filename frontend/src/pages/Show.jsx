@@ -2,6 +2,7 @@
 import { goBack, finishTo } from "../nav";
 // import { useNavigate, useParams } from "react-router-dom";
 // import { api, currentUser } from "../api";
+import { watchShowSeats } from "../liveSeats";
 // import TheatreMap, { haversineKm } from "../components/TheatreMap";
 
 // const MAX_SEATS = 10;
@@ -426,6 +427,27 @@ export default function Show() {
   }, [id]);
 
 
+
+  // Live seat map: other people's holds/bookings appear instantly (WebSocket), and seats you picked that
+  // someone else just took are dropped from your selection.
+  const holdRef = useRef(null);
+  holdRef.current = hold;
+  const [liveNote, setLiveNote] = useState("");
+  useEffect(() => {
+    const stop = watchShowSeats(id, () => {
+      api.get("/shows/" + id + "/seats").then((res) => {
+        setSeats(res.data);
+        if (holdRef.current) return;
+        const free = new Set(res.data.filter((x) => x.status === "AVAILABLE").map((x) => x.seat_number));
+        setSelected((cur) => {
+          const kept = cur.filter((sn) => free.has(sn));
+          if (kept.length !== cur.length) setLiveNote("Someone just booked a seat you picked. Please choose again.");
+          return kept.length === cur.length ? cur : kept;
+        });
+      }).catch(() => {});
+    });
+    return stop;
+  }, [id]);
 
   useEffect(() => {
 
@@ -881,6 +903,7 @@ export default function Show() {
           )}
 
           {seatMsg && <p className="notice">{seatMsg}</p>}
+          {liveNote && !seatMsg && <p className="notice">{liveNote}</p>}
 
           {/* Seat map: rows are grouped into the seat classes. Zoom scales seat size; it scrolls when larger than the screen. */}
           <div className="seat-zoom" ref={zoomRef} onTouchStart={onPinchStart} onTouchMove={onPinchMove} onTouchEnd={onPinchEnd} onTouchCancel={onPinchEnd}>
