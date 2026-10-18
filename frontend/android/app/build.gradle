@@ -7,7 +7,7 @@ android {
         applicationId "com.sujaytumu.bookmyshow"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode (System.getenv("BUILD_NUMBER") ?: "1").toInteger()
+        versionCode Integer.parseInt(System.getenv("BUILD_NUMBER") ?: "1")
         versionName "1.0.${System.getenv("BUILD_NUMBER") ?: "0"}"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
@@ -20,7 +20,7 @@ android {
         debug {
             // CI injects a permanent keystore so every APK has the SAME signature
             // (otherwise Android refuses to install it over the previous one).
-            if (System.getenv("KEYSTORE_PATH")) {
+            if (System.getenv("KEYSTORE_PATH") != null) {
                 storeFile file(System.getenv("KEYSTORE_PATH"))
                 storePassword System.getenv("KEYSTORE_PASSWORD")
                 keyAlias "bms"
