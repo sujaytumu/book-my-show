@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "../api";
 
 export default function Auth({ register = false }) {
@@ -36,7 +36,7 @@ export default function Auth({ register = false }) {
       const res = await api.post("/auth/" + (register ? "register" : "login"), form);
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data));
-      navigate("/");
+      navigate("/", { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || "Something went wrong. Please try again.");
     } finally {
@@ -45,6 +45,11 @@ export default function Auth({ register = false }) {
   }
 
   return (
+    <div className="auth-wrap">
+    <div className="auth-brand">
+      <b>book<i>my</i>show</b>
+      <span>{register ? "Create your account to start booking" : "Login to continue"}</span>
+    </div>
     <div className="auth card">
       <h2>{register ? "Create account" : "Login"}</h2>
       {sessionExpired && !register && (
@@ -64,6 +69,19 @@ export default function Auth({ register = false }) {
         </p>
       )}
       {error && <p className="error">{error}</p>}
+      {!register && (
+        <p className="auth-links">
+          <Link to="/forgot">Forgot password?</Link>
+        </p>
+      )}
+      <p className="auth-links">
+        {register ? (
+          <>Already have an account? <Link to="/login">Login</Link></>
+        ) : (
+          <>New here? <Link to="/register">Create an account</Link></>
+        )}
+      </p>
+    </div>
     </div>
   );
 }

@@ -56,7 +56,7 @@ export default function Profile() {
 
   function handleLogout() {
     logout();
-    navigate("/");
+    navigate("/", { replace: true });
   }
 
   const confirmed = bookings.filter((b) => b.status === "CONFIRMED");
@@ -138,6 +138,7 @@ export default function Profile() {
       </div>
 
       <div className="pf-card pf-menu">
+        <Link to="/forgot?change=1">🔑 Change password <i>›</i></Link>
         <Link to="/wallet">👛 Wallet <i>›</i></Link>
         <Link to="/offers">🏷 Offers &amp; coupons <i>›</i></Link>
         <Link to="/help">❓ Help &amp; support <i>›</i></Link>

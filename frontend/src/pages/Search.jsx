@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { goBack } from "../nav";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { IcBack } from "../components/Icons";
@@ -47,7 +48,7 @@ export default function Search() {
   return (
     <div className="search-page">
       <div className="sp-bar">
-        <button type="button" onClick={() => navigate(-1)} aria-label="Back">
+        <button type="button" onClick={() => goBack(navigate)} aria-label="Back">
           <IcBack />
         </button>
         <input

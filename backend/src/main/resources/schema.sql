@@ -35,3 +35,6 @@ alter table bookings add column if not exists food_summary text;
 alter table users add column if not exists wallet_balance numeric(12,2) not null default 0;
 create table if not exists wallet_txns(id bigserial primary key,user_id bigint not null references users(id),amount numeric(12,2) not null,kind varchar(20) not null,note varchar(200),created_at timestamptz not null default now());
 create index if not exists idx_wallet_txns_user on wallet_txns(user_id,created_at desc);
+alter table movies add column if not exists votes_base int;
+alter table movies add column if not exists interested_base int;
+create table if not exists password_resets(email varchar(160) primary key,otp_hash varchar(100) not null,expires_at timestamptz not null,attempts int not null default 0,sent_at timestamptz not null default now());
