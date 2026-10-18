@@ -2,7 +2,7 @@
 // (new Capacitor plugin, AndroidManifest/permissions, icons, capacitor.config).
 // Pure web/UI/API changes never need a bump: they reach the phone through the
 // in-app "Update" popup without reinstalling the APK.
-export const NATIVE_VERSION = 1;
+export const NATIVE_VERSION = 2;
 
 // Stamped by the CI build (GitHub run number). "dev" when running locally.
 export const BUILD_ID = String(import.meta.env.VITE_BUILD_ID || "dev");
