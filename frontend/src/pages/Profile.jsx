@@ -56,7 +56,7 @@ export default function Profile() {
 
   function handleLogout() {
     logout();
-    navigate("/");
+    navigate("/", { replace: true });
   }
 
   const confirmed = bookings.filter((b) => b.status === "CONFIRMED");

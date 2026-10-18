@@ -15,3 +15,9 @@ export function seedHomeBelow(navigate, pathname, search) {
   navigate("/", { replace: true });
   navigate(pathname + (search || ""));
 }
+
+// After something final (e.g. a paid booking): show `path`, and make back go Home instead of into the finished flow.
+export function finishTo(navigate, path) {
+  navigate("/", { replace: true });
+  navigate(path);
+}

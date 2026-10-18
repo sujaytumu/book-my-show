@@ -86,7 +86,7 @@ export default function Nav() {
   function handleLogout() {
     setOpen(false);
     logout();
-    navigate("/");
+    navigate("/", { replace: true });
   }
 
   if (pathname === "/search" || pathname === "/city" || pathname === "/notifications" || pathname === "/offers" || pathname === "/help" || pathname === "/wallet" || pathname === "/coming-soon" || pathname === "/now-showing" || pathname.startsWith("/movie/") || pathname.startsWith("/show/")) return null;
