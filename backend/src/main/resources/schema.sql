@@ -52,3 +52,4 @@ create index if not exists idx_booking_seats_booking on booking_seats(booking_id
 create index if not exists idx_screens_theatre on screens(theatre_id);
 create index if not exists idx_theatres_city on theatres(city_id) where active=true;
 create index if not exists idx_waitlist_show on waitlist(show_id) where notified_at is null;
+create table if not exists app_flags(flag varchar(100) primary key,done_at timestamptz not null default now());
