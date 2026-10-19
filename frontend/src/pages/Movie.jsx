@@ -269,15 +269,10 @@ function movieTags(movie) {
 function StickyBook({ onClick }) {
   return (
     <div className="sticky-book">
-      <div className="sb-inner">
-        <div className="sb-info">
-          <b>Book your seats</b>
-          <small>Starting ₹100 · Pick a show next</small>
-        </div>
-        <button type="button" onClick={onClick}>
-          Book tickets
-        </button>
-      </div>
+      <button type="button" onClick={onClick}>
+        Book tickets
+      </button>
+    </div>
     </div>
   );
 }
