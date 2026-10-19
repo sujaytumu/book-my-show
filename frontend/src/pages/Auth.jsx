@@ -125,6 +125,11 @@ export default function Auth({ register = false }) {
       <b>book<i>my</i>show</b>
       <span>{register ? "Create your account to start booking" : "Login to continue"}</span>
     </div>
+    <ul className="auth-perks">
+      <li>🎟️ Instant e-tickets</li>
+      <li>💺 Live seat map</li>
+      <li>👛 Wallet refunds</li>
+    </ul>
     <div className="auth card">
       {!register && device && (
         <div className="one-tap">
