@@ -59,6 +59,8 @@ public class WaitlistService {
 
     /** Called whenever seats of a show were released (cancellation or expired hold). */
     public void onSeatsFreed(long showId) {
+        // One notifier per show at a time (released automatically at the end of the surrounding transaction).
+        db.execute("select pg_advisory_xact_lock(" + showId + ")");
         List<Map<String, Object>> waiting = db.queryForList(
                 "select w.id, w.seats_wanted, u.id user_id, u.email, m.title, t.name theatre_name, sh.show_date, sh.start_time " +
                         "from waitlist w join users u on u.id=w.user_id join shows sh on sh.id=w.show_id " +
