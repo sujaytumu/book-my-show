@@ -23,7 +23,7 @@ export function buildNotifications(bookings) {
         out.push({
           id: "r" + b.id,
           kind: "reminder",
-          at: startsAt - 3600 * 1000,
+          at: Math.min(startsAt - 3600 * 1000, now),
           title: "Show starts soon",
           text: b.title + " at " + b.theatre_name + " · " + when(b) + ". Seats " + b.seats + ".",
         });
@@ -74,6 +74,15 @@ export function useNotifications() {
       setList([...buildNotifications(bookings), ...extra].sort((a, b) => b.at - a.at));
     });
   }, []);
+  useEffect(() => {
+    const sync = () => {
+      try {
+        setSeen(Number(localStorage.getItem(SEEN) || 0));
+      } catch {}
+    };
+    window.addEventListener("bms-notif-seen", sync);
+    return () => window.removeEventListener("bms-notif-seen", sync);
+  }, []);
   const unread = list.filter((n) => n.at > seen).length;
   function markSeen() {
     const t = Date.now();
@@ -81,6 +90,7 @@ export function useNotifications() {
       localStorage.setItem(SEEN, String(t));
     } catch {}
     setSeen(t);
+    window.dispatchEvent(new Event("bms-notif-seen"));
   }
   return { list, unread, markSeen };
 }
