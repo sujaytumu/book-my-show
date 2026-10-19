@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import AdminAnalytics from "../components/AdminAnalytics";
 import { api, currentUser } from "../api";
 
 const emptyMovie = {
@@ -74,6 +75,7 @@ export default function Admin() {
   return (
     <div className="admin">
       <h1>Admin</h1>
+      <AdminAnalytics />
       {message && <p className="notice">{message}</p>}
 
       <div className="card">
