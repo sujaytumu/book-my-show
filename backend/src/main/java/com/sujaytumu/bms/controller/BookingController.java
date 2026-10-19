@@ -25,7 +25,8 @@ public class BookingController {
     }
 
     @PostMapping("/hold")
-    public Map<String, Object> hold(Authentication auth, @RequestBody Map<String, Object> body) {
+    public Map<String, Object> hold(Authentication auth, @RequestBody Map<String, Object> body,
+                                    @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
         long showId = ((Number) body.get("showId")).longValue();
         @SuppressWarnings("unchecked")
         List<String> seatNumbers = ((List<Object>) body.get("seatNumbers")).stream()
@@ -35,7 +36,20 @@ public class BookingController {
         String couponCode = body.get("couponCode") == null ? null : body.get("couponCode").toString();
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> food = body.get("food") instanceof List<?> l ? (List<Map<String, Object>>) l : null;
-        return bookingService.holdSeats(auth.getName(), showId, seatNumbers, contactEmail, contactPhone, couponCode, food);
+        // Retry on a database deadlock / lock timeout (rare, and always safe: the whole transaction rolled back).
+        for (int attempt = 1; ; attempt++) {
+            try {
+                return bookingService.holdSeats(auth.getName(), showId, seatNumbers, contactEmail, contactPhone, couponCode, food, idempotencyKey);
+            } catch (org.springframework.dao.ConcurrencyFailureException e) {
+                if (attempt >= 3) throw e;
+                try {
+                    Thread.sleep(60L * attempt);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw e;
+                }
+            }
+        }
     }
 
     @GetMapping("/me")

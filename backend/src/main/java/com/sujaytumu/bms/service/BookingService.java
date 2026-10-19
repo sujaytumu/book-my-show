@@ -25,6 +25,7 @@ public class BookingService {
 
     private static final int MAX_SEATS_PER_BOOKING = 10;
     private static final long HOLD_SECONDS = 600; // 10 minutes
+    private static final int MAX_OPEN_HOLDS = 3;
 
     private final JdbcTemplate db;
     private final SeatEvents seatEvents;
@@ -40,6 +41,71 @@ public class BookingService {
     public Map<String, Object> holdSeats(String email, long showId, List<String> rawSeatNumbers,
                                           String contactEmail, String contactPhone, String couponCode,
                                           List<Map<String, Object>> food) {
+        return holdSeats(email, showId, rawSeatNumbers, contactEmail, contactPhone, couponCode, food, null);
+    }
+
+    /**
+     * @param idempotencyKey optional client-generated key: a double tap or a network retry carrying the same key gets the
+     *                       SAME booking back instead of creating a second hold.
+     */
+    @Transactional
+    public Map<String, Object> holdSeats(String email, long showId, List<String> rawSeatNumbers,
+                                          String contactEmail, String contactPhone, String couponCode,
+                                          List<Map<String, Object>> food, String idempotencyKey) {
+        if (idempotencyKey != null && !idempotencyKey.isBlank()) {
+            String key = idempotencyKey.trim();
+            if (key.length() > 80) key = key.substring(0, 80);
+            Long uid = db.queryForObject("select id from users where email=?", Long.class, email);
+            // ON CONFLICT waits for a concurrent transaction using the same key, so two simultaneous requests serialise here.
+            int first = db.update("insert into idempotency_keys(user_id,idem_key) values(?,?) on conflict do nothing", uid, key);
+            if (first == 0) {
+                List<Long> done = db.queryForList(
+                        "select booking_id from idempotency_keys where user_id=? and idem_key=? and booking_id is not null",
+                        Long.class, uid, key);
+                if (!done.isEmpty()) return holdSummary(done.get(0));
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "That request is already being processed");
+            }
+            Map<String, Object> created = holdSeatsOnce(email, showId, rawSeatNumbers, contactEmail, contactPhone, couponCode, food);
+            db.update("update idempotency_keys set booking_id=? where user_id=? and idem_key=?",
+                    ((Number) created.get("bookingId")).longValue(), uid, key);
+            return created;
+        }
+        return holdSeatsOnce(email, showId, rawSeatNumbers, contactEmail, contactPhone, couponCode, food);
+    }
+
+    /** Rebuilds the hold response for an existing booking (used when an idempotent request is repeated). */
+    private Map<String, Object> holdSummary(long bookingId) {
+        Map<String, Object> b = db.queryForMap(
+                "select id, reference, ticket_subtotal, discount_amount, food_amount, food_summary, coupon_code, convenience_fee, " +
+                        "gst_amount, amount, expires_at from bookings where id=?", bookingId);
+        Map<String, Object> r = new java.util.LinkedHashMap<>();
+        r.put("bookingId", bookingId);
+        r.put("reference", b.get("reference"));
+        r.put("ticketSubtotal", b.get("ticket_subtotal"));
+        r.put("discount", b.get("discount_amount"));
+        r.put("foodAmount", b.get("food_amount"));
+        if (b.get("food_summary") != null) r.put("foodSummary", b.get("food_summary"));
+        if (b.get("coupon_code") != null) r.put("couponCode", b.get("coupon_code"));
+        r.put("convenienceFee", b.get("convenience_fee"));
+        r.put("gst", b.get("gst_amount"));
+        r.put("amount", b.get("amount"));
+        Object exp = b.get("expires_at");
+        r.put("expiresAt", exp instanceof Timestamp ? ((Timestamp) exp).toInstant().toString() : String.valueOf(exp));
+        r.put("seats", db.queryForList("select seat_number from booking_seats where booking_id=? order by seat_number", String.class, bookingId));
+        return r;
+    }
+
+    private Map<String, Object> holdSeatsOnce(String email, long showId, List<String> rawSeatNumbers,
+                                              String contactEmail, String contactPhone, String couponCode,
+                                              List<Map<String, Object>> food) {
+        // Anti-hoarding: at most 3 unpaid holds per person at a time.
+        Long open = db.queryForObject(
+                "select count(*) from bookings b join users u on u.id=b.user_id where u.email=? and b.status='PENDING' and b.expires_at>now()",
+                Long.class, email);
+        if (open != null && open >= MAX_OPEN_HOLDS) {
+            throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS,
+                    "You already have " + MAX_OPEN_HOLDS + " unpaid seat holds. Complete one or wait for it to expire.");
+        }
         List<String> seatNumbers = rawSeatNumbers.stream().distinct().toList();
         if (seatNumbers.isEmpty() || seatNumbers.size() > MAX_SEATS_PER_BOOKING) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -60,7 +126,7 @@ public class BookingService {
         for (int i = 0; i < seatNumbers.size(); i++) params[i + 1] = seatNumbers.get(i);
 
         List<Map<String, Object>> rows = db.queryForList(
-                "select * from show_seats where show_id=? and seat_number in (" + placeholders + ") for update",
+                "select * from show_seats where show_id=? and seat_number in (" + placeholders + ") order by id for update",
                 params);
         if (rows.size() != seatNumbers.size()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "One or more seats do not exist on this show");
@@ -379,15 +445,32 @@ public class BookingService {
         }
     }
 
-    /** Releases seat holds and bookings whose 10-minute window has lapsed. Runs every minute. */
+    /**
+     * Releases seat holds and bookings whose 10-minute window has lapsed. Runs every minute.
+     * Lock order is always booking -> seats (same as confirmBooking), and rows a payment is touching right now are
+     * skipped (SKIP LOCKED) instead of waited on, so the sweeper can never deadlock with or stall a checkout.
+     */
     @Transactional
     public void expireStaleHolds() {
-        List<Long> freed = db.queryForList("update show_seats set status='AVAILABLE',locked_by=null,locked_until=null " +
-                "where status='LOCKED' and locked_until<now() returning show_id", Long.class);
-        for (Long sid : new java.util.LinkedHashSet<>(freed)) {
+        List<Long> shows = db.queryForList("""
+                with due as (
+                    select id from bookings where status='PENDING' and expires_at<now() order by id for update skip locked
+                ), gone as (
+                    update bookings set status='EXPIRED' where id in (select id from due) returning id
+                )
+                update show_seats set status='AVAILABLE',locked_by=null,locked_until=null
+                where status='LOCKED' and locked_by in (select id from gone) returning show_id
+                """, Long.class);
+        // Safety net: a lapsed lock whose booking is no longer pending (e.g. cancelled) must not stay stuck.
+        shows.addAll(db.queryForList("""
+                update show_seats set status='AVAILABLE',locked_by=null,locked_until=null
+                where status='LOCKED' and locked_until<now() - interval '2 minutes'
+                  and not exists (select 1 from bookings b where b.id=show_seats.locked_by and b.status='PENDING')
+                returning show_id
+                """, Long.class));
+        for (Long sid : new java.util.LinkedHashSet<>(shows)) {
             seatEvents.publishAfterCommit(sid);
             waitlist.onSeatsFreed(sid);
         }
-        db.update("update bookings set status='EXPIRED' where status='PENDING' and expires_at<now()");
     }
 }
