@@ -1181,3 +1181,9 @@ img{-webkit-touch-callout:none;-webkit-user-drag:none}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
+
+/* Book tickets bar: exactly like the real app - full-width red button on the page background, snug to the bottom edge */
+.sticky-book{background:#f4f4f7;box-shadow:none;padding:8px 20px calc(8px + env(safe-area-inset-bottom));pointer-events:auto}
+.sticky-book button,.sticky-book button:active{display:block;width:100%;max-width:none;margin:0;padding:14px 20px;border-radius:10px;font-size:17px;font-weight:500;background:#dc3558;color:#fff;border:0;box-shadow:none;animation:none}
+.sticky-book button::after{display:none}
+.sticky-book button:active{transform:scale(.97)}
