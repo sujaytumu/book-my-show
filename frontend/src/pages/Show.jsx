@@ -432,6 +432,7 @@ export default function Show() {
   // Live seat map: other people's holds/bookings appear instantly (WebSocket), and seats you picked that
   // someone else just took are dropped from your selection.
   const holdRef = useRef(null);
+  const idemRef = useRef(null);
   holdRef.current = hold;
   const [liveNote, setLiveNote] = useState("");
   const [wait, setWait] = useState(null); // { onWaitlist, seats, available }
@@ -640,6 +641,10 @@ export default function Show() {
 
     try {
 
+      // Same seats + coupon + food => same key, so a double tap or a network retry returns the SAME hold.
+      const sig = id + "|" + [...selected].sort().join(",") + "|" + couponCode.trim() + "|" + JSON.stringify(foodQty);
+      if (!idemRef.current || idemRef.current.sig !== sig) idemRef.current = { sig, key: Date.now().toString(36) + Math.random().toString(36).slice(2, 12) };
+      const idemKey = idemRef.current.key;
       const res = await api.post("/bookings/hold", {
 
         showId: +id,
@@ -652,7 +657,7 @@ export default function Show() {
         couponCode: couponCode.trim() || null,
         food: Object.entries(foodQty).filter(([, q]) => q > 0).map(([fid, q]) => ({ id: +fid, qty: q })),
 
-      });
+      }, { headers: { "Idempotency-Key": idemKey } });
 
       setHold(res.data);
 

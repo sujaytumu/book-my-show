@@ -71,6 +71,31 @@ public class AdminController {
         return out;
     }
 
+    /** Consistency check of seats vs bookings. Every number should be 0 on a healthy system. */
+    @GetMapping("/integrity")
+    public Map<String, Object> integrity() {
+        Map<String, Object> out = new java.util.LinkedHashMap<>();
+        out.put("seatsBookedWithoutBooking", db.queryForObject(
+                "select count(*) from show_seats ss where ss.status='BOOKED' and not exists (" +
+                        "select 1 from booking_seats bs join bookings b on b.id=bs.booking_id " +
+                        "where b.show_id=ss.show_id and bs.seat_number=ss.seat_number and b.status='CONFIRMED')", Long.class));
+        out.put("confirmedSeatsNotBooked", db.queryForObject(
+                "select count(*) from booking_seats bs join bookings b on b.id=bs.booking_id join show_seats ss " +
+                        "on ss.show_id=b.show_id and ss.seat_number=bs.seat_number where b.status='CONFIRMED' and ss.status<>'BOOKED'", Long.class));
+        out.put("doubleBookedSeats", db.queryForObject(
+                "select count(*) from (select b.show_id, bs.seat_number from booking_seats bs join bookings b on b.id=bs.booking_id " +
+                        "where b.status='CONFIRMED' group by 1,2 having count(*)>1) x", Long.class));
+        out.put("staleLocks", db.queryForObject(
+                "select count(*) from show_seats where status='LOCKED' and locked_until < now() - interval '5 minutes'", Long.class));
+        out.put("stuckPendingBookings", db.queryForObject(
+                "select count(*) from bookings where status='PENDING' and expires_at < now() - interval '5 minutes'", Long.class));
+        out.put("negativeWallets", db.queryForObject("select count(*) from users where wallet_balance < 0", Long.class));
+        long bad = 0;
+        for (Object v : out.values()) bad += ((Number) v).longValue();
+        out.put("healthy", bad == 0);
+        return out;
+    }
+
     @GetMapping("/theatres")
     public List<Map<String, Object>> theatres() {
         return db.queryForList(
