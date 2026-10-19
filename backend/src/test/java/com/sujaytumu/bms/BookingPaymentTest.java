@@ -190,4 +190,151 @@ class BookingPaymentTest {
 
         assertEquals("duplicate", payments.handleWebhook(body, signature, eventId, bookings));
     }
+
+    private String freeSeat(java.util.Set<String> avoid) {
+        List<String> seats = db.queryForList(
+                "select seat_number from show_seats where show_id=? and status='AVAILABLE' order by random() limit 12",
+                String.class, showId);
+        for (String sn : seats) if (!avoid.contains(sn)) return sn;
+        throw new IllegalStateException("no free seat");
+    }
+
+    @Test
+    void walletPaymentIsChargedOnlyOnceWhenDoubleSubmitted() throws Exception {
+        String email = newUser();
+        db.update("update users set wallet_balance=5000 where email=?", email);
+        long id = hold(email, freeSeat());
+        BigDecimal amount = db.queryForObject("select amount from bookings where id=?", BigDecimal.class, id);
+
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+        CountDownLatch start = new CountDownLatch(1);
+        List<Future<Boolean>> res = new ArrayList<>();
+        for (int i = 0; i < 2; i++) {
+            res.add(pool.submit(() -> {
+                start.await();
+                try {
+                    bookings.payWithWallet(email, id);
+                    return true;
+                } catch (ResponseStatusException e) {
+                    return false;
+                }
+            }));
+        }
+        start.countDown();
+        int ok = 0;
+        for (Future<Boolean> f : res) if (f.get()) ok++;
+        pool.shutdown();
+
+        assertEquals(1, ok, "only one of two simultaneous wallet payments may succeed");
+        assertEquals("CONFIRMED", bookingStatus(id));
+        assertEquals(0, new BigDecimal("5000").subtract(amount).compareTo(wallet(email)), "charged exactly once");
+    }
+
+    @Test
+    void cancellingTwiceRefundsOnce() throws Exception {
+        String email = newUser();
+        long id = hold(email, freeSeat());
+        assertTrue(bookings.confirmBooking(id, "pay_c"));
+        BigDecimal amount = db.queryForObject("select amount from bookings where id=?", BigDecimal.class, id);
+        BigDecimal before = wallet(email);
+
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+        CountDownLatch start = new CountDownLatch(1);
+        List<Future<Boolean>> res = new ArrayList<>();
+        for (int i = 0; i < 2; i++) {
+            res.add(pool.submit(() -> {
+                start.await();
+                try {
+                    bookings.cancel(email, id);
+                    return true;
+                } catch (ResponseStatusException e) {
+                    return false;
+                }
+            }));
+        }
+        start.countDown();
+        int ok = 0;
+        for (Future<Boolean> f : res) if (f.get()) ok++;
+        pool.shutdown();
+
+        assertEquals(1, ok);
+        assertEquals(0, before.add(amount).compareTo(wallet(email)), "refunded exactly once");
+    }
+
+    @Test
+    void sameIdempotencyKeyReturnsTheSameHold() throws Exception {
+        String email = newUser();
+        String seat = freeSeat();
+        String key = "key-" + UUID.randomUUID();
+
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+        CountDownLatch start = new CountDownLatch(1);
+        List<Future<Long>> res = new ArrayList<>();
+        for (int i = 0; i < 2; i++) {
+            res.add(pool.submit(() -> {
+                start.await();
+                Map<String, Object> r = bookings.holdSeats(email, showId, List.of(seat), null, null, null, null, key);
+                return ((Number) r.get("bookingId")).longValue();
+            }));
+        }
+        start.countDown();
+        long first = res.get(0).get();
+        long second = res.get(1).get();
+        pool.shutdown();
+
+        assertEquals(first, second, "a double tap must not create two holds");
+        Long rows = db.queryForObject(
+                "select count(*) from bookings b join users u on u.id=b.user_id where u.email=?", Long.class, email);
+        assertEquals(1L, rows);
+    }
+
+    @Test
+    void aPersonCannotHoardMoreThanThreeHolds() {
+        String email = newUser();
+        java.util.Set<String> used = new java.util.HashSet<>();
+        for (int i = 0; i < 3; i++) {
+            String sn = freeSeat(used);
+            used.add(sn);
+            hold(email, sn);
+        }
+        String extra = freeSeat(used);
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> hold(email, extra));
+        assertEquals(429, ex.getStatusCode().value());
+    }
+
+    @Test
+    void expirySweeperAndPaymentNeverLeaveAHalfDoneBooking() throws Exception {
+        for (int round = 0; round < 4; round++) {
+            String email = newUser();
+            String seat = freeSeat();
+            long id = hold(email, seat);
+            // make the hold lapsed so the sweeper wants it while the payment arrives
+            db.update("update bookings set expires_at = now() - interval '1 minute' where id=?", id);
+            db.update("update show_seats set locked_until = now() - interval '1 minute' where locked_by=?", id);
+
+            ExecutorService pool = Executors.newFixedThreadPool(2);
+            CountDownLatch start = new CountDownLatch(1);
+            Future<Boolean> pay = pool.submit(() -> {
+                start.await();
+                return bookings.confirmBooking(id, "pay_race");
+            });
+            Future<?> sweep = pool.submit(() -> {
+                try {
+                    start.await();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                bookings.expireStaleHolds();
+            });
+            start.countDown();
+            pay.get();
+            sweep.get();
+            pool.shutdown();
+
+            String bs = bookingStatus(id);
+            String ss = seatStatus(seat);
+            boolean consistent = ("CONFIRMED".equals(bs) && "BOOKED".equals(ss)) || ("EXPIRED".equals(bs) && "AVAILABLE".equals(ss));
+            assertTrue(consistent, "booking " + bs + " but seat " + ss);
+        }
+    }
 }
