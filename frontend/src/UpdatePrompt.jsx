@@ -15,7 +15,9 @@ async function findUpdate() {
     const url = asset("book-my-show.apk");
     return url ? { type: "apk", url, build: String(meta.build) } : null;
   }
-  if (BUILD_ID !== "dev" && String(meta.build) !== BUILD_ID) {
+  // When the app loads the live website (not the bundled copy) the web part is always current: nothing to download.
+  const bundled = window.location.hostname === "localhost";
+  if (bundled && BUILD_ID !== "dev" && String(meta.build) !== BUILD_ID) {
     const url = asset("bundle.zip");
     return url ? { type: "web", url, build: String(meta.build) } : null;
   }

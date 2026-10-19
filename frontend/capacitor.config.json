@@ -3,7 +3,12 @@
   "appName": "Book My Show",
   "webDir": "dist",
   "server": {
-    "androidScheme": "https"
+    "androidScheme": "https",
+    "url": "https://book-my-show-nu-three.vercel.app",
+    "allowNavigation": [
+      "book-my-show-nu-three.vercel.app",
+      "*.onrender.com"
+    ]
   },
   "android": {
     "allowMixedContent": false
