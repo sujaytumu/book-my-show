@@ -1,24 +1,24 @@
-import { useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { Navigate, NavLink, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { api } from "./api";
 import Nav from "./components/Nav";
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
-import Movie from "./pages/Movie";
-import Show from "./pages/Show";
-import Bookings from "./pages/Bookings";
-import Admin from "./pages/Admin";
+const Movie = lazy(() => import("./pages/Movie"));
+const Show = lazy(() => import("./pages/Show"));
+const Bookings = lazy(() => import("./pages/Bookings"));
+const Admin = lazy(() => import("./pages/Admin"));
 //
-import Profile from "./pages/Profile";
-import Search from "./pages/Search";
-import MovieList from "./pages/MovieList";
-import City from "./pages/City";
-import Notifications from "./pages/Notifications";
-import Offers from "./pages/Offers";
-import Help from "./pages/Help";
-import Cinemas from "./pages/Cinemas";
-import Wallet from "./pages/Wallet";
-import Forgot from "./pages/Forgot";
+const Profile = lazy(() => import("./pages/Profile"));
+const Search = lazy(() => import("./pages/Search"));
+const MovieList = lazy(() => import("./pages/MovieList"));
+const City = lazy(() => import("./pages/City"));
+const Notifications = lazy(() => import("./pages/Notifications"));
+const Offers = lazy(() => import("./pages/Offers"));
+const Help = lazy(() => import("./pages/Help"));
+const Cinemas = lazy(() => import("./pages/Cinemas"));
+const Wallet = lazy(() => import("./pages/Wallet"));
+const Forgot = lazy(() => import("./pages/Forgot"));
 import UpdateBanner from "./components/UpdateBanner";
 import NativeBack from "./components/NativeBack";
 import { IcTarget, IcHome, IcSearch, IcTicket, IcUser } from "./components/Icons";
@@ -124,7 +124,8 @@ export default function App() {
       <UpdateBanner />
       <NativeBack />
       <Nav />
-      <main>
+      <main key={pathname} className="page-in">
+        <Suspense fallback={<div className="route-fallback"><div className="sk sk-hero" /></div>}>
         <Routes>
           <Route path="/forgot" element={<Forgot />} />
           <Route path="/" element={<Home mode="now-showing" />} />
@@ -145,6 +146,7 @@ export default function App() {
           <Route path="/cinemas" element={<Cinemas />} />
           <Route path="/admin" element={<Admin />} />
         </Routes>
+        </Suspense>
       </main>
       <TabBar />
       {signedIn && askLoc && pathname === "/" && <LocationPrompt onDone={() => setAskLoc(false)} />}

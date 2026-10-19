@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
+import { swrGet } from "../cache";
 import { IcClap, IcFilm, IcReel } from "../components/Icons";
 
 function votesLabel(n) {
@@ -59,9 +60,10 @@ export default function Home({ mode = "now-showing" }) {
   }
 
   useEffect(() => {
-    api
-      .get("/movies")
-      .then((res) => setMovies(res.data))
+    swrGet("/movies", (data) => {
+      setMovies(data);
+      setLoading(false);
+    })
       .catch(() => {})
       .finally(() => setLoading(false));
     window.scrollTo(0, 0);

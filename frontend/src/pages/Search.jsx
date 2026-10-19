@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { goBack } from "../nav";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api";
+import { swrGet } from "../cache";
 import { IcBack } from "../components/Icons";
 
 const RKEY = "bms_recent";
@@ -33,9 +34,10 @@ export default function Search() {
   }
 
   useEffect(() => {
-    api
-      .get("/movies")
-      .then((res) => setMovies(res.data))
+    swrGet("/movies", (data) => {
+      setMovies(data);
+      setLoading(false);
+    })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);

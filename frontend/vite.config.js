@@ -7,6 +7,13 @@ const BUILD_ID = String(Date.now());
 
 export default defineConfig({
   define: { __BUILD_ID__: JSON.stringify(BUILD_ID) },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: { vendor: ["react", "react-dom", "react-router-dom"], http: ["axios"] },
+      },
+    },
+  },
   plugins: [
     react(),
     {
