@@ -273,7 +273,6 @@ function StickyBook({ onClick }) {
         Book tickets
       </button>
     </div>
-    </div>
   );
 }
 
