@@ -1205,3 +1205,30 @@ img{-webkit-touch-callout:none;-webkit-user-drag:none}
 .auth-perks{list-style:none;display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin:12px 0 18px;padding:0}
 .auth-perks li{font-size:12px;font-weight:600;background:#fff;border:1px solid #f0d2d8;border-radius:16px;padding:5px 12px;color:#444}
 .auth.card{box-shadow:0 10px 30px rgba(220,53,88,.12)}
+
+/* Density pass: text -20%, posters -10%, roomier gaps */
+.poster-row{gap:20px}
+.poster-row .poster-card{flex:0 0 106px}
+.poster-card b{font-size:9px;margin-top:10px}
+.poster-card small{font-size:7.7px}
+.ml-grid{gap:34px 22px}
+.ml-card img{width:90%}
+.ml-card b{font-size:11.5px;margin-top:12px}
+.ml-card small{font-size:9px;margin-top:7px}
+.trend-row{gap:14px}
+.trend-card{flex:0 0 136px;height:154px}
+.trend-card img{width:94px;height:140px}
+.hero-card .hc-poster{aspect-ratio:2/3}
+.hero-card div{left:calc(14px + 90px + 14px)}
+.hero-card b{font-size:14.4px}
+.hero-card span{font-size:9.6px}
+.hero-card .hc-rate{font-size:10.4px}
+.hero-card em{font-size:9.6px}
+.quick-row{gap:14px}
+.quick-row small{font-size:9.2px}
+.sp-rank{gap:12px}
+.sp-rank-item b{font-size:11.2px}
+.sp-rank-item small{font-size:9.6px}
+.sp-rank-item i{font-size:10.4px}
+.sp-rank-item img{width:40px;height:58px}
+.section-title{font-size:12px}
