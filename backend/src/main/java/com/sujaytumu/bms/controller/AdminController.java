@@ -18,6 +18,59 @@ public class AdminController {
         this.db = db;
     }
 
+    /** Business analytics for the admin dashboard (revenue, bookings, top movies/cinemas, occupancy, peak hours). */
+    @GetMapping("/analytics")
+    public Map<String, Object> analytics(@RequestParam(defaultValue = "30") int days) {
+        int d = Math.max(1, Math.min(days, 365));
+        String today = "(now() at time zone 'Asia/Kolkata')::date";
+        Map<String, Object> out = new java.util.LinkedHashMap<>();
+        out.put("days", d);
+        out.put("totals", db.queryForMap(
+                "select coalesce(sum(b.amount) filter (where b.status='CONFIRMED'),0) revenue," +
+                        " count(*) filter (where b.status='CONFIRMED') bookings," +
+                        " (select count(*) from booking_seats bs2 join bookings b3 on b3.id=bs2.booking_id where b3.status='CONFIRMED' and (b3.created_at at time zone 'Asia/Kolkata')::date > " + today + " - " + d + ") tickets," +
+                        " count(*) filter (where b.status='CANCELLED') cancelled," +
+                        " count(*) filter (where b.status='REFUNDED') refunded," +
+                        " coalesce(avg(b.amount) filter (where b.status='CONFIRMED'),0) avg_order," +
+                        " coalesce(sum(b.amount) filter (where b.status='CONFIRMED' and (b.created_at at time zone 'Asia/Kolkata')::date = " + today + "),0) revenue_today," +
+                        " (select count(*) from users) users," +
+                        " (select count(*) from waitlist where notified_at is null) waitlisted," +
+                        " (select count(*) from watchlist_movies) watchlisted " +
+                        "from bookings b where (b.created_at at time zone 'Asia/Kolkata')::date > " + today + " - " + d));
+        out.put("daily", db.queryForList(
+                "select to_char(g.dt,'YYYY-MM-DD') label, count(b.id) bookings, coalesce(sum(b.amount),0) revenue " +
+                        "from generate_series(" + today + " - " + (d - 1) + ", " + today + ", interval '1 day') g(dt) " +
+                        "left join bookings b on b.status='CONFIRMED' and (b.created_at at time zone 'Asia/Kolkata')::date = g.dt::date " +
+                        "group by g.dt order by g.dt"));
+        out.put("topMovies", db.queryForList(
+                "select m.title, count(distinct b.id) bookings, count(bs.id) tickets, " +
+                        "(select coalesce(sum(b2.amount),0) from bookings b2 join shows s2 on s2.id=b2.show_id where s2.movie_id=m.id and b2.status='CONFIRMED' " +
+                        " and (b2.created_at at time zone 'Asia/Kolkata')::date > " + today + " - " + d + ") revenue " +
+                        "from bookings b join shows sh on sh.id=b.show_id join movies m on m.id=sh.movie_id " +
+                        "join booking_seats bs on bs.booking_id=b.id where b.status='CONFIRMED' " +
+                        "and (b.created_at at time zone 'Asia/Kolkata')::date > " + today + " - " + d + " " +
+                        "group by m.id, m.title order by tickets desc limit 8"));
+        out.put("topTheatres", db.queryForList(
+                "select t.name, c.name city, count(b.id) bookings, coalesce(sum(b.amount),0) revenue " +
+                        "from bookings b join shows sh on sh.id=b.show_id join screens sc on sc.id=sh.screen_id " +
+                        "join theatres t on t.id=sc.theatre_id left join cities c on c.id=t.city_id " +
+                        "where b.status='CONFIRMED' and (b.created_at at time zone 'Asia/Kolkata')::date > " + today + " - " + d + " " +
+                        "group by t.id, t.name, c.name order by revenue desc limit 8"));
+        out.put("peakHours", db.queryForList(
+                "select extract(hour from sh.start_time)::int hr, count(b.id) bookings from bookings b join shows sh on sh.id=b.show_id " +
+                        "where b.status='CONFIRMED' and (b.created_at at time zone 'Asia/Kolkata')::date > " + today + " - " + d + " " +
+                        "group by 1 order by 1"));
+        out.put("occupancy", db.queryForMap(
+                "select coalesce(round(100.0 * count(*) filter (where ss.status in ('BOOKED','LOCKED')) / nullif(count(*),0), 1),0) fill_percent, " +
+                        "count(distinct sh.id) shows from shows sh join show_seats ss on ss.show_id=sh.id " +
+                        "where sh.show_date between " + today + " and " + today + " + 6"));
+        out.put("paymentMix", db.queryForList(
+                "select case when razorpay_payment_id like 'WALLET-%' then 'Wallet' when razorpay_payment_id like 'MOCK-%' then 'Demo checkout' else 'Razorpay' end method, " +
+                        "count(*) bookings, coalesce(sum(amount),0) revenue from bookings where status='CONFIRMED' " +
+                        "and (created_at at time zone 'Asia/Kolkata')::date > " + today + " - " + d + " group by 1 order by 3 desc"));
+        return out;
+    }
+
     @GetMapping("/theatres")
     public List<Map<String, Object>> theatres() {
         return db.queryForList(
