@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { goBack } from "../nav";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api";
+import { swrGet } from "../cache";
 import { IcBack, IcSearch } from "../components/Icons";
 import { getCity } from "../location";
 
@@ -32,9 +33,10 @@ export default function MovieList({ upcoming = false }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api
-      .get("/movies")
-      .then((res) => setMovies(res.data))
+    swrGet("/movies", (data) => {
+      setMovies(data);
+      setLoading(false);
+    })
       .catch(() => {})
       .finally(() => setLoading(false));
     window.scrollTo(0, 0);

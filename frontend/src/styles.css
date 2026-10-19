@@ -1119,3 +1119,65 @@ main{padding-bottom:104px}
 .an-htrack{background:#f1f1f4;border-radius:6px;height:10px;overflow:hidden}
 .an-htrack i{display:block;height:100%;border-radius:6px}
 .an-empty{color:#888;font-size:13px}
+
+/* ======================================================================
+   Motion & touch feel: press-to-shrink, page + card entrances, micro-interactions
+   ====================================================================== */
+html{-webkit-tap-highlight-color:transparent}
+img{-webkit-touch-callout:none;-webkit-user-drag:none}
+.poster-card,.ml-card,.hero-card,.trend-card,.cin-card,.quick-row a,.offer-banner,.resume-card,.rc-btn,.mv-offer,
+.home-tabs a,.tabbar a,.wl-item,.pf-menu a,.pf-stat,.of-card,.ml-banner,.browse-cin,.sticky-book button,.wait-btn,
+.cast-item,.chip-row button,.ml-chips button,.date-strip button,.pf-btn,.an-kpi,button.primary,button{
+  transition:transform .16s cubic-bezier(.2,.8,.3,1.2),box-shadow .16s ease,background-color .2s ease,opacity .2s;
+}
+/* hold your finger down: the card shrinks under it and springs back when you let go */
+.poster-card:active,.ml-card:active,.hero-card:active,.trend-card:active,.cin-card:active,.quick-row a:active,
+.offer-banner:active,.resume-card:active,.mv-offer:active,.wl-item:active,.pf-menu a:active,.of-card:active,
+.ml-banner:active,.cast-item:active,.pf-stat:active,.an-kpi:active{transform:scale(.95)}
+.rc-btn:active,.sticky-book button:active,.wait-btn:active,.browse-cin:active,.pf-btn:active,button:active{transform:scale(.94)}
+.home-tabs a:active,.tabbar a:active{transform:scale(.88)}
+.poster-card:active .pc-img,.ml-card:active img{box-shadow:0 1px 4px rgba(0,0,0,.25);filter:brightness(.93)}
+.pc-img,.ml-card img{transition:filter .16s,box-shadow .16s,transform .3s}
+
+/* page transition */
+@keyframes bmsPageIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.page-in{animation:bmsPageIn .28s ease-out backwards}
+
+/* cards pop in one after another */
+@keyframes bmsPop{from{opacity:0;transform:translateY(14px) scale(.96)}to{opacity:1;transform:none}}
+.poster-row .poster-card,.ml-grid .ml-card,.trend-row .trend-card,.cin-card,.hero-row .hero-card,.of-card,.quick-row a{animation:bmsPop .4s cubic-bezier(.2,.8,.3,1) backwards}
+.poster-row .poster-card:nth-child(2),.ml-grid .ml-card:nth-child(2),.trend-card:nth-child(2),.quick-row a:nth-child(2){animation-delay:.05s}
+.poster-row .poster-card:nth-child(3),.ml-grid .ml-card:nth-child(3),.trend-card:nth-child(3),.quick-row a:nth-child(3){animation-delay:.1s}
+.poster-row .poster-card:nth-child(4),.ml-grid .ml-card:nth-child(4),.trend-card:nth-child(4),.quick-row a:nth-child(4){animation-delay:.15s}
+.poster-row .poster-card:nth-child(n+5),.ml-grid .ml-card:nth-child(n+5),.trend-card:nth-child(n+5){animation-delay:.2s}
+
+/* tab bar: active pill slides in, icon hops */
+@keyframes bmsHop{0%{transform:translateY(0)}40%{transform:translateY(-4px) scale(1.12)}100%{transform:none}}
+.tabbar a.on svg{animation:bmsHop .35s ease}
+.tabbar a.on{animation:bmsPop .3s ease backwards}
+
+/* eye-catchers */
+@keyframes bmsShine{0%{transform:translateX(-120%)}60%,100%{transform:translateX(220%)}}
+.offer-banner,.rc-btn,.sticky-book button,.wait-btn,.browse-cin{position:relative;overflow:hidden}
+.offer-banner::after,.sticky-book button::after,.browse-cin::after{content:"";position:absolute;top:0;bottom:0;width:40%;left:0;background:linear-gradient(100deg,transparent,rgba(255,255,255,.35),transparent);animation:bmsShine 3.6s ease-in-out infinite;pointer-events:none}
+@keyframes bmsPulse{0%,100%{box-shadow:0 4px 14px rgba(220,53,88,.35)}50%{box-shadow:0 4px 22px rgba(220,53,88,.65)}}
+.sticky-book button,.browse-cin{animation:bmsPulse 2.4s ease-in-out infinite}
+.hero-card .hc-tag{animation:bmsPulse 2s ease-in-out infinite}
+@keyframes bmsBell{0%,100%{transform:rotate(0)}15%{transform:rotate(14deg)}30%{transform:rotate(-12deg)}45%{transform:rotate(8deg)}60%{transform:rotate(-5deg)}}
+.home-bell svg{transform-origin:50% 0;animation:bmsBell 1.2s ease 1s 2}
+@keyframes bmsStar{0%{transform:scale(.4) rotate(-40deg);opacity:0}70%{transform:scale(1.25) rotate(8deg)}100%{transform:none;opacity:1}}
+.pc-meta i,.hc-rate i,.ml-rate i{display:inline-block;animation:bmsStar .5s ease .3s backwards}
+
+/* seats */
+@keyframes bmsSeat{0%{transform:scale(.7)}60%{transform:scale(1.2)}100%{transform:scale(1)}}
+.seat.selected,.seat.sel,.seat.on{animation:bmsSeat .25s ease}
+
+/* shimmering skeletons keep going; sheets slide up */
+@keyframes bmsSheet{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.sheet,.bottom-sheet,.review-sheet,.modal{animation:bmsSheet .28s cubic-bezier(.2,.8,.3,1) backwards}
+
+.route-fallback{padding:12px 4px}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}

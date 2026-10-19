@@ -1,0 +1,11 @@
+name: keepalive
+# Render's free tier sleeps after ~15 minutes idle (first open then takes a minute). A light ping keeps the API warm.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - run: curl -fsS --max-time 60 https://book-my-show-api-qx31.onrender.com/api/health || true

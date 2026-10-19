@@ -44,3 +44,11 @@ create index if not exists idx_user_notifications_user on user_notifications(use
 create table if not exists waitlist(id bigserial primary key,user_id bigint not null references users(id) on delete cascade,show_id bigint not null references shows(id) on delete cascade,seats_wanted int not null default 1,created_at timestamptz not null default now(),notified_at timestamptz,unique(user_id,show_id));
 create table if not exists payment_events(event_id varchar(80) primary key,event_type varchar(60) not null,received_at timestamptz not null default now());
 create table if not exists watchlist_movies(user_id bigint not null references users(id) on delete cascade,movie_id bigint not null references movies(id) on delete cascade,created_at timestamptz not null default now(),reminded_tomorrow boolean not null default false,reminded_release boolean not null default false,primary key(user_id,movie_id));
+create index if not exists idx_shows_movie_date on shows(movie_id,show_date,start_time);
+create index if not exists idx_shows_screen_date on shows(screen_id,show_date,start_time);
+create index if not exists idx_bookings_user on bookings(user_id,created_at desc);
+create index if not exists idx_bookings_show on bookings(show_id,status);
+create index if not exists idx_booking_seats_booking on booking_seats(booking_id);
+create index if not exists idx_screens_theatre on screens(theatre_id);
+create index if not exists idx_theatres_city on theatres(city_id) where active=true;
+create index if not exists idx_waitlist_show on waitlist(show_id) where notified_at is null;
