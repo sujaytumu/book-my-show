@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
  * existed at the last deploy - drifting into the past and never reaching
  * further into the future as real time moves on.
  *
- * This keeps a rolling 7-day window (today through +6) alive indefinitely:
+ * This keeps a rolling 10-day window (today through +9) alive indefinitely:
  * for every distinct (movie, screen, start_time, end_time, price) combination
  * that has ever been scheduled, it tops up any missing date in that window.
  * Runs once immediately at startup (so a fresh deploy is correct right away)
@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class ShowWindowScheduler {
 
-    private static final int WINDOW_DAYS = 7;
+    private static final int WINDOW_DAYS = 10;
 
     private final JdbcTemplate db;
 
@@ -31,6 +31,7 @@ public class ShowWindowScheduler {
     @PostConstruct
     public void onStartup() {
         releaseDueMovies();
+        applyOneTimeFixes();
         removeClashingShows();
         topUpWindow();
     }
@@ -39,6 +40,7 @@ public class ShowWindowScheduler {
     @Scheduled(cron = "0 5 0 * * *")
     public void daily() {
         releaseDueMovies();
+        applyOneTimeFixes();
         removeClashingShows();
         topUpWindow();
     }
@@ -46,11 +48,9 @@ public class ShowWindowScheduler {
     /**
      * Standard release procedure, fully automatic:
      * 1. A Coming Soon movie whose release_date has arrived becomes Now Showing.
-     * 2. A newly released movie takes most of the screens: about 2/3 of the screens in every
-     *    multiplex and 3 of 4 shows in a single screen. The shows taken over are the oldest
-     *    movies' shows first, but every old movie keeps at least one show per cinema per day,
-     *    so a couple of older films lose most screens and keep a few.
-     * Shows that already have a booking are never touched.
+     * 2. Shows already on the calendar are NEVER rewritten (the next 10 days stay exactly as scheduled).
+     *    Screens are shared out when a new day is added to the window (see topUpWindow): the newest release
+     *    (first 10 days after release) gets every show in single-screen cinemas and 2 of 3 screens in multiplexes.
      */
     public void releaseDueMovies() {
         db.update("""
@@ -59,44 +59,6 @@ public class ShowWindowScheduler {
                   and release_date <= (now() at time zone 'Asia/Kolkata')::date
                 """);
         assignRatings();
-        java.util.List<Long> fresh = db.queryForList("""
-                select id from movies
-                where active = true and upcoming = false and release_date is not null
-                  and release_date between (now() at time zone 'Asia/Kolkata')::date - 14
-                                       and (now() at time zone 'Asia/Kolkata')::date
-                  and not exists (select 1 from shows sh where sh.movie_id = movies.id
-                                  and sh.show_date >= (now() at time zone 'Asia/Kolkata')::date)
-                order by release_date, id
-                """, Long.class);
-        for (Long movieId : fresh) {
-            db.update("""
-                    with base as (
-                        select sh.id, t.id theatre_id, sh.show_date, sh.start_time, sh.movie_id, t.theatre_type,
-                               coalesce(m.release_date, date '1900-01-01') rel,
-                               exists(select 1 from bookings b where b.show_id = sh.id
-                                      and b.status in ('PENDING','CONFIRMED')) booked
-                        from shows sh
-                        join screens sc on sc.id = sh.screen_id
-                        join theatres t on t.id = sc.theatre_id
-                        join movies m on m.id = sh.movie_id
-                        where t.active = true
-                          and sh.show_date >= (now() at time zone 'Asia/Kolkata')::date
-                          and m.language = (select language from movies where id = ?)
-                    ), sized as (
-                        select base.*, count(*) over (partition by theatre_id, show_date) n,
-                               row_number() over (partition by theatre_id, show_date, movie_id order by start_time) rn_movie
-                        from base
-                    ), ranked as (
-                        select sized.*, row_number() over (partition by theatre_id, show_date order by rel, movie_id, start_time) pos
-                        from sized
-                        where movie_id <> ? and not booked and rn_movie > 1
-                    )
-                    update shows s set movie_id = ?, language = (select language from movies where id = ?)
-                    from ranked r
-                    where s.id = r.id
-                      and r.pos <= ceil(r.n * case when r.theatre_type = 'MULTIPLEX' then 2.0 / 3 else 0.75 end)
-                    """, movieId, movieId, movieId, movieId);
-        }
     }
 
     /**
@@ -131,23 +93,82 @@ public class ShowWindowScheduler {
                 """);
     }
 
+    /**
+     * One-off clean-up, run exactly once (guarded by app_flags): Sigma and Tella Kagitam leave the listings and their
+     * unbooked future shows go to Ranabaali, and Ranabaali gets every show in single-screen cinemas plus 2 of 3
+     * screens in multiplexes for the next 10 days. Shows that already have a booking are never touched.
+     */
+    public void applyOneTimeFixes() {
+        int fresh = db.update("insert into app_flags(flag) values('ranabaali_boost_2026_10_19') on conflict do nothing");
+        if (fresh == 0) return;
+        java.util.List<Long> ids = db.queryForList("select id from movies where title ilike 'Ranabaali' order by id limit 1", Long.class);
+        if (ids.isEmpty()) return;
+        long ranabaali = ids.get(0);
+        db.update("update movies set active = false where lower(title) in ('sigma', 'tella kagitam')");
+        String future = "(sh.show_date + sh.start_time) > (now() at time zone 'Asia/Kolkata') "
+                + "and not exists (select 1 from bookings b where b.show_id = sh.id and b.status in ('PENDING','CONFIRMED'))";
+        db.update("update shows sh set movie_id = ?, language = (select language from movies where id = ?) "
+                + "where sh.movie_id in (select id from movies where lower(title) in ('sigma', 'tella kagitam')) and " + future, ranabaali, ranabaali);
+        db.update("""
+                update shows sh set movie_id = ?, language = (select language from movies where id = ?)
+                from (select sc.id screen_id, t.theatre_type,
+                             row_number() over (partition by t.id order by sc.id) screen_rank
+                      from screens sc join theatres t on t.id = sc.theatre_id where t.active = true) sr
+                where sr.screen_id = sh.screen_id and (sr.theatre_type <> 'MULTIPLEX' or sr.screen_rank <= 2)
+                  and sh.movie_id <> ? and sh.show_date <= (now() at time zone 'Asia/Kolkata')::date + 9
+                  and (select language from movies where id = sh.movie_id) = 'Telugu'
+                  and (sh.show_date + sh.start_time) > (now() at time zone 'Asia/Kolkata')
+                  and not exists (select 1 from bookings b where b.show_id = sh.id and b.status in ('PENDING','CONFIRMED'))
+                """, ranabaali, ranabaali, ranabaali);
+    }
+
     public void topUpWindow() {
         db.update("""
                 insert into shows(movie_id,screen_id,show_date,start_time,end_time,price,format,language)
-                select r.movie_id, r.screen_id, (now() at time zone 'Asia/Kolkata')::date + d.day_offset, r.start_time, r.end_time,
-                       case when t.theatre_type = 'MULTIPLEX' then 150 else 100 end, r.format, r.language
-                from (select distinct on (screen_id, start_time) movie_id, screen_id, start_time, end_time, price, format, language
-                      from shows order by screen_id, start_time, show_date desc, id desc) r
-                join movies m on m.id = r.movie_id
-                join screens sc on sc.id = r.screen_id
-                join theatres t on t.id = sc.theatre_id
-                cross join generate_series(0, ?) as d(day_offset)
-                where m.active = true and m.upcoming = false and t.active = true
-                and not exists (
-                    select 1 from shows sh2
-                    where sh2.screen_id = r.screen_id
-                      and sh2.show_date = (now() at time zone 'Asia/Kolkata')::date + d.day_offset and sh2.start_time = r.start_time
+                with slots as (
+                    select distinct on (screen_id, start_time) screen_id, start_time, end_time, format, movie_id tmpl
+                    from shows order by screen_id, start_time, show_date desc, id desc
+                ), scr as (
+                    select sc.id screen_id, t.theatre_type,
+                           row_number() over (partition by t.id order by sc.id) screen_rank
+                    from screens sc join theatres t on t.id = sc.theatre_id where t.active = true
+                ), days as (
+                    select ((now() at time zone 'Asia/Kolkata')::date + g) d from generate_series(0, ?) g
+                ), cand as (
+                    select dd.d, m.id, m.release_date,
+                           row_number() over (partition by dd.d order by m.release_date desc nulls last, m.id) rk
+                    from days dd
+                    join movies m on m.active = true and m.language = 'Telugu'
+                         and (m.release_date is null or m.release_date <= dd.d)
+                         and (m.upcoming = false or m.release_date is not null)
+                ), newest as (
+                    select d, id from cand where rk = 1 and release_date is not null and d - release_date <= 10
+                ), todo as (
+                    select s.screen_id, dd.d, s.start_time, s.end_time, s.format, s.tmpl, sr.theatre_type, sr.screen_rank,
+                           row_number() over (partition by s.screen_id, dd.d order by s.start_time) slot_idx,
+                           (select n.id from newest n where n.d = dd.d) newest_id
+                    from slots s join scr sr on sr.screen_id = s.screen_id cross join days dd
+                    where not exists (select 1 from shows x where x.screen_id = s.screen_id
+                                      and x.show_date = dd.d and x.start_time = s.start_time)
+                ), pick as (
+                    select td.*,
+                           case
+                             when td.newest_id is not null and (td.theatre_type <> 'MULTIPLEX' or td.screen_rank <= 2) then td.newest_id
+                             when tm.active = true and tm.upcoming = false
+                                  and (tm.language <> 'Telugu' or tm.id <> coalesce(td.newest_id, -1)) then tm.id
+                             else (select c.id from cand c where c.d = td.d and c.id <> coalesce(td.newest_id, -1)
+                                   order by c.rk
+                                   offset ((td.slot_idx + td.screen_id) % greatest(
+                                       (select count(*) from cand c2 where c2.d = td.d and c2.id <> coalesce(td.newest_id, -1)), 1))
+                                   limit 1)
+                           end movie_id
+                    from todo td left join movies tm on tm.id = td.tmpl
                 )
+                select p.movie_id, p.screen_id, p.d, p.start_time, p.end_time,
+                       case when p.theatre_type = 'MULTIPLEX' then 150 else 100 end, p.format,
+                       (select language from movies where id = p.movie_id)
+                from pick p
+                where p.movie_id is not null
                 """, WINDOW_DAYS - 1);
 
         // New shows need their seats too (10 rows A-J x 15 seats).
