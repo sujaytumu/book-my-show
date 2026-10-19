@@ -31,6 +31,10 @@ export default function AdminAnalytics() {
   const [days, setDays] = useState(30);
   const [data, setData] = useState(null);
   const [err, setErr] = useState("");
+  const [health, setHealth] = useState(null);
+  useEffect(() => {
+    api.get("/admin/integrity").then((r) => setHealth(r.data)).catch(() => {});
+  }, []);
 
   useEffect(() => {
     setErr("");
@@ -89,6 +93,17 @@ export default function AdminAnalytics() {
           </div>
         ))}
       </div>
+
+      {health && (
+        <div className={"card an-health " + (health.healthy ? "ok" : "bad")}>
+          <h3>{health.healthy ? "✓ Seats & payments consistent" : "⚠ Inconsistencies found"}</h3>
+          <p>
+            Double-booked seats: {health.doubleBookedSeats} · Booked without booking: {health.seatsBookedWithoutBooking} · Paid but not booked:{" "}
+            {health.confirmedSeatsNotBooked} · Stale locks: {health.staleLocks} · Stuck holds: {health.stuckPendingBookings} · Negative wallets:{" "}
+            {health.negativeWallets}
+          </p>
+        </div>
+      )}
 
       <div className="card">
         <h3>Revenue per day</h3>
