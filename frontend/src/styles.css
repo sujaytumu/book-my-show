@@ -1211,10 +1211,10 @@ img{-webkit-touch-callout:none;-webkit-user-drag:none}
 .poster-row .poster-card{flex:0 0 106px}
 .poster-card b{font-size:9px;margin-top:10px}
 .poster-card small{font-size:7.7px}
-.ml-grid{gap:34px 22px}
-.ml-card img{width:90%}
-.ml-card b{font-size:11.5px;margin-top:12px}
-.ml-card small{font-size:9px;margin-top:7px}
+.ml-grid{gap:26px 20px}
+.ml-card img{width:100%}
+.ml-card b{font-size:14.4px;margin-top:10px}
+.ml-card small{font-size:11.2px;margin-top:6px}
 .trend-row{gap:14px}
 .trend-card{flex:0 0 136px;height:154px}
 .trend-card img{width:94px;height:140px}
