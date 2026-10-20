@@ -148,7 +148,7 @@ export default function Home({ mode = "now-showing" }) {
                       <span>{m.genre}</span>
                       <span className="hc-rate">
                         <i>★</i> {Number(m.rating || 0).toFixed(1)}
-                        {Number(m.votes) > 0 && <u>{votesLabel(m.votes)} votes</u>}
+                        {Number(m.votes) > 0 && <u>{votesLabel(m.votes)}</u>}
                       </span>
                       <em>Book now</em>
                     </div>
