@@ -83,7 +83,7 @@ export default function Search() {
           <div className="sp-grid">
             {results.map((m) => (
               <Link key={m.id} to={"/movie/" + m.id} className="sp-item" onClick={() => remember(m.title)}>
-                <img src={m.poster_url} alt="" />
+                <img loading="lazy" decoding="async" src={m.poster_url} alt="" />
                 <span>
                   <b>{m.title}</b>
                   <small>{m.upcoming ? "Coming Soon" : "Movies"}</small>
