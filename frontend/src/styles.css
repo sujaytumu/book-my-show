@@ -1232,3 +1232,13 @@ img{-webkit-touch-callout:none;-webkit-user-drag:none}
 .sp-rank-item i{font-size:10.4px}
 .sp-rank-item img{width:40px;height:58px}
 .section-title{font-size:12px}
+
+/* Search page: match real BMS sizes */
+.sp-h{font-size:18px;font-weight:600;margin:34px 0 18px}
+.sp-grid{gap:22px 16px}
+.sp-item{gap:12px}
+.sp-item img{width:46px;height:70px;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,.18)}
+.sp-item b{font-size:15px;font-weight:600;line-height:1.3}
+.sp-item small{font-size:13.5px;display:block;margin-top:3px}
+.rec-row{gap:14px}
+.rec-big{flex:0 0 181px;border-radius:16px}
