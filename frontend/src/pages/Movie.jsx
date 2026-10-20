@@ -165,7 +165,7 @@ import { goBack } from "../nav";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { api, currentUser } from "../api";
-import { haversineKm } from "../components/TheatreMap";
+import { haversineKm } from "../geo";
 import Reviews from "../components/Reviews";
 import { isWatchlisted, syncWatchlist, toggleWatchlist } from "../watchlist";
 import { getCity } from "../location";

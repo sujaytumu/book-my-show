@@ -153,7 +153,7 @@ export default function Profile() {
         <div className="wl-grid">
           {watchlist.map((m) => (
             <Link className="wl-item" to={"/movie/" + m.id} key={m.id}>
-              <img src={m.poster_url} alt={m.title} />
+              <img loading="lazy" decoding="async" src={m.poster_url} alt={m.title} />
               <span>{m.title}</span>
               {m.release_date && m.upcoming !== false && <small className="wl-date">Releases {fmtDate(String(m.release_date).slice(0, 10))}</small>}
               {m.upcoming === false && <small className="wl-date on">Now showing</small>}
