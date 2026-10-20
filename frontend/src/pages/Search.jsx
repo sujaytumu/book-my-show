@@ -119,16 +119,14 @@ export default function Search() {
             </>
           )}
           <h2 className="sp-h">Trending Now</h2>
-          <div className="sp-rank">
-            {running.slice(0, 6).map((m, i) => (
-              <Link key={m.id} to={"/movie/" + m.id} className="sp-rank-item">
-                <em>{i + 1}</em>
-                <img src={m.poster_url} alt="" loading="lazy" />
+          <div className="sp-grid">
+            {running.slice(0, 10).map((m) => (
+              <Link key={m.id} to={"/movie/" + m.id} className="sp-item">
+                <img src={m.poster_url} alt="" loading="lazy" decoding="async" />
                 <span>
                   <b>{m.title}</b>
-                  <small>{m.genre}</small>
+                  <small>Movies</small>
                 </span>
-                <i>★ {Number(m.rating || 0).toFixed(1)}</i>
               </Link>
             ))}
           </div>
