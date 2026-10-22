@@ -27,6 +27,54 @@ import { alreadyAsked, detectCity, markAsked, setCity } from "./location";
 
 const TAB_PAGES = ["/", "/search", "/bookings", "/profile"];
 
+
+// Swipe left/right between the four main tabs (Home, Search, Bookings, Profile), like WhatsApp.
+// Ignored when the gesture starts inside something that scrolls sideways (poster rows, carousel, chips) or a form field.
+function useTabSwipe() {
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  useEffect(() => {
+    const id = setTimeout(() => delete document.documentElement.dataset.swipe, 450);
+    return () => clearTimeout(id);
+  }, [pathname]);
+  useEffect(() => {
+    const idx = TAB_PAGES.indexOf(pathname);
+    if (idx < 0) return;
+    let sx = 0, sy = 0, ok = false, t0 = 0;
+    const blocked = (el) => {
+      for (let n = el; n && n !== document.body; n = n.parentElement) {
+        if (/^(INPUT|TEXTAREA|SELECT)$/.test(n.tagName)) return true;
+        if (n.classList && (n.classList.contains("sheet-backdrop") || n.classList.contains("qty-overlay") || n.classList.contains("tabbar"))) return true;
+        const cs = window.getComputedStyle(n);
+        if ((cs.overflowX === "auto" || cs.overflowX === "scroll") && n.scrollWidth > n.clientWidth + 2) return true;
+      }
+      return false;
+    };
+    const start = (e) => {
+      const t = e.touches[0];
+      sx = t.clientX; sy = t.clientY; t0 = Date.now();
+      ok = e.touches.length === 1 && !blocked(e.target);
+    };
+    const end = (e) => {
+      if (!ok) return;
+      ok = false;
+      const t = e.changedTouches[0];
+      const dx = t.clientX - sx, dy = t.clientY - sy;
+      if (Math.abs(dx) < 70 || Math.abs(dy) > Math.abs(dx) * 0.6 || Date.now() - t0 > 700) return;
+      const next = idx + (dx < 0 ? 1 : -1);
+      if (next < 0 || next >= TAB_PAGES.length) return;
+      document.documentElement.dataset.swipe = dx < 0 ? "left" : "right";
+      navigate(TAB_PAGES[next], { replace: true });
+    };
+    document.addEventListener("touchstart", start, { passive: true });
+    document.addEventListener("touchend", end, { passive: true });
+    return () => {
+      document.removeEventListener("touchstart", start);
+      document.removeEventListener("touchend", end);
+    };
+  }, [pathname, navigate]);
+}
+
 function TabBar() {
   const { pathname } = useLocation();
   if (!TAB_PAGES.includes(pathname)) return null;
@@ -99,6 +147,7 @@ export default function App() {
     api.get("/health").catch(() => {});
   }, []);
   const navigate = useNavigate();
+  useTabSwipe();
   const here = useLocation();
   useEffect(() => {
     // First tap in the session: make sure back goes Home before leaving the app.
