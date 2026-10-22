@@ -1242,3 +1242,10 @@ img{-webkit-touch-callout:none;-webkit-user-drag:none}
 .sp-item small{font-size:13.5px;display:block;margin-top:3px}
 .rec-row{gap:14px}
 .rec-big{flex:0 0 181px;border-radius:16px}
+
+/* Tab swipe: new tab slides in from the side you swiped toward */
+@keyframes bmsFromRight{from{opacity:.4;transform:translateX(36px)}to{opacity:1;transform:none}}
+@keyframes bmsFromLeft{from{opacity:.4;transform:translateX(-36px)}to{opacity:1;transform:none}}
+html[data-swipe="left"] main.page-in{animation:bmsFromRight .26s ease-out backwards}
+html[data-swipe="right"] main.page-in{animation:bmsFromLeft .26s ease-out backwards}
+html,body{overscroll-behavior-x:none}
