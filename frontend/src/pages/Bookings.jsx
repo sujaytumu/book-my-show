@@ -73,18 +73,17 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
 import { isNativeApp, shareTicketNative } from "../ticket";
-import QRCode from "qrcode";
 
 function TicketModal({ b, poster, onClose }) {
   const [qr, setQr] = useState("");
   useEffect(() => {
-    QRCode.toDataURL(String(b.reference), { width: 220, margin: 1 }).then(setQr).catch(() => {});
+    import("qrcode").then((m) => m.default.toDataURL(String(b.reference), { width: 220, margin: 1 })).then(setQr).catch(() => {});
   }, [b.reference]);
   return (
     <div className="sheet-backdrop" onClick={onClose}>
       <div className="tk-sheet" onClick={(e) => e.stopPropagation()}>
         <div className="tk-top">
-          {poster && <img src={poster} alt="" />}
+          {poster && <img loading="lazy" decoding="async" src={poster} alt="" />}
           <div>
             <b>{b.title}</b>
             <small>{b.theatre_name}</small>
@@ -252,7 +251,7 @@ export default function Bookings() {
           <div className={"bk-card" + (bucket === "upcoming" ? "" : " dim")} key={b.id}>
             <div className="bk-main">
               {poster ? (
-                <img className="bk-poster" src={poster} alt={b.title} />
+                <img loading="lazy" decoding="async" className="bk-poster" src={poster} alt={b.title} />
               ) : (
                 <div className="bk-poster ph">{String(b.title).charAt(0)}</div>
               )}
