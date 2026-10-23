@@ -1249,3 +1249,28 @@ img{-webkit-touch-callout:none;-webkit-user-drag:none}
 html[data-swipe="left"] main.page-in{animation:bmsFromRight .26s ease-out backwards}
 html[data-swipe="right"] main.page-in{animation:bmsFromLeft .26s ease-out backwards}
 html,body{overscroll-behavior-x:none}
+
+/* ---------- Tab bar: labels never fade out, one pill slides between tabs; swipe follows the finger ---------- */
+.tabbar{
+  background:#fff;backdrop-filter:none;-webkit-backdrop-filter:none;
+  transform:translate3d(-50%,0,0);will-change:transform;contain:layout style;
+  -webkit-tap-highlight-color:transparent;user-select:none;
+}
+.tab-pill{
+  position:absolute;top:4px;bottom:4px;left:6px;width:calc((100% - 12px) / 4);
+  border-radius:24px;background:#ececf0;pointer-events:none;
+  transform:translate3d(calc(var(--i, 0) * 100%),0,0);
+  transition:transform .34s cubic-bezier(.32,.72,.24,1);will-change:transform;
+}
+.tabbar.dragging .tab-pill{transition:none}
+.tabbar a,.tabbar a.on{position:relative;z-index:1;background:transparent;animation:none;transition:color .25s ease,transform .12s ease}
+.tabbar a.on{color:#e0415a;font-weight:600}
+.tabbar .tab-label{display:block;line-height:1.2;opacity:1;visibility:visible}
+/* the page we swipe/tap to slides in from the side it came from */
+@keyframes bmsSlideR{from{opacity:.5;transform:translate3d(56px,0,0)}to{opacity:1;transform:none}}
+@keyframes bmsSlideL{from{opacity:.5;transform:translate3d(-56px,0,0)}to{opacity:1;transform:none}}
+html[data-swipe="left"] main.page-in{animation:bmsSlideR .24s cubic-bezier(.2,.8,.3,1) backwards}
+html[data-swipe="right"] main.page-in{animation:bmsSlideL .24s cubic-bezier(.2,.8,.3,1) backwards}
+/* sideways drags on the main tab pages belong to the swipe; vertical scrolling stays native */
+main{touch-action:pan-y pinch-zoom}
+@media (prefers-reduced-motion:reduce){.tab-pill{transition:none}html[data-swipe] main.page-in{animation:none}}
