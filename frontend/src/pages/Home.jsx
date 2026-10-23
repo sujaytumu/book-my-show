@@ -141,14 +141,14 @@ export default function Home({ mode = "now-showing" }) {
                 {hero.map((m) => (
                   <Link key={m.id} to={"/movie/" + m.id} className="hero-card">
                     <img className="hc-bg" src={m.poster_url} alt="" />
-                    <img className="hc-poster" src={m.poster_url} alt={m.title} />
+                    <img decoding="async" className="hc-poster" src={m.poster_url} alt={m.title} />
                     <div>
                       <span className="hc-tag">NOW SHOWING</span>
                       <b>{m.title}</b>
                       <span>{m.genre}</span>
                       <span className="hc-rate">
                         <i>★</i> {Number(m.rating || 0).toFixed(1)}
-                        {Number(m.votes) > 0 && <u>{votesLabel(m.votes)} votes</u>}
+                        {Number(m.votes) > 0 && <u>{votesLabel(m.votes)}</u>}
                       </span>
                       <em>Book now</em>
                     </div>

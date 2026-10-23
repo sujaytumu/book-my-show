@@ -165,7 +165,7 @@ import { goBack } from "../nav";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { api, currentUser } from "../api";
-import { haversineKm } from "../components/TheatreMap";
+import { haversineKm } from "../geo";
 import Reviews from "../components/Reviews";
 import { isWatchlisted, syncWatchlist, toggleWatchlist } from "../watchlist";
 import { getCity } from "../location";
@@ -721,16 +721,20 @@ export default function Movie() {
             .join("  •  ")}
         </p>
         <div className="mv-tags">
-          {[...new Set(shows.map((x) => x.format || "2D"))].length > 0 && (
-            <span>{[...new Set(shows.map((x) => x.format || "2D"))].sort().join(", ")}</span>
-          )}
-          {String(movie.language || "")
-            .split(/[,/&]/)
-            .map((l) => l.trim())
-            .filter(Boolean)
-            .map((l) => (
-              <span key={l}>{l.toUpperCase()}</span>
-            ))}
+          {(() => {
+            const plus = (arr) => (arr.length > 3 ? arr.slice(0, 3).join(", ") + ", +" + (arr.length - 3) : arr.join(", "));
+            const fm = [...new Set(shows.map((x) => x.format || "2D"))].sort();
+            const lg = String(movie.language || "")
+              .split(/[,/&]/)
+              .map((l) => l.trim().toUpperCase())
+              .filter(Boolean);
+            return (
+              <>
+                {fm.length > 0 && <span>{plus(fm)}</span>}
+                {lg.length > 0 && <span>{plus(lg)}</span>}
+              </>
+            );
+          })()}
         </div>
         <p className={"mv-desc" + (readMore ? " open" : "")}>
           {movie.description}
@@ -740,14 +744,14 @@ export default function Movie() {
             </button>
           )}
         </p>
-        {movie.upcoming && (
+        {(movie.upcoming || Number(movie.interested_base) > 0) && (
           <div className="interest-card">
             <span className="ic-thumb">
               <svg width="30" height="30" viewBox="0 0 24 24" fill="#1ea83c"><path d="M2 21h4V9H2v12zm20-11c0-1.1-.9-2-2-2h-6.3l1-4.6.03-.3c0-.4-.2-.8-.4-1.1L13.2 1 6.6 7.6C6.2 8 6 8.5 6 9v10c0 1.1.9 2 2 2h9c.8 0 1.5-.5 1.8-1.2l3-7c.1-.2.2-.5.2-.8v-2z" /></svg>
             </span>
             <div className="ic-text">
               <b>{interested ? <><strong>You</strong> and </> : null}{fmtCount(Number(movie.interested_base) || 0)}+ are interested</b>
-              <small>{interested ? "Movie added to your Wishlist in your Profile" : "Tap to get notified when bookings open"}</small>
+              <small>{interested ? "Movie added to your Wishlist in your Profile" : movie.upcoming ? "Tap to get notified when bookings open" : "Tap to add this movie to your Wishlist"}</small>
             </div>
             <button type="button" onClick={() => setInterested(toggleWatchlist(movie))}>
               {interested ? "Undo" : "I'm interested"}
