@@ -54,7 +54,6 @@ export default function Search() {
           <IcBack />
         </button>
         <input
-          autoFocus
           placeholder="Search for latest movies"
           value={q}
           onChange={(e) => setQ(e.target.value)}
