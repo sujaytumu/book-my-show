@@ -52,9 +52,10 @@ function initials(name) {
   return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
 }
 
-export default function Nav() {
+export default function Nav({ path }) {
   const navigate = useNavigate();
-  const { pathname } = useLocation();
+  const loc = useLocation();
+  const pathname = path || loc.pathname;
   const [city, setCityState] = useState(getCity());
   const { unread } = useNotifications();
   useEffect(() => {
