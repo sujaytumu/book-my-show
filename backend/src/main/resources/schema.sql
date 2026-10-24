@@ -54,3 +54,7 @@ create index if not exists idx_theatres_city on theatres(city_id) where active=t
 create index if not exists idx_waitlist_show on waitlist(show_id) where notified_at is null;
 create table if not exists app_flags(flag varchar(100) primary key,done_at timestamptz not null default now());
 create table if not exists idempotency_keys(user_id bigint not null references users(id) on delete cascade,idem_key varchar(80) not null,booking_id bigint references bookings(id) on delete cascade,created_at timestamptz not null default now(),primary key(user_id,idem_key));
+alter table movies add column if not exists tmdb_id bigint;
+alter table movies add column if not exists meta_source varchar(20);
+alter table movies add column if not exists details_synced_at timestamptz;
+create unique index if not exists uq_movies_tmdb on movies(tmdb_id) where tmdb_id is not null;
