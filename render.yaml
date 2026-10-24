@@ -18,3 +18,5 @@ services:
         sync: false
       - key: RAZORPAY_KEY_SECRET
         sync: false
+      - key: TMDB_API_KEY
+        sync: false
