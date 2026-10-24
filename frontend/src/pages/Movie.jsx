@@ -205,7 +205,11 @@ function castSlug(name) {
 }
 
 // One neutral "unknown person" icon for everyone (no photos available).
-function CastAvatar() {
+function CastAvatar({ photo }) {
+  const [bad, setBad] = useState(false);
+  if (photo && !bad) {
+    return <img className="cast-avatar" src={photo} alt="" loading="lazy" onError={() => setBad(true)} />;
+  }
   return (
     <div className="cast-avatar" aria-hidden="true">
       <svg viewBox="0 0 24 24" fill="currentColor">
@@ -806,7 +810,7 @@ export default function Movie() {
               <div className="cast-row">
                 {list.map((p) => (
                   <div className="cast-item" key={p.name + p.role}>
-                    <CastAvatar />
+                    <CastAvatar photo={p.photo} />
                     <b>{p.name}</b>
                     <small>{p.role}</small>
                   </div>
