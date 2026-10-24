@@ -146,5 +146,24 @@ public class CatalogController {
         return db.queryForList(
                 "select id,seat_number,seat_type,status from show_seats where show_id=? order by seat_number", id);
     }
+
+    /**
+     * Smart seat picker: the best group of `count` seats for this show right now (centred, right depth, no lonely
+     * single seats left behind), a couple of alternatives, and a 0-100 view-quality score for every free seat.
+     * mode=view (default) maximises the view; mode=value trades the view against the class price.
+     */
+    @GetMapping("/api/shows/{id}/best-seats")
+    public com.sujaytumu.bms.service.SeatAdvisor.Advice bestSeats(@PathVariable long id,
+                                                                  @RequestParam(defaultValue = "2") int count,
+                                                                  @RequestParam(defaultValue = "view") String mode) {
+        String theatreType = db.queryForObject(
+                "select t.theatre_type from shows sh join screens s on s.id=sh.screen_id " +
+                        "join theatres t on t.id=s.theatre_id where sh.id=?", String.class, id);
+        List<com.sujaytumu.bms.service.SeatAdvisor.Seat> seats = db.query(
+                "select seat_number,status from show_seats where show_id=?",
+                (rs, n) -> new com.sujaytumu.bms.service.SeatAdvisor.Seat(rs.getString(1), "AVAILABLE".equals(rs.getString(2))),
+                id);
+        return com.sujaytumu.bms.service.SeatAdvisor.advise(seats, count, mode, theatreType);
+    }
 }
 
