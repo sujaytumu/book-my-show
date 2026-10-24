@@ -1,21 +1,31 @@
 package com.sujaytumu.bms.controller;
 
+import com.sujaytumu.bms.service.MovieEnricher;
+import com.sujaytumu.bms.service.MovieLookupService;
+import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 @RestController
 @RequestMapping("/api/admin")
 public class AdminController {
 
     private final JdbcTemplate db;
+    private final MovieLookupService lookup;
+    private final MovieEnricher enricher;
 
-    public AdminController(JdbcTemplate db) {
+    public AdminController(JdbcTemplate db, MovieLookupService lookup, MovieEnricher enricher) {
         this.db = db;
+        this.lookup = lookup;
+        this.enricher = enricher;
     }
 
     /** Business analytics for the admin dashboard (revenue, bookings, top movies/cinemas, occupancy, peak hours). */
@@ -137,13 +147,115 @@ public class AdminController {
                         "join theatres t on t.id = s.theatre_id where t.active=true order by t.name, s.name");
     }
 
+    private static Object nz(Object v) {
+        return v == null || String.valueOf(v).isBlank() ? null : v;
+    }
+
+    private static Integer intOrNull(Object v) {
+        try {
+            return nz(v) == null ? null : (int) Math.round(Double.parseDouble(String.valueOf(v).trim()));
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private static java.math.BigDecimal decOrNull(Object v) {
+        try {
+            return nz(v) == null ? null : new java.math.BigDecimal(String.valueOf(v).trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    /** Run a movie-database call; turn "not set up" / "could not reach it" into a clear message for the admin screen. */
+    private <T> T lookupCall(Supplier<T> call) {
+        if (!lookup.configured()) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                    "Movie lookup is not set up yet. Add TMDB_API_KEY (free at themoviedb.org) to the server settings.");
+        }
+        try {
+            return call.get();
+        } catch (MovieLookupService.LookupException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, e.getMessage());
+        }
+    }
+
+    /**
+     * Add a movie by hand. Anything left blank (poster, description, language, genre, runtime, certificate, release
+     * date, cast) is filled in automatically from the movie database using the title, when lookup is set up.
+     */
     @PostMapping("/movies")
-    public Map<String, String> addMovie(@RequestBody Map<String, Object> body) {
-        db.update("insert into movies(title,description,poster_url,language,genre,duration_minutes,certificate,rating) " +
-                        "values(?,?,?,?,?,?,?,?)",
-                body.get("title"), body.get("description"), body.get("posterUrl"), body.get("language"),
-                body.get("genre"), body.get("durationMinutes"), body.get("certificate"), body.get("rating"));
-        return Map.of("status", "created");
+    public Map<String, Object> addMovie(@RequestBody Map<String, Object> body) {
+        Object title = nz(body.get("title"));
+        if (title == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Movie title is required.");
+        java.sql.Date release = null;
+        if (nz(body.get("releaseDate")) != null) {
+            try {
+                release = java.sql.Date.valueOf(String.valueOf(body.get("releaseDate")).trim());
+            } catch (IllegalArgumentException e) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Release date must look like 2026-10-16.");
+            }
+        }
+        boolean upcoming = release != null && release.toLocalDate().isAfter(LocalDate.now(java.time.ZoneId.of("Asia/Kolkata")));
+        Long id = db.queryForObject(
+                "insert into movies(title,description,poster_url,language,genre,duration_minutes,certificate,rating,release_date,upcoming) " +
+                        "values(?,?,?,?,?,?,?,?,?,?) returning id", Long.class,
+                String.valueOf(title).trim(), nz(body.get("description")), nz(body.get("posterUrl")), nz(body.get("language")),
+                nz(body.get("genre")), intOrNull(body.get("durationMinutes")), nz(body.get("certificate")),
+                decOrNull(body.get("rating")) == null ? java.math.BigDecimal.ZERO : decOrNull(body.get("rating")), release, upcoming);
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("status", "created");
+        out.put("id", id);
+        if (enricher.configured()) {
+            try {
+                MovieEnricher.Result r = enricher.enrich(id, false, false);
+                out.put("autoFill", r);
+            } catch (RuntimeException e) {
+                out.put("autoFillNote", "Added, but the automatic fill could not run: " + e.getMessage());
+            }
+        } else {
+            out.put("autoFillNote", "Added. Set TMDB_API_KEY on the server and the poster, cast and dates fill in by themselves.");
+        }
+        return out;
+    }
+
+    /** Search the movie database by name (the admin screen shows these as pickable cards). */
+    @GetMapping("/movies/lookup")
+    public Map<String, Object> lookupMovies(@RequestParam String query, @RequestParam(required = false) Integer year) {
+        if (query == null || query.trim().length() < 2) return Map.of("results", List.of());
+        return Map.of("results", lookupCall(() -> lookup.search(query, year)));
+    }
+
+    /** Everything we would save for one search result, so the admin can look before adding. */
+    @GetMapping("/movies/lookup/{tmdbId}")
+    public MovieLookupService.Details previewMovie(@PathVariable long tmdbId) {
+        return lookupCall(() -> lookup.details(tmdbId));
+    }
+
+    /** Add the picked film with every detail (poster, language, genre, runtime, certificate, release date, cast and crew). */
+    @PostMapping("/movies/from-lookup")
+    public Map<String, Object> addFromLookup(@RequestBody Map<String, Object> body) {
+        Integer tmdbId = intOrNull(body.get("tmdbId"));
+        if (tmdbId == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Pick a movie first.");
+        return lookupCall(() -> enricher.createFromLookup(tmdbId));
+    }
+
+    /**
+     * Fill the blanks of a movie that already exists (or refresh everything with overwrite=true). When the title is
+     * ambiguous the response carries suggestions; sending {"tmdbId": ...} links the chosen one.
+     */
+    @PostMapping("/movies/{id}/auto-fill")
+    public MovieEnricher.Result autoFill(@PathVariable long id, @RequestParam(defaultValue = "false") boolean overwrite,
+                                         @RequestBody(required = false) Map<String, Object> body) {
+        Integer chosen = body == null ? null : intOrNull(body.get("tmdbId"));
+        if (chosen != null) {
+            try {
+                db.update("update movies set tmdb_id = ? where id = ?", chosen, id);
+            } catch (org.springframework.dao.DuplicateKeyException e) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "That film is already in the catalogue as another movie.");
+            }
+        }
+        return lookupCall(() -> enricher.enrich(id, overwrite, false));
     }
 
     @PostMapping("/shows")

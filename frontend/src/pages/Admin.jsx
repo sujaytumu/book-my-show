@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import AdminAnalytics from "../components/AdminAnalytics";
+import { AddByName, NeedsDetails } from "../components/MovieByName";
 import { api, currentUser } from "../api";
 
 const emptyMovie = {
@@ -151,8 +152,11 @@ export default function Admin() {
         </form>
       </div>
 
+      <AddByName onChange={loadLookups} />
+      <NeedsDetails movies={movies} onChange={loadLookups} />
+
       <div className="card">
-        <h2>Add a movie</h2>
+        <h2>Add a movie manually</h2>
         <form onSubmit={submitMovie}>
           <input placeholder="Title" required value={movieForm.title} onChange={updateMovie("title")} />
           <input placeholder="Description" value={movieForm.description} onChange={updateMovie("description")} />
