@@ -1,5 +1,5 @@
 // import { useEffect, useState } from "react";
-// import { api } from "../api";
+// import { api, currentUser } from "../api";
 
 // export default function Bookings() {
 //   const [bookings, setBookings] = useState([]);
@@ -153,15 +153,21 @@ const TABS = [
   { key: "cancelled", label: "Cancelled" },
 ];
 
+// Last bookings fetched for this user (kept while the app is open) so the tab shows instantly, e.g. while it slides in.
+const mem = { uid: null, data: null };
+const whoAmI = () => { const u = currentUser(); return u ? String(u.id || u.email || "") : ""; };
+
 export default function Bookings() {
   const [ticket, setTicket] = useState(null);
-  const [bookings, setBookings] = useState([]);
+  const [bookings, setBookings] = useState(() => (mem.data && mem.uid === whoAmI() ? mem.data : []));
   const [posters, setPosters] = useState({});
-  const [loaded, setLoaded] = useState(false);
+  const [loaded, setLoaded] = useState(() => !!(mem.data && mem.uid === whoAmI()));
   const [tab, setTab] = useState("upcoming");
 
   function load() {
     api.get("/bookings/me").then((res) => {
+      mem.uid = whoAmI();
+      mem.data = res.data;
       setBookings(res.data);
       setLoaded(true);
     });

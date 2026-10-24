@@ -1274,3 +1274,45 @@ html[data-swipe="right"] main.page-in{animation:bmsSlideL .24s cubic-bezier(.2,.
 /* sideways drags on the main tab pages belong to the swipe; vertical scrolling stays native */
 main{touch-action:pan-y pinch-zoom}
 @media (prefers-reduced-motion:reduce){.tab-pill{transition:none}html[data-swipe] main.page-in{animation:none}}
+
+/* ---------- Live tab pager: the neighbouring tab is rendered beside the current one while you drag ---------- */
+.pager-peek{position:fixed;left:0;right:0;top:0;bottom:0;z-index:5;overflow:hidden;background:var(--bg);pointer-events:none;
+  transform:translate3d(100%,0,0);box-shadow:0 0 32px rgba(0,0,0,.2);will-change:transform;contain:layout paint}
+.pager-peek main{padding-bottom:104px}
+html[data-swipe="none"] main.page-in{animation:none}
+/* a springy pill with a soft inner highlight, and a touch more depth on the bar */
+.tab-pill{background:linear-gradient(180deg,#f1f1f5,#e6e6ec);box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 1px 3px rgba(0,0,0,.08);
+  transition:transform .46s cubic-bezier(.34,1.38,.5,1)}
+.tabbar{box-shadow:0 10px 30px rgba(20,20,40,.16),0 2px 6px rgba(20,20,40,.08)}
+.tabbar a.on .tab-label{letter-spacing:.1px}
+.tabbar a.on svg{filter:drop-shadow(0 2px 3px rgba(224,65,90,.35))}
+
+/* ---------- Smart seat picker ---------- */
+.seat-tools{display:flex;gap:8px;align-items:center;margin:4px 0 10px;overflow-x:auto;scrollbar-width:none}
+.seat-tools::-webkit-scrollbar{display:none}
+.seat-tools button,.seat-tools button:hover{flex:none;display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:22px;border:1.5px solid #e0415a;
+  background:#fff;color:#e0415a;font-size:10.5px;font-weight:600;text-transform:none;letter-spacing:0}
+.seat-tools .st-pick:not(.alt){background:linear-gradient(135deg,#ef4f63,#d92f56);color:#fff;border-color:transparent;box-shadow:0 4px 12px rgba(217,47,86,.28)}
+.seat-tools .st-pick:disabled{opacity:.7}
+.seat-tools .st-heat{border-color:#cfcfd4;color:#555}
+.seat-tools .st-heat.on{border-color:#2f9e5b;background:#e9f7ef;color:#1b7a43}
+.st-dot{width:10px;height:10px;border-radius:50%;background:conic-gradient(#e5534b,#f0b429,#2f9e5b,#e5534b)}
+.pick-note{margin:0 0 12px;padding:12px 14px;border-radius:14px;background:linear-gradient(135deg,#fff,#fdf0f2);border:1px solid #f3d3d9;animation:bmsPop .35s cubic-bezier(.2,.8,.3,1) backwards}
+.pn-top{display:flex;align-items:center;gap:10px}
+.pn-top b{font-size:12.5px;color:#1f1f24}
+.pn-top em{font-style:normal;font-size:10px;color:#777}
+.pn-score{flex:1;height:6px;border-radius:6px;background:#eee;overflow:hidden}
+.pn-score i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#f0b429,#2f9e5b);animation:pnFill .7s cubic-bezier(.2,.8,.3,1) backwards}
+@keyframes pnFill{from{width:0!important}}
+.pick-note ul{margin:8px 0 0;padding:0 0 0 16px;font-size:10.2px;color:#444;line-height:1.55}
+.pn-alts{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}
+.pn-alts small{font-size:9.5px;color:#777}
+.pn-alts button,.pn-alts button:hover{padding:5px 11px;border-radius:16px;border:1.5px solid #cfcfd4;background:#fff;color:#333;font-size:10px;font-weight:600;text-transform:none;letter-spacing:0}
+.seat-map.heat button.available,.seat-map.heat button.available:hover{background:hsl(calc(var(--q, 50) * 1.15) 70% 88%);border-color:hsl(calc(var(--q, 50) * 1.15) 55% 62%);color:#333}
+.seat-map button{transition:background .3s ease,border-color .3s ease,transform .15s ease}
+.seat-map button.selected.pulse{animation:seatPulse .55s cubic-bezier(.2,.8,.3,1) 2}
+@keyframes seatPulse{0%{transform:scale(1);box-shadow:0 0 0 0 rgba(224,65,90,.55)}55%{transform:scale(1.22);box-shadow:0 0 0 8px rgba(224,65,90,0)}100%{transform:scale(1);box-shadow:0 0 0 0 rgba(224,65,90,0)}}
+.heat-legend{display:flex;align-items:center;justify-content:center;gap:8px;margin:6px 0 2px}
+.heat-legend i{width:120px;height:8px;border-radius:8px;background:linear-gradient(90deg,hsl(0 70% 88%),hsl(60 70% 88%),hsl(115 70% 88%))}
+.heat-legend small{font-size:9px;color:#777}
+@media (prefers-reduced-motion:reduce){.seat-map button.selected.pulse,.pick-note,.pn-score i{animation:none}}

@@ -21,3 +21,22 @@ export function finishTo(navigate, path) {
   navigate("/", { replace: true });
   navigate(path);
 }
+
+// The four main tabs in the order they were used (most recent last). Back goes to the tab used before this one,
+// not always Home, and only leaves the app once only Home is left.
+const stack = [];
+export const tabStack = {
+  visit(path) {
+    const i = stack.indexOf(path);
+    if (i >= 0) stack.splice(i, 1);
+    stack.push(path);
+  },
+  previous(current) {
+    for (let i = stack.length - 1; i >= 0; i--) if (stack[i] !== current) return stack[i];
+    return null;
+  },
+  drop(path) {
+    const i = stack.indexOf(path);
+    if (i >= 0) stack.splice(i, 1);
+  },
+};
