@@ -392,6 +392,12 @@ export default function Show() {
   const fitted = useRef(false); // auto-fit the 15-seat rows to the screen width once
   const anchor = useRef(null); // keeps the point between the fingers steady while zooming
   const [seatMsg, setSeatMsg] = useState("");
+  // Smart seat picker (server-side scoring): auto-pick, explanation card and the view-quality heat overlay.
+  const [heat, setHeat] = useState(null);
+  const [showHeat, setShowHeat] = useState(false);
+  const [pickNote, setPickNote] = useState(null);
+  const [picking, setPicking] = useState("");
+  const [flash, setFlash] = useState(false);
   const [siblings, setSiblings] = useState([]); // other showtimes of this movie at this cinema on this day
   useEffect(() => {
     if (!show?.movie_id) return;
@@ -594,6 +600,60 @@ export default function Show() {
     setQtyOpen(false);
   }
 
+  // Heat overlay: fetched only while it is switched on, and refreshed whenever the seat map changes.
+  useEffect(() => {
+    if (!showHeat) return;
+    let live = true;
+    const t = setTimeout(() => {
+      api
+        .get("/shows/" + id + "/best-seats", { params: { count: qty || 2 } })
+        .then((r) => live && setHeat(r.data.heat))
+        .catch(() => {});
+    }, 250);
+    return () => {
+      live = false;
+      clearTimeout(t);
+    };
+  }, [showHeat, id, seats, qty]);
+
+  // Auto-pick: the server finds the best group (centred, right depth, no lonely seat left beside it).
+  async function autoPick(mode) {
+    if (!qty) {
+      setQtyOpen(true);
+      return;
+    }
+    setSeatMsg("");
+    setPicking(mode);
+    try {
+      const { data } = await api.get("/shows/" + id + "/best-seats", { params: { count: qty, mode } });
+      if (!data.seats || data.seats.length === 0) {
+        setPickNote(null);
+        setSeatMsg("No seats left for " + qty + ". Try fewer tickets or another show.");
+        return;
+      }
+      setSelected(data.seats);
+      setPickNote(data);
+      showPicked(data.seats);
+    } catch (e) {
+      setSeatMsg("Couldn't pick seats just now. Tap any seat to choose yourself.");
+    } finally {
+      setPicking("");
+    }
+  }
+  function showPicked(list) {
+    setFlash(true);
+    setTimeout(() => setFlash(false), 1100);
+    try {
+      if (navigator.vibrate) navigator.vibrate(10);
+    } catch (e) {
+      /* no haptics */
+    }
+    setTimeout(() => {
+      const first = zoomRef.current && zoomRef.current.querySelector('[title="' + list[0] + '"]');
+      if (first && first.scrollIntoView) first.scrollIntoView({ block: "center", inline: "center", behavior: "smooth" });
+    }, 60);
+  }
+
   // Tap a seat -> select `qty` seats together in that row (starting at the tapped seat,
   // sliding left if there is no room on the right). Tap a selected seat again to clear.
   function selectSeat(seat) {
@@ -603,6 +663,7 @@ export default function Show() {
       return;
     }
     setSeatMsg("");
+    setPickNote(null);
     if (selected.includes(seat.seat_number)) {
       setSelected([]);
       return;
@@ -962,9 +1023,59 @@ export default function Show() {
           )}
 
 
+          {seats.some((x) => x.status === "AVAILABLE") && (
+            <div className="seat-tools">
+              <button type="button" className="st-pick" disabled={!!picking} onClick={() => autoPick("view")}>
+                <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2zm7 12l.9 2.6 2.6.9-2.6.9L19 21l-.9-2.6-2.6-.9 2.6-.9L19 14z" fill="currentColor" /></svg>
+                {picking === "view" ? "Finding…" : "Best seats"}
+              </button>
+              <button type="button" className="st-pick alt" disabled={!!picking} onClick={() => autoPick("value")}>
+                {picking === "value" ? "Finding…" : "Best value"}
+              </button>
+              <button type="button" className={"st-heat" + (showHeat ? " on" : "")} onClick={() => setShowHeat((v) => !v)}>
+                <i className="st-dot" />
+                View quality
+              </button>
+            </div>
+          )}
+          {pickNote && selected.length > 0 && (
+            <div className="pick-note">
+              <div className="pn-top">
+                <b>{pickNote.label}</b>
+                <span className="pn-score">
+                  <i style={{ width: pickNote.score + "%" }} />
+                </span>
+                <em>{pickNote.score}/100</em>
+              </div>
+              <ul>
+                {pickNote.reasons.map((r) => (
+                  <li key={r}>{r}</li>
+                ))}
+              </ul>
+              {pickNote.alternatives && pickNote.alternatives.length > 0 && (
+                <div className="pn-alts">
+                  <small>Or sit in</small>
+                  {pickNote.alternatives.map((alt) => (
+                    <button
+                      type="button"
+                      key={alt.join()}
+                      onClick={() => {
+                        setSelected(alt);
+                        setPickNote(null);
+                        showPicked(alt);
+                      }}
+                    >
+                      Row {alt[0].charAt(0)} · {alt[0]}{alt.length > 1 ? "–" + alt[alt.length - 1] : ""}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Seat map: rows are grouped into the seat classes. Zoom scales seat size; it scrolls when larger than the screen. */}
           <div className="seat-zoom" ref={zoomRef} onTouchStart={onPinchStart} onTouchMove={onPinchMove} onTouchEnd={onPinchEnd} onTouchCancel={onPinchEnd}>
-          <div className="seat-map" style={{ "--z": zoom }}>
+          <div className={"seat-map" + (showHeat && heat ? " heat" : "")} style={{ "--z": zoom }}>
             {sections.map((section) => (
               <div className="seat-class" key={section.label}>
                 <div className="seat-class-title">{section.label}{classPrices[section.label] != null ? " · ₹" + classPrices[section.label] : ""}</div>
@@ -975,10 +1086,11 @@ export default function Show() {
                       {rowMap[letter].map((seat, idx) => (
                         <button
                           className={
-                            (selected.includes(seat.seat_number) ? "selected" : seat.status.toLowerCase() + (bestSet.has(seat.seat_number) ? " best" : "")) +
+                            (selected.includes(seat.seat_number) ? "selected" + (flash ? " pulse" : "") : seat.status.toLowerCase() + (bestSet.has(seat.seat_number) && !showHeat ? " best" : "")) +
                             ((idx + 1) % 5 === 0 && idx < rowMap[letter].length - 1 ? " aisle" : "")
                           }
                           title={seat.seat_number}
+                          style={showHeat && heat && heat[seat.seat_number] != null ? { "--q": heat[seat.seat_number] } : undefined}
                           onClick={() => selectSeat(seat)}
                           key={seat.id}
                         >
@@ -995,6 +1107,13 @@ export default function Show() {
 
           {/* SCREEN is kept below the seats as requested. */}
           <div className="screen">SCREEN</div>
+          {showHeat && heat && (
+            <div className="heat-legend">
+              <small>Weaker view</small>
+              <i />
+              <small>Best view</small>
+            </div>
+          )}
           <div className="seat-legend">
             <span>
               <i className="lg best" />
