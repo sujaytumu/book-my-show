@@ -54,11 +54,11 @@ export function landPoster(movieId, target) {
         { left: s.left + "px", top: s.top + "px", width: s.width + "px", height: s.height + "px", objectPosition: "50% 50%" },
         { left: r.left + "px", top: r.top + "px", width: r.width + "px", height: r.height + "px", borderRadius: "16px", objectPosition: "50% 22%" },
       ],
-      { duration: 400, easing: "cubic-bezier(.2,.8,.2,1)", fill: "forwards" }
+      { duration: 280, easing: "cubic-bezier(.2,.8,.2,1)", fill: "forwards" }
     );
     a.onfinish = done;
     a.oncancel = done;
-    setTimeout(done, 900);
+    setTimeout(done, 700);
   } catch (e) {
     if (target) target.style.visibility = "";
   }
