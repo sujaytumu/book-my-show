@@ -96,11 +96,31 @@ public class CatalogController {
             sql += "and exists(select 1 from cities c where c.id=t.city_id and lower(c.name)=lower(?)) ";
             args.add(city.trim());
         }
+        List<Map<String, Object>> rows;
         if (date == null) {
-            return db.queryForList(sql + "order by t.name,show_date,start_time", args.toArray());
+            rows = db.queryForList(sql + "order by t.name,show_date,start_time", args.toArray());
+        } else {
+            args.add(LocalDate.parse(date));
+            rows = db.queryForList(sql + "and show_date=? order by t.name,start_time", args.toArray());
         }
-        args.add(LocalDate.parse(date));
-        return db.queryForList(sql + "and show_date=? order by t.name,start_time", args.toArray());
+        addCrowdForecast(rows);
+        return rows;
+    }
+
+    /** Adds a "crowd" object (level, label, projected fill, tip) to every show row. */
+    private static void addCrowdForecast(List<Map<String, Object>> rows) {
+        java.time.LocalDateTime now = java.time.LocalDateTime.now(java.time.ZoneId.of("Asia/Kolkata"));
+        for (Map<String, Object> r : rows) {
+            try {
+                java.time.LocalDate d = ((java.sql.Date) r.get("show_date")).toLocalDate();
+                java.time.LocalTime t = ((java.sql.Time) r.get("start_time")).toLocalTime();
+                var f = com.sujaytumu.bms.service.CrowdForecast.forecast(now, d, t,
+                        ((Number) r.get("total_seats")).intValue(), ((Number) r.get("available_seats")).intValue());
+                if (f != null) r.put("crowd", f);
+            } catch (RuntimeException ignored) {
+                // forecast is a nicety; never break the show list
+            }
+        }
     }
 
     @GetMapping("/api/shows/{id}")
