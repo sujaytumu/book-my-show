@@ -1358,3 +1358,6 @@ html[data-swipe="none"] main.page-in{animation:none}
 .mbn-sugg{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
 .mbn-sugg button{font-size:12px;border:1px solid #d8d8e0;background:#fff;border-radius:99px;padding:4px 10px;cursor:pointer}
 .mbn-fill{flex:0 0 auto;padding:8px 12px;font-size:13px}
+
+.tk-actions{display:flex;gap:10px;margin:0 16px 10px}
+.tk-actions button,.tk-actions button:hover{flex:1;padding:11px 8px;font-size:12px;font-weight:700;text-transform:none;letter-spacing:0;border-radius:10px;background:#fff;color:var(--red);border:1.5px solid var(--red)}
