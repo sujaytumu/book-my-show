@@ -162,7 +162,8 @@ import { goBack } from "../nav";
 // }
 
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { landPoster } from "../sharedPoster";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { api, currentUser } from "../api";
 import { haversineKm } from "../geo";
@@ -444,6 +445,21 @@ export default function Movie() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [movie, setMovie] = useState();
+  const heroRef = useRef(null);
+  // Parallax: the hero picture drifts slower than the page as you scroll.
+  useEffect(() => {
+    let raf = 0;
+    const onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        const el = heroRef.current;
+        if (el) el.style.setProperty("--py", Math.min(60, Math.max(0, window.scrollY) * 0.3).toFixed(1));
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => { window.removeEventListener("scroll", onScroll); if (raf) cancelAnimationFrame(raf); };
+  }, []);
   const [shows, setShows] = useState([]);
   const [showsLoaded, setShowsLoaded] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
@@ -709,8 +725,8 @@ export default function Movie() {
       </div>
       {shareMsg && <p className="share-msg mv-share-msg">{shareMsg}</p>}
 
-      <div className="mv-hero">
-        <img src={movie.poster_url} alt={movie.title} />
+      <div className="mv-hero" ref={heroRef}>
+        <img src={movie.poster_url} alt={movie.title} ref={(el) => el && landPoster(movie.id, el)} />
         <a
           className="mv-trailer"
           href={"https://www.youtube.com/results?search_query=" + encodeURIComponent(movie.title + " official trailer")}

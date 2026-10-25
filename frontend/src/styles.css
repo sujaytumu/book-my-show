@@ -1370,3 +1370,20 @@ html[data-swipe="none"] main.page-in{animation:none}
 .crowd-bar.busy i{background:#f59e0b}
 .crowd-bar.rush i{background:#e11d48}
 .crowd-tip{margin:8px 0 0;font-size:11px;color:#6b6b76}
+
+/* Seat drag-select + hold ring */
+.seat-zoom.dragging{cursor:grabbing}
+.seat-zoom.dragging .seat-row-seats button{transition:none}
+.seat-zoom.dragging button.selected{transform:scale(1.18)}
+.seat-hint{margin:6px 0 0;font-size:10.5px;color:#7a7a86}
+.hold-timer.ring{display:flex;align-items:center;gap:12px;padding:10px 12px}
+.hold-timer.ring svg{flex:0 0 46px;transform:rotate(-90deg)}
+.hold-timer.ring .hr-track{fill:none;stroke:rgba(0,0,0,.09);stroke-width:4}
+.hold-timer.ring .hr-arc{fill:none;stroke:#d97706;stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset 1s linear,stroke .3s}
+.hold-timer.ring.low .hr-arc{stroke:var(--red);animation:ringPulse 1s ease-in-out infinite}
+@keyframes ringPulse{50%{opacity:.45}}
+.hold-timer.ring b{display:block;font-size:15px;margin-top:2px}
+
+/* Hero parallax */
+.mv-hero img{top:-12%;height:124%;inset:auto 0 auto 0;transform:translate3d(0,calc(var(--py,0)*1px),0);will-change:transform}
+.seat-zoom{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
