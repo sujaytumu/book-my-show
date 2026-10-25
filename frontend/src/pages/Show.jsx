@@ -705,14 +705,14 @@ export default function Show() {
         active = true;
         el.classList.add("dragging");
         apply(num);
-      }, 260);
+      }, 140);
     };
     const move = (e) => {
       const t = e.touches[0];
       if (active) {
         e.preventDefault();
         apply(at(t));
-      } else if (timer && Math.hypot(t.clientX - sx, t.clientY - sy) > 8) {
+      } else if (timer && Math.hypot(t.clientX - sx, t.clientY - sy) > 10) {
         clearTimeout(timer);
         timer = 0;
       }
