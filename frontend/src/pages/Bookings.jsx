@@ -74,6 +74,42 @@ import { Link } from "react-router-dom";
 import { api } from "../api";
 import { isNativeApp, shareTicketNative } from "../ticket";
 
+// .ics file so the show lands in the phone's calendar (times are India time).
+function addToCalendar(b) {
+  const p2 = (n) => String(n).padStart(2, "0");
+  const [y, m, d] = String(b.show_date).slice(0, 10).split("-").map(Number);
+  const [hh, mm] = String(b.start_time).split(":").map(Number);
+  const start = new Date(Date.UTC(y, m - 1, d, hh, mm));
+  const end = new Date(start.getTime() + (Number(b.duration_minutes) || 150) * 60000);
+  const f = (t) => t.getUTCFullYear() + p2(t.getUTCMonth() + 1) + p2(t.getUTCDate()) + "T" + p2(t.getUTCHours()) + p2(t.getUTCMinutes()) + "00";
+  const esc = (t) => String(t || "").replace(/([,;\\])/g, "\\$1").replace(/\n/g, "\\n");
+  const ics = [
+    "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//BookMyShow clone//EN", "BEGIN:VEVENT",
+    "UID:" + b.reference + "@bms", "DTSTAMP:" + f(new Date()) + "Z",
+    "DTSTART;TZID=Asia/Kolkata:" + f(start), "DTEND;TZID=Asia/Kolkata:" + f(end),
+    "SUMMARY:" + esc(b.title + " - movie"), "LOCATION:" + esc(b.theatre_name),
+    "DESCRIPTION:" + esc("Seats " + b.seats + ". Booking ID " + b.reference),
+    "BEGIN:VALARM", "TRIGGER:-PT2H", "ACTION:DISPLAY", "DESCRIPTION:Show starts soon", "END:VALARM",
+    "END:VEVENT", "END:VCALENDAR",
+  ].join("\r\n");
+  const url = URL.createObjectURL(new Blob([ics], { type: "text/calendar" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = b.reference + ".ics";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+async function shareTicket(b) {
+  const text = b.title + " at " + b.theatre_name + ", " + fmtDate(b.show_date) + " " + fmtTime(b.start_time) + ". Seats " + b.seats + ". Booking ID " + b.reference;
+  try {
+    if (navigator.share) await navigator.share({ title: b.title, text });
+    else await navigator.clipboard.writeText(text);
+  } catch {}
+}
+
 function TicketModal({ b, poster, onClose }) {
   const [qr, setQr] = useState("");
   useEffect(() => {
@@ -103,6 +139,10 @@ function TicketModal({ b, poster, onClose }) {
           <small className="tk-ref">Booking ID</small>
           <b className="tk-id">{b.reference}</b>
           <p>Show this QR code at the cinema entrance.</p>
+        </div>
+        <div className="tk-actions">
+          <button type="button" onClick={() => addToCalendar(b)}>📅 Add to calendar</button>
+          <button type="button" onClick={() => shareTicket(b)}>↗ Share</button>
         </div>
         <button type="button" className="tk-close" onClick={onClose}>
           Close
