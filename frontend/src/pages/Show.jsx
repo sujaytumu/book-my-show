@@ -654,6 +654,96 @@ export default function Show() {
     }, 60);
   }
 
+  // The `qty` free seats side by side that include (or sit just left of) the given seat, or null.
+  function windowFor(seatNumber) {
+    const letter = seatNumber.charAt(0);
+    const row = seats
+      .filter((x) => x.seat_number.charAt(0) === letter)
+      .sort((x, y) => parseInt(x.seat_number.slice(1), 10) - parseInt(y.seat_number.slice(1), 10));
+    const idx = row.findIndex((x) => x.seat_number === seatNumber);
+    if (idx < 0 || !qty) return null;
+    for (let start = idx; start > idx - qty; start--) {
+      if (start < 0 || start + qty > row.length) continue;
+      const win = row.slice(start, start + qty);
+      if (win.every((x) => x.status === "AVAILABLE")) return win.map((x) => x.seat_number);
+    }
+    return null;
+  }
+
+  // Press and slide across a row to move the whole group of seats (WhatsApp-style hold, then drag).
+  const dragLatest = useRef({});
+  dragLatest.current = { qty, windowFor, setSelected, setSeatMsg, setPickNote };
+  const hasSeats = seats.length > 0;
+  useEffect(() => {
+    const el = zoomRef.current;
+    if (!el) return;
+    let timer = 0, active = false, sx = 0, sy = 0, last = "", block = 0;
+    const at = (t) => {
+      const b = document.elementFromPoint(t.clientX, t.clientY);
+      const seat = b && b.closest ? b.closest("[data-seat]") : null;
+      return seat ? seat.getAttribute("data-seat") : null;
+    };
+    const apply = (num) => {
+      if (!num || num === last) return;
+      const d = dragLatest.current;
+      const win = d.windowFor(num);
+      if (!win) return;
+      last = num;
+      d.setSelected(win);
+      d.setSeatMsg("");
+      d.setPickNote(null);
+      try { if (navigator.vibrate) navigator.vibrate(6); } catch (e) { /* no haptics */ }
+    };
+    const start = (e) => {
+      clearTimeout(timer);
+      if (e.touches.length !== 1 || !dragLatest.current.qty) return;
+      const t = e.touches[0];
+      const num = at(t);
+      if (!num) return;
+      sx = t.clientX; sy = t.clientY; last = "";
+      timer = setTimeout(() => {
+        active = true;
+        el.classList.add("dragging");
+        apply(num);
+      }, 260);
+    };
+    const move = (e) => {
+      const t = e.touches[0];
+      if (active) {
+        e.preventDefault();
+        apply(at(t));
+      } else if (timer && Math.hypot(t.clientX - sx, t.clientY - sy) > 8) {
+        clearTimeout(timer);
+        timer = 0;
+      }
+    };
+    const end = () => {
+      clearTimeout(timer);
+      timer = 0;
+      if (active) {
+        active = false;
+        block = Date.now() + 450;
+        el.classList.remove("dragging");
+      }
+    };
+    const click = (e) => {
+      if (Date.now() < block) { e.stopPropagation(); e.preventDefault(); }
+    };
+    el.addEventListener("touchstart", start, { passive: true });
+    el.addEventListener("touchmove", move, { passive: false });
+    el.addEventListener("touchend", end);
+    el.addEventListener("touchcancel", end);
+    el.addEventListener("click", click, true);
+    return () => {
+      clearTimeout(timer);
+      el.removeEventListener("touchstart", start);
+      el.removeEventListener("touchmove", move);
+      el.removeEventListener("touchend", end);
+      el.removeEventListener("touchcancel", end);
+      el.removeEventListener("click", click, true);
+    };
+  }, [hasSeats]);
+
   // Tap a seat -> select `qty` seats together in that row (starting at the tapped seat,
   // sliding left if there is no room on the right). Tap a selected seat again to clear.
   function selectSeat(seat) {
@@ -668,18 +758,10 @@ export default function Show() {
       setSelected([]);
       return;
     }
-    const letter = seat.seat_number.charAt(0);
-    const row = seats
-      .filter((x) => x.seat_number.charAt(0) === letter)
-      .sort((x, y) => parseInt(x.seat_number.slice(1), 10) - parseInt(y.seat_number.slice(1), 10));
-    const idx = row.findIndex((x) => x.seat_number === seat.seat_number);
-    for (let start = idx; start > idx - qty; start--) {
-      if (start < 0 || start + qty > row.length) continue;
-      const win = row.slice(start, start + qty);
-      if (win.every((x) => x.status === "AVAILABLE")) {
-        setSelected(win.map((x) => x.seat_number));
-        return;
-      }
+    const win = windowFor(seat.seat_number);
+    if (win) {
+      setSelected(win);
+      return;
     }
     setSeatMsg("Can't seat " + qty + " together here. Try another spot or change the number of tickets.");
   }
@@ -1036,6 +1118,7 @@ export default function Show() {
                 <i className="st-dot" />
                 View quality
               </button>
+            {qty ? <p className="seat-hint">Tip: press a seat, hold, then slide along the row to move your group.</p> : null}
             </div>
           )}
           {pickNote && selected.length > 0 && (
@@ -1090,6 +1173,7 @@ export default function Show() {
                             ((idx + 1) % 5 === 0 && idx < rowMap[letter].length - 1 ? " aisle" : "")
                           }
                           title={seat.seat_number}
+                          data-seat={seat.seat_number}
                           style={showHeat && heat && heat[seat.seat_number] != null ? { "--q": heat[seat.seat_number] } : undefined}
                           onClick={() => selectSeat(seat)}
                           key={seat.id}
@@ -1264,12 +1348,22 @@ export default function Show() {
           <h2>Confirm booking</h2>
 
           {secsLeft != null && (
-            <p className={"hold-timer" + (secsLeft <= 60 ? " low" : "")}>
-              ⏱ Complete payment in{" "}
-              <b>
-                {String(Math.floor(secsLeft / 60)).padStart(2, "0")}:{String(secsLeft % 60).padStart(2, "0")}
-              </b>
-            </p>
+            <div className={"hold-timer ring" + (secsLeft <= 60 ? " low" : "")}>
+              <svg viewBox="0 0 44 44" width="46" height="46" aria-hidden="true">
+                <circle cx="22" cy="22" r="18" className="hr-track" />
+                <circle
+                  cx="22" cy="22" r="18" className="hr-arc"
+                  strokeDasharray="113.1"
+                  strokeDashoffset={113.1 * (1 - Math.min(1, secsLeft / 600))}
+                />
+              </svg>
+              <span>
+                Seats held for you. Complete payment in{" "}
+                <b>
+                  {String(Math.floor(secsLeft / 60)).padStart(2, "0")}:{String(secsLeft % 60).padStart(2, "0")}
+                </b>
+              </span>
+            </div>
           )}
 
           <p>
