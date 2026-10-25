@@ -340,6 +340,19 @@ const SORTS = [
   { key: "distance", label: "Distance", hint: "Show nearest first" },
 ];
 
+// One line per cinema: the quietest and the fastest-filling show, from the server's crowd forecast.
+function crowdTip(shows) {
+  const f = shows.filter((x) => x.crowd && x.crowd.level !== "full");
+  if (f.length < 2) return "";
+  const quiet = f.reduce((a, b) => (b.crowd.projectedPercent < a.crowd.projectedPercent ? b : a));
+  const busy = f.reduce((a, b) => (b.crowd.projectedPercent > a.crowd.projectedPercent ? b : a));
+  if (busy.crowd.projectedPercent - quiet.crowd.projectedPercent < 15) return "";
+  const out = [];
+  if (quiet.crowd.level === "quiet" || quiet.crowd.level === "steady") out.push("Quietest: " + time12(quiet.start_time));
+  if (busy.crowd.level === "rush" || busy.crowd.level === "busy") out.push("Fills fastest: " + time12(busy.start_time));
+  return out.join(" · ");
+}
+
 // green = plenty of seats, yellow = filling fast (under half left), full = housefull.
 // If the API doesn't send seat counts, every show is treated as green.
 function availability(show) {
@@ -968,6 +981,7 @@ export default function Movie() {
               </button>
             </div>
           </div>
+          {crowdTip(group.shows) && <p className="crowd-tip">{crowdTip(group.shows)}</p>}
           <div className="time-slots">
             {group.shows.map((show) => {
               const av = availability(show);
@@ -976,11 +990,16 @@ export default function Movie() {
                   key={show.id}
                   className={"time-slot " + av}
                   disabled={av === "full"}
-                  title={av === "full" ? "Housefull" : av === "fast" ? "Filling fast" : "Available"}
+                  title={show.crowd ? show.crowd.label + ". " + show.crowd.tip : av === "full" ? "Housefull" : av === "fast" ? "Filling fast" : "Available"}
                   onClick={() => navigate("/show/" + show.id)}
                 >
                   {time12(show.start_time)}
                   <small>{av === "full" ? "Housefull" : show.format || "2D"}</small>
+                  {show.crowd && av !== "full" && (
+                    <span className={"crowd-bar " + show.crowd.level} aria-label={show.crowd.label}>
+                      <i style={{ width: Math.max(8, Math.min(100, show.crowd.projectedPercent)) + "%" }} />
+                    </span>
+                  )}
                   {slotKind(show.start_time) && <i className={"slot-badge " + slotKind(show.start_time)}>{slotKind(show.start_time) === "late" ? "☾" : "☀"}</i>}
                 </button>
               );
