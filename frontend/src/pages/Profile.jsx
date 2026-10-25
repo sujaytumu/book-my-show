@@ -55,6 +55,15 @@ export default function Profile() {
 
   if (!user) return <Navigate to="/login" replace />;
 
+  async function invite() {
+    const url = window.location.origin;
+    const text = "Book movie tickets with live seat maps, offers and a wallet on BookMyShow: " + url;
+    try {
+      if (navigator.share) await navigator.share({ title: "BookMyShow", text, url });
+      else await navigator.clipboard.writeText(text);
+    } catch {}
+  }
+
   function handleLogout() {
     logout();
     navigate("/", { replace: true });
@@ -143,6 +152,7 @@ export default function Profile() {
         <Link to="/wallet"><span><em>👛</em>Wallet</span><i>›</i></Link>
         <Link to="/offers"><span><em>🏷️</em>Offers &amp; coupons</span><i>›</i></Link>
         <Link to="/help"><span><em>❓</em>Help &amp; support</span><i>›</i></Link>
+        <a href="#invite" onClick={(e) => { e.preventDefault(); invite(); }}><span><em>🎁</em>Invite friends</span><i>›</i></a>
       </div>
 
       <div className="pf-card">
