@@ -1,3 +1,4 @@
+import { installPosterFlight } from "./sharedPoster";
 import { Suspense, lazy, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Navigate, NavLink, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { api } from "./api";
@@ -127,6 +128,8 @@ function useTabPager(peek, setPeek) {
     const id = window.requestIdleCallback ? window.requestIdleCallback(warm, { timeout: 2500 }) : setTimeout(warm, 1200);
     return () => (window.cancelIdleCallback && window.requestIdleCallback ? window.cancelIdleCallback(id) : clearTimeout(id));
   }, [pathname]);
+
+  useEffect(() => installPosterFlight(), []);
 
   // The page we landed on slides in from the side we came from (taps and back); a swipe sets "none".
   useEffect(() => {
