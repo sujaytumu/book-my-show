@@ -9,7 +9,7 @@ const ICON = { confirmed: "🎟", reminder: "⏰", cancelled: "✕", seats: "�
 
 export default function Notifications() {
   const navigate = useNavigate();
-  const { list, markSeen } = useNotifications();
+  const { list, markSeen, clearAll } = useNotifications();
   useEffect(() => {
     if (list.length) markSeen();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -23,6 +23,11 @@ export default function Notifications() {
         <div>
           <h1>Notifications</h1>
         </div>
+        {list.length > 0 && (
+          <button type="button" className="nt-clear" onClick={clearAll}>
+            Clear all
+          </button>
+        )}
       </div>
       {!currentUser() ? (
         <div className="nt-empty">
