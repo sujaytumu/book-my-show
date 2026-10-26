@@ -497,6 +497,12 @@ export default function Movie() {
   useEffect(() => {
     api.get("/movies/" + id).then((res) => {
       setMovie(res.data);
+      try {
+        const d = res.data;
+        const rec = JSON.parse(localStorage.getItem("bms_recent_movies") || "[]").filter((x) => x.id !== d.id);
+        rec.unshift({ id: d.id, title: d.title, poster_url: d.poster_url, rating: d.rating, votes: d.votes, upcoming: d.upcoming, release_date: d.release_date, language: d.language, genre: d.genre });
+        localStorage.setItem("bms_recent_movies", JSON.stringify(rec.slice(0, 10)));
+      } catch {}
       if (!res.data.upcoming) {
         try {
           localStorage.setItem("bms_last_movie", JSON.stringify({ id: res.data.id, title: res.data.title, poster_url: res.data.poster_url, rating: res.data.rating, genre: res.data.genre }));
