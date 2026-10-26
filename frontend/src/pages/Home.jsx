@@ -52,6 +52,19 @@ export default function Home({ mode = "now-showing" }) {
       return null;
     }
   });
+  const [recent, setRecent] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("bms_recent_movies") || "[]");
+    } catch {
+      return [];
+    }
+  });
+  function clearRecent() {
+    try {
+      localStorage.removeItem("bms_recent_movies");
+    } catch {}
+    setRecent([]);
+  }
   function dismissLast() {
     try {
       localStorage.removeItem("bms_last_movie");
@@ -213,6 +226,20 @@ export default function Home({ mode = "now-showing" }) {
             ))}
           </div>
           {running.length === 0 && <p className="empty-note">No Telugu movies running right now.</p>}
+
+          {recent.length > 1 && (
+            <>
+              <div className="hp-head">
+                <h2 className="hp-h">Recently Viewed</h2>
+                <a href="#clear" onClick={(e) => { e.preventDefault(); clearRecent(); }}>Clear</a>
+              </div>
+              <div className="poster-row">
+                {recent.map((m) => (
+                  <Poster movie={m} key={m.id} />
+                ))}
+              </div>
+            </>
+          )}
 
           {soon.length > 0 && (
             <>
