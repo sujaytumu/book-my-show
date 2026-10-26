@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { api, currentUser, logout } from "../api";
+import { getTheme, setTheme } from "../theme";
 import { loadWatchlist, removeFromWatchlist, syncWatchlist } from "../watchlist";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -43,6 +44,7 @@ export default function Profile() {
   const user = currentUser();
   const [bookings, setBookings] = useState([]);
   const [watchlist, setWatchlist] = useState(loadWatchlist);
+  const [dark, setDark] = useState(getTheme() === "dark");
 
   useEffect(() => {
     if (!user) return;
@@ -152,6 +154,10 @@ export default function Profile() {
         <Link to="/wallet"><span><em>👛</em>Wallet</span><i>›</i></Link>
         <Link to="/offers"><span><em>🏷️</em>Offers &amp; coupons</span><i>›</i></Link>
         <Link to="/help"><span><em>❓</em>Help &amp; support</span><i>›</i></Link>
+        <a href="#theme" onClick={(e) => { e.preventDefault(); const n = !dark; setDark(n); setTheme(n ? "dark" : "light"); }}>
+          <span><em>{dark ? "🌙" : "☀️"}</em>Dark mode</span>
+          <i className={"pf-switch" + (dark ? " on" : "")} aria-hidden="true"><b /></i>
+        </a>
         <a href="#invite" onClick={(e) => { e.preventDefault(); invite(); }}><span><em>🎁</em>Invite friends</span><i>›</i></a>
       </div>
 
