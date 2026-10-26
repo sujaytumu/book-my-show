@@ -1394,3 +1394,186 @@ html,body{overscroll-behavior-y:contain}
 .ptr{position:fixed;top:env(safe-area-inset-top);left:50%;z-index:900;width:38px;height:38px;border-radius:50%;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;color:var(--red);font-size:22px;pointer-events:none}
 .ptr .spin{animation:ptrSpin .7s linear infinite}
 @keyframes ptrSpin{to{transform:rotate(360deg)}}
+
+/* ==== DARK MODE (generated) ==== */
+html[data-theme=dark]{color-scheme:dark;--bg:#121216;--white:#1d1d23;--ink:#ececf0;--gray:#a4a4b0;--gray-light:#80808c;--border:#34343c;--red-light:#3a2226;--shadow:0 1px 3px rgba(0,0,0,.5);--shadow-hover:0 4px 18px rgba(0,0,0,.6)}
+html[data-theme=dark] body{background:#121216;color:#ececf0}
+html[data-theme=dark] img{filter:brightness(.92)}
+html[data-theme=dark] input,html[data-theme=dark] select,html[data-theme=dark] textarea{background:#1d1d23;color:#ececf0;border-color:#34343c}
+html[data-theme=dark] .tabbar,html[data-theme=dark] nav{background:rgba(29,29,35,.92)}
+html[data-theme=dark] button:hover{background:#1d1d23}
+html[data-theme=dark] .seats button{border:1.5px solid #4a4a54}
+html[data-theme=dark] .seats .booked,html[data-theme=dark] .seats .locked{background:#33333b;border-color:#3c3c45}
+html[data-theme=dark] .notice{background:#3a3220}
+html[data-theme=dark] .bk-status.ok{background:#1f3327}
+html[data-theme=dark] .bk-status.bad{background:#3a2226}
+html[data-theme=dark] .bk-status.wait{background:#3a3220}
+html[data-theme=dark] .pf-avatar{background:#1d1d23}
+html[data-theme=dark] .pf-pill.ok{background:#1f3327}
+html[data-theme=dark] .pf-pill.bad{background:#3a2226}
+html[data-theme=dark] .pf-pill.wait{background:#3a3220}
+html[data-theme=dark] .slot-legend .lg.ok{background:#1f3327}
+html[data-theme=dark] .slot-legend .lg.fast{background:#3a3220}
+html[data-theme=dark] .slot-legend .lg.full{border-color:#4a4a54;background:#2c2c34}
+html[data-theme=dark] .time-slot.full,html[data-theme=dark] .time-slot.full:hover{border-color:#3c3c45}
+html[data-theme=dark] .seat-map button.available:hover{background:#1f3327}
+html[data-theme=dark] .seat-map button.booked,html[data-theme=dark] .seat-map button.booked:hover,html[data-theme=dark] .seat-map button.locked,html[data-theme=dark] .seat-map button.locked:hover{background:#33333b;border-color:#3c3c45}
+html[data-theme=dark] .seat-legend .lg.available{background:#1d1d23}
+html[data-theme=dark] .seat-legend .lg.booked{border-color:#3c3c45;background:#33333b}
+html[data-theme=dark] .visited-tag{background:#272a3d}
+html[data-theme=dark] .qty-grid button{border:1.5px solid #4a4a54}
+html[data-theme=dark] .mv-tags span{color:#dcdce4}
+html[data-theme=dark] img.cast-photo{background:#2c2c34}
+html[data-theme=dark] /* ---------- Payment countdown,html[data-theme=dark] more-movies row ---------- */
+.hold-timer{background:#3a3220}
+html[data-theme=dark] .hold-timer.low{background:#3a2226}
+html[data-theme=dark] .tb-text{color:#ececf0}
+html[data-theme=dark] .ci-tags span{color:#dcdce4}
+html[data-theme=dark] .offer-chip,html[data-theme=dark] .offer-chip:hover{background:#1b2a21}
+html[data-theme=dark] .book-back{background:#1d1d23}
+html[data-theme=dark] /* ---------- BMS-style seat page ---------- */
+.bms-head{background:#1d1d23}
+html[data-theme=dark] .bms-head-row{background:#26262d}
+html[data-theme=dark] .bms-times{background:#26262d}
+html[data-theme=dark] .bms-time,html[data-theme=dark] .bms-time:hover{background:#1d1d23;color:#c4c4cf}
+html[data-theme=dark] .bms-time small{color:#a4a4b0}
+html[data-theme=dark] .seat-map button.best.available{background:#3a3220}
+html[data-theme=dark] .seat-legend .lg.best{background:#3a3220}
+html[data-theme=dark] .sheet-mode .grab{background:#33333b}
+html[data-theme=dark] .home-person{color:#b4b4bf}
+html[data-theme=dark] .home-tabs a{color:#dcdce4}
+html[data-theme=dark] .home-tabs a svg{color:#c4c4cf}
+html[data-theme=dark] .pc-img{background:#33333b}
+html[data-theme=dark] .tabbar a{color:#dcdce4}
+html[data-theme=dark] .tabbar a.on{background:#2c2c34}
+html[data-theme=dark] .sp-bar{background:#2c2c34}
+html[data-theme=dark] .sp-bar button{color:#ececf0}
+html[data-theme=dark] .city-page{background:#1d1d23}
+html[data-theme=dark] .cp-back{color:#ececf0}
+html[data-theme=dark] .cp-h{background:#26262d;color:#a4a4b0}
+html[data-theme=dark] .cp-grid button{background:#1d1d23;color:#b4b4bf}
+html[data-theme=dark] .cp-grid button span{color:#ececf0}
+html[data-theme=dark] .cp-list li button{color:#ececf0}
+html[data-theme=dark] .cp-empty-cell{background:#1d1d23}
+html[data-theme=dark] .loc-sheet{background:#1d1d23}
+html[data-theme=dark] .loc-sheet .grab{background:#33333b}
+html[data-theme=dark] .loc-ic{background:#3a2226}
+html[data-theme=dark] .mv-back{background:#1d1d23}
+html[data-theme=dark] .no-cinemas{background:#1d1d23}
+html[data-theme=dark] .ml-top button,html[data-theme=dark] .ml-top>a{color:#ececf0}
+html[data-theme=dark] .ml-chips button{background:#1d1d23}
+html[data-theme=dark] .ml-chips .ml-filter.on{background:#3a2226}
+html[data-theme=dark] .ml-card img{background:#33333b}
+html[data-theme=dark] .ml-pill{color:#b4b4bf}
+html[data-theme=dark] .mv-bar button{color:#ececf0}
+html[data-theme=dark] .mv-desc{color:#b4b4bf}
+html[data-theme=dark] .mv-offer{background:#3a3220}
+html[data-theme=dark] .lf-sheet .grab{background:#33333b}
+html[data-theme=dark] .lf-movie{color:#dcdce4}
+html[data-theme=dark] .lf-lang{background:#26262d;color:#b4b4bf}
+html[data-theme=dark] .lf-chips button{background:#1d1d23}
+html[data-theme=dark] /* ---------- Showtimes page (BMS style) ---------- */
+.book-head{background:#1d1d23}
+html[data-theme=dark] .book-head small{color:#ececf0}
+html[data-theme=dark] .movie-page .date-strip{background:#1d1d23}
+html[data-theme=dark] .movie-page .date-pill{background:#1d1d23;color:#a4a4b0}
+html[data-theme=dark] .movie-page .date-pill b{color:#ececf0}
+html[data-theme=dark] .lf-row{background:#1d1d23}
+html[data-theme=dark] .movie-page .mv-toolbar{background:#1d1d23}
+html[data-theme=dark] .movie-page .mv-tool,html[data-theme=dark] .movie-page .mv-tool:hover{background:#1d1d23}
+html[data-theme=dark] .th-logo{background:#1d1d23}
+html[data-theme=dark] .cine-search{background:#1d1d23}
+html[data-theme=dark] .movie-page .mv-tool.on,html[data-theme=dark] .movie-page .mv-tool.on:hover{background:#3a2226}
+html[data-theme=dark] /* flat cinema list like BMS */
+.movie-page .theatre-block{background:#1d1d23}
+html[data-theme=dark] .time-slot{color:#c4c4cf;background:#1d1d23}
+html[data-theme=dark] .time-slot.ok,html[data-theme=dark] .time-slot.fast{color:#c4c4cf}
+html[data-theme=dark] .time-slot small{color:#9a9aa6}
+html[data-theme=dark] .slot-hint{background:#1d1d23;color:#c4c4cf}
+html[data-theme=dark] .slot-hint button{color:#dcdce4}
+html[data-theme=dark] /* ---------- Extra BMS features: ticket QR,html[data-theme=dark] recent searches,html[data-theme=dark] resume card ---------- */
+.tk-sheet{background:#1d1d23}
+html[data-theme=dark] .sp-recent button{background:#1d1d23;color:#dcdce4}
+html[data-theme=dark] .rc-head button{color:#b4b4bf}
+html[data-theme=dark] .home-bell{color:#dcdce4}
+html[data-theme=dark] .nt-item{background:#1d1d23}
+html[data-theme=dark] .nt-item i{background:#3a2226}
+html[data-theme=dark] .nt-item.cancelled i{background:#2c2c34}
+html[data-theme=dark] .of-card{background:#1b2a21}
+html[data-theme=dark] .of-card p{color:#c4c4cf}
+html[data-theme=dark] .of-card button{background:#1d1d23}
+html[data-theme=dark] .hp-item{border-bottom:1px solid #34343c}
+html[data-theme=dark] .hp-item p{color:#b4b4bf}
+html[data-theme=dark] .pf-menu a{border-bottom:1px solid #34343c}
+html[data-theme=dark] .food-row{border-bottom:1px solid #34343c}
+html[data-theme=dark] .food-row small{color:#9a9aa6}
+html[data-theme=dark] .food-add,html[data-theme=dark] .food-step{background:#1d1d23}
+html[data-theme=dark] .bk-food{color:#a4a4b0}
+html[data-theme=dark] .wl-chips button,html[data-theme=dark] .wl-custom button{background:#1d1d23}
+html[data-theme=dark] .wl-note{color:#9a9aa6}
+html[data-theme=dark] .wl-tx{border-bottom:1px solid #34343c}
+html[data-theme=dark] .wl-tx small{color:#9a9aa6}
+html[data-theme=dark] .wallet-pay{border:1px solid #3c3c45}
+html[data-theme=dark] .ic-text b{color:#ececf0}
+html[data-theme=dark] .ic-text small{color:#c4c4cf}
+html[data-theme=dark] .interest-card button{background:#1d1d23}
+html[data-theme=dark] .auth-brand b{color:#ececf0}
+html[data-theme=dark] .auth-links{color:#b4b4bf}
+html[data-theme=dark] .one-tap small{color:#a4a4b0}
+html[data-theme=dark] .save-note{color:#b4b4bf}
+html[data-theme=dark] .ghost-btn,html[data-theme=dark] .auth .ghost-btn{color:#a4a4b0}
+html[data-theme=dark] .pf-menu em{background:#26262d}
+html[data-theme=dark] .hero-card em{background:#1d1d23}
+html[data-theme=dark] /* ---------- Sticky book bar (proper placement) ---------- */
+.sticky-book{background:#1d1d23}
+html[data-theme=dark] .quick-row a{color:#dcdce4}
+html[data-theme=dark] .quick-row span{background:#1d1d23}
+html[data-theme=dark] .offer-banner em{background:#1d1d23}
+html[data-theme=dark] .ml-likes{color:#ececf0}
+html[data-theme=dark] .cin-search{border:1px solid #3c3c45;background:#1d1d23}
+html[data-theme=dark] .cin-card{background:#1d1d23}
+html[data-theme=dark] .cin-type{color:#b4b4bf}
+html[data-theme=dark] .cin-type.mx{background:#3a2226}
+html[data-theme=dark] /* ---------- Waitlist card ---------- */
+.wait-card{background:#3a3220}
+html[data-theme=dark] .wait-card p{color:#b4b4bf}
+html[data-theme=dark] .wait-qty button{background:#1d1d23}
+html[data-theme=dark] .nt-item.seats i,html[data-theme=dark] .nt-item.release i{background:#3a2226}
+html[data-theme=dark] .an-range button{background:#1d1d23}
+html[data-theme=dark] .an-kpi{background:#1d1d23}
+html[data-theme=dark] .an-kpi small{color:#9a9aa6}
+html[data-theme=dark] /* Book tickets bar: exactly like the real app - full-width red button on the page background,html[data-theme=dark] snug to the bottom edge */
+.sticky-book{background:#26262d}
+html[data-theme=dark] .an-health p{color:#b4b4bf}
+html[data-theme=dark] .sp-rank-item{background:#1d1d23}
+html[data-theme=dark] .sp-rank-item img{background:#2c2c34}
+html[data-theme=dark] .sp-rank-item i{background:#3a2226}
+html[data-theme=dark] .bk-food{color:#b4b4bf;background:#3a3220}
+html[data-theme=dark] .auth-perks li{background:#1d1d23;color:#c4c4cf}
+html[data-theme=dark] /* ---------- Tab bar: labels never fade out,html[data-theme=dark] one pill slides between tabs; swipe follows the finger ---------- */
+.tabbar{background:#1d1d23}
+html[data-theme=dark] .tab-pill{background:#2c2c34}
+html[data-theme=dark] .seat-tools button,html[data-theme=dark] .seat-tools button:hover{background:#1d1d23}
+html[data-theme=dark] .seat-tools .st-heat{color:#b4b4bf}
+html[data-theme=dark] .pn-top em{color:#9a9aa6}
+html[data-theme=dark] .pn-score{background:#2c2c34}
+html[data-theme=dark] .pick-note ul{color:#c4c4cf}
+html[data-theme=dark] .pn-alts small{color:#9a9aa6}
+html[data-theme=dark] .pn-alts button,html[data-theme=dark] .pn-alts button:hover{background:#1d1d23;color:#dcdce4}
+html[data-theme=dark] .seat-map.heat button.available,html[data-theme=dark] .seat-map.heat button.available:hover{color:#dcdce4}
+html[data-theme=dark] .heat-legend small{color:#9a9aa6}
+html[data-theme=dark] .mbn-error{background:#3a2226}
+html[data-theme=dark] .mbn-error small{color:#b4b4bf}
+html[data-theme=dark] .mbn-preview{border-top:1px solid #34343c}
+html[data-theme=dark] .mbn-when{color:#c4c4cf}
+html[data-theme=dark] .mbn-overview{color:#c4c4cf}
+html[data-theme=dark] .mbn-crew{color:#b4b4bf}
+html[data-theme=dark] .mbn-row{border-top:1px solid #34343c}
+html[data-theme=dark] .mbn-sugg button{border:1px solid #3c3c45;background:#1d1d23}
+html[data-theme=dark] .tk-actions button,html[data-theme=dark] .tk-actions button:hover{background:#1d1d23}
+html[data-theme=dark] .ptr{background:#1d1d23}
+
+.pf-menu i.pf-switch{width:42px;height:24px;border-radius:12px;background:#cfcfd6;position:relative;transition:background .2s;flex:none}
+.pf-menu i.pf-switch b{position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .2s}
+.pf-menu i.pf-switch.on{background:var(--red)}
+.pf-menu i.pf-switch.on b{transform:translateX(18px)}
