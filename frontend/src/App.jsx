@@ -22,6 +22,7 @@ const Wallet = lazy(() => import("./pages/Wallet"));
 const Forgot = lazy(() => import("./pages/Forgot"));
 import UpdateBanner from "./components/UpdateBanner";
 import NativeBack from "./components/NativeBack";
+import PullRefresh from "./components/PullRefresh";
 import { IcTarget, IcHome, IcSearch, IcTicket, IcUser } from "./components/Icons";
 import { seedHomeBelow, tabStack } from "./nav";
 import { alreadyAsked, detectCity, markAsked, setCity } from "./location";
@@ -389,6 +390,7 @@ export default function App() {
     <>
       <UpdateBanner />
       <NativeBack />
+      <PullRefresh />
       <div className="pager-cur">
         <Nav />
         <main key={pathname} className="page-in">

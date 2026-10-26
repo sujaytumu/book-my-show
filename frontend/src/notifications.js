@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { api, currentUser } from "./api";
 
 const SEEN = "bms_notif_seen";
+const CLEARED = "bms_notif_cleared";
 const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 function when(b) {
@@ -83,7 +84,23 @@ export function useNotifications() {
     window.addEventListener("bms-notif-seen", sync);
     return () => window.removeEventListener("bms-notif-seen", sync);
   }, []);
-  const unread = list.filter((n) => n.at > seen).length;
+  const [cleared, setCleared] = useState(() => {
+    try {
+      return Number(localStorage.getItem(CLEARED) || 0);
+    } catch {
+      return 0;
+    }
+  });
+  function clearAll() {
+    const t = Date.now();
+    try {
+      localStorage.setItem(CLEARED, String(t));
+    } catch {}
+    setCleared(t);
+    markSeen();
+  }
+  const visible = list.filter((n) => n.at > cleared);
+  const unread = visible.filter((n) => n.at > seen).length;
   function markSeen() {
     const t = Date.now();
     try {
@@ -92,5 +109,5 @@ export function useNotifications() {
     setSeen(t);
     window.dispatchEvent(new Event("bms-notif-seen"));
   }
-  return { list, unread, markSeen };
+  return { list: visible, unread, markSeen, clearAll };
 }
