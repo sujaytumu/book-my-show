@@ -28,10 +28,17 @@ public class CatalogController {
 
     @GetMapping("/api/movies")
     public List<Map<String, Object>> movies(@RequestParam(required = false) String q) {
-        if (q == null || q.isBlank()) {
-            return db.queryForList("select m.*,(coalesce(m.votes_base,0) + (select count(*) from reviews r where r.movie_id=m.id)) votes from movies m where m.active=true order by m.title");
+        String base = "select m.*,coalesce(m.votes_base,0) + coalesce(rv.c,0) votes from movies m " +
+                "left join (select movie_id,count(*) c from reviews group by movie_id) rv on rv.movie_id=m.id where m.active=true ";
+        List<Map<String, Object>> rows = (q == null || q.isBlank())
+                ? db.queryForList(base + "order by m.title")
+                : db.queryForList(base + "and m.title ilike ? order by m.title", "%" + q + "%");
+        // The list never shows cast and crew (the movie page loads it on its own); it is the heaviest column, so leave it out.
+        for (Map<String, Object> r : rows) {
+            Object cast = r.remove("cast_crew");
+            r.put("has_cast", cast != null && !String.valueOf(cast).isBlank());
         }
-        return db.queryForList("select m.*,(coalesce(m.votes_base,0) + (select count(*) from reviews r where r.movie_id=m.id)) votes from movies m where m.active=true and m.title ilike ? order by m.title", "%" + q + "%");
+        return rows;
     }
 
     @GetMapping("/api/movies/{id}")
@@ -82,14 +89,17 @@ public class CatalogController {
         String sql = "select sh.*,t.id theatre_id,t.theatre_type,t.cancellable,t.name theatre_name,t.address theatre_address,t.latitude,t.longitude," +
                 
                 "s.name screen_name," +
-                "(select count(*) from show_seats ss where ss.show_id=sh.id) total_seats," +
-                "(select count(*) from show_seats ss where ss.show_id=sh.id and ss.status='AVAILABLE') available_seats " +
+                "coalesce(c.total_seats,0) total_seats,coalesce(c.available_seats,0) available_seats " +
                 "from shows sh " +
+                // one pass over this movie's seats instead of two subqueries per show row
+                "left join (select show_id,count(*) total_seats,count(*) filter (where status='AVAILABLE') available_seats " +
+                "from show_seats where show_id in (select id from shows where movie_id=?) group by show_id) c on c.show_id=sh.id " +
 
                 "join screens s on s.id=sh.screen_id join theatres t on t.id=s.theatre_id " +
                 "where sh.movie_id=? and t.active=true and sh.show_date>=(now() at time zone 'Asia/Kolkata')::date " +
                 "and (sh.show_date + sh.start_time) > (now() at time zone 'Asia/Kolkata') ";
         java.util.List<Object> args = new java.util.ArrayList<>();
+        args.add(movieId);
         args.add(movieId);
         // Optional city filter (the city picked in the app); no city = every cinema, as before.
         if (city != null && !city.isBlank()) {
