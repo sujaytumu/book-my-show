@@ -199,7 +199,8 @@ const FIELDS = [
   ["release_date", "release date"],
   ["cast_crew", "cast & crew"],
 ];
-const missingOf = (m) => FIELDS.filter(([k]) => m[k] == null || String(m[k]).trim() === "").map(([, label]) => label);
+const missingOf = (m) =>
+  FIELDS.filter(([k]) => (k === "cast_crew" ? m.has_cast === false : m[k] == null || String(m[k]).trim() === "")).map(([, label]) => label);
 
 export function NeedsDetails({ movies, onChange }) {
   const [state, setState] = useState({}); // id -> { busy, note, suggestions }
