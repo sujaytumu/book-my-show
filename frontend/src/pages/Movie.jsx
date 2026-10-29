@@ -1,4 +1,5 @@
 // import { useEffect, useMemo, useState } from "react";
+import { thumb } from "../img";
 import { goBack } from "../nav";
 // import { Link, useNavigate, useParams } from "react-router-dom";
 // import { api } from "../api";
@@ -298,7 +299,7 @@ function MoreMovies({ currentId, upcoming }) {
       <div className="more-row">
         {list.map((m) => (
           <Link className="more-card" to={"/movie/" + m.id} key={m.id}>
-            <img src={m.poster_url} alt={m.title} loading="lazy" />
+            <img src={thumb(m.poster_url)} alt={m.title} loading="lazy" />
             <b>{m.title}</b>
             {!m.upcoming && Number(m.rating) > 0 && <small>★ {m.rating}</small>}
           </Link>
