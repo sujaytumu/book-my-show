@@ -10,17 +10,6 @@
 
 //   useEffect(load, []);
 
-  // Just paid? Confetti, and open the new ticket.
-  const [openId, setOpenId] = useState(null);
-  const celebrate = useRef(takeCelebrate());
-  useEffect(() => {
-    if (!celebrate.current || !loaded || bookings.length === 0) return;
-    celebrate.current = false;
-    const newest = bookings.filter((b) => bucketOf(b) === "upcoming").sort((a, b) => b.id - a.id)[0];
-    if (newest) setOpenId(newest.id);
-    confetti();
-  }, [loaded, bookings]);
-
 //   async function cancel(id) {
 //     try {
 //       await api.post("/bookings/" + id + "/cancel");
@@ -83,7 +72,7 @@
 import { useEffect, useRef, useState } from "react";
 import { confetti, takeCelebrate } from "../confetti";
 import { Link } from "react-router-dom";
-import { api } from "../api";
+import { api, currentUser } from "../api";
 import { SplitBill, TripChip } from "../components/TicketExtras";
 
 // .ics file so the show lands in the phone's calendar (times are India time).
@@ -227,6 +216,17 @@ export default function Bookings() {
   }
 
   useEffect(load, []);
+
+  // Just paid? Confetti, and open the new ticket.
+  const [openId, setOpenId] = useState(null);
+  const celebrate = useRef(takeCelebrate());
+  useEffect(() => {
+    if (!celebrate.current || !loaded || bookings.length === 0) return;
+    celebrate.current = false;
+    const newest = bookings.filter((b) => bucketOf(b) === "upcoming").sort((a, b) => b.id - a.id)[0];
+    if (newest) setOpenId(newest.id);
+    confetti();
+  }, [loaded, bookings]);
 
   // Posters come from the existing movie list (matched by title) - no backend change needed.
   useEffect(() => {
