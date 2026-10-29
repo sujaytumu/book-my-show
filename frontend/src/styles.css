@@ -1667,3 +1667,4 @@ html[data-theme=dark] .ptr{background:#171717}
 .split-go a,.split-go button{flex:1;text-align:center;padding:11px;border-radius:10px;font-weight:800;font-size:13px;text-decoration:none;text-transform:none;letter-spacing:0}
 .split-go a{background:#1ea83c;color:#fff}
 .split-go button{background:#fff;color:#333;border:1.5px solid #d4d4dc}
+.pay-note{margin:0 0 10px;padding:10px 12px;border-radius:10px;background:#eef4ff;color:#1d4ed8;font-weight:700;font-size:13px}
