@@ -10,6 +10,17 @@
 
 //   useEffect(load, []);
 
+  // Just paid? Confetti, and open the new ticket.
+  const [openId, setOpenId] = useState(null);
+  const celebrate = useRef(takeCelebrate());
+  useEffect(() => {
+    if (!celebrate.current || !loaded || bookings.length === 0) return;
+    celebrate.current = false;
+    const newest = bookings.filter((b) => bucketOf(b) === "upcoming").sort((a, b) => b.id - a.id)[0];
+    if (newest) setOpenId(newest.id);
+    confetti();
+  }, [loaded, bookings]);
+
 //   async function cancel(id) {
 //     try {
 //       await api.post("/bookings/" + id + "/cancel");
@@ -69,7 +80,8 @@
 // }
 
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { confetti, takeCelebrate } from "../confetti";
 import { Link } from "react-router-dom";
 import { api } from "../api";
 
@@ -258,6 +270,9 @@ export default function Bookings() {
     counts[bucketOf(b)] += 1;
   });
   const visible = bookings.filter((b) => bucketOf(b) === tab);
+  // Wallet-style stack: with 2+ upcoming tickets only one is open, the others tuck underneath as slim strips.
+  const stacked = tab === "upcoming" && visible.length >= 2;
+  const openKey = stacked ? (visible.some((b) => b.id === openId) ? openId : visible[0].id) : null;
 
   return (
     <>
@@ -291,7 +306,11 @@ export default function Bookings() {
         const poster = posters[b.title];
         const seatCount = String(b.seats).split(",").filter((s) => s.trim()).length;
         return (
-          <div className={"bk-card" + (bucket === "upcoming" ? "" : " dim")} key={b.id}>
+          <div
+            className={"bk-card" + (bucket === "upcoming" ? "" : " dim") + (stacked ? (b.id === openKey ? " open" : " tucked") : "")}
+            key={b.id}
+            onClick={stacked && b.id !== openKey ? () => setOpenId(b.id) : undefined}
+          >
             <div className="bk-main">
               {poster ? (
                 <img loading="lazy" decoding="async" className="bk-poster" src={poster} alt={b.title} />

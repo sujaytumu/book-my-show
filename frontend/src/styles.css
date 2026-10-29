@@ -1640,3 +1640,11 @@ html[data-theme=dark] .ptr{background:#171717}
 .plan-show i{font-style:normal;color:var(--red);font-weight:800;font-size:13px}
 
 .qty-modal{will-change:transform}
+
+/* Wallet-style ticket stack */
+.bk-card.open,.bk-card.tucked{transition:max-height .38s cubic-bezier(.2,.8,.2,1),transform .3s,box-shadow .3s}
+.bk-card.open{max-height:1100px}
+.bk-card.tucked{max-height:104px;cursor:pointer;transform:scale(.97);margin-bottom:-4px;box-shadow:0 -2px 10px rgba(0,0,0,.1)}
+.bk-card.tucked:nth-of-type(odd){transform:scale(.955)}
+.bk-card.tucked .bk-foot,.bk-card.tucked .bk-divider,.bk-card.tucked .bk-food{display:none}
+.bk-card.tucked .bk-when{opacity:.9}
