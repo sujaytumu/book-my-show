@@ -286,6 +286,7 @@ import { watchShowSeats } from "../liveSeats";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
+import { sheetDrag } from "../components/sheetDrag";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
 import { api, currentUser } from "../api";
@@ -1050,7 +1051,7 @@ export default function Show() {
 
           {qtyOpen && (
             <div className="qty-overlay sheet-mode" onClick={() => setQtyOpen(false)}>
-              <div className="qty-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="qty-modal" onClick={(e) => e.stopPropagation()} {...sheetDrag(() => setQtyOpen(false))}>
                 <i className="grab" />
                 <h2>How many seats?</h2>
                 <div className="qty-grid">

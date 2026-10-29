@@ -133,6 +133,52 @@ public class CatalogController {
         }
     }
 
+    /** Back-to-back showtimes at one cinema for 2-4 movies on one day, with comfortable gaps. */
+    @GetMapping("/api/plan")
+    public Map<String, Object> plan(@RequestParam String movieIds, @RequestParam(required = false) String date,
+                                    @RequestParam(required = false) String city) {
+        List<Long> ids = java.util.Arrays.stream(movieIds.split(",")).map(String::trim).filter(x -> !x.isEmpty())
+                .map(Long::valueOf).distinct().limit(5).toList();
+        java.time.LocalDateTime now = java.time.LocalDateTime.now(java.time.ZoneId.of("Asia/Kolkata"));
+        LocalDate day = (date == null || date.isBlank()) ? now.toLocalDate() : LocalDate.parse(date);
+        String sql = "select sh.id,sh.movie_id,sh.start_time,sh.end_time,sh.price,sh.format,m.title movie_title,m.poster_url," +
+                "t.id theatre_id,t.name theatre_name from shows sh join movies m on m.id=sh.movie_id " +
+                "join screens s on s.id=sh.screen_id join theatres t on t.id=s.theatre_id " +
+                "where sh.movie_id in (" + String.join(",", java.util.Collections.nCopies(ids.size(), "?")) + ") and sh.show_date=? and t.active=true " +
+                "and (sh.show_date + sh.start_time) > (now() at time zone 'Asia/Kolkata') ";
+        List<Object> args = new java.util.ArrayList<>();
+        args.addAll(ids);
+        args.add(java.sql.Date.valueOf(day));
+        if (city != null && !city.isBlank()) {
+            sql += "and exists(select 1 from cities c where c.id=t.city_id and lower(c.name)=lower(?)) ";
+            args.add(city.trim());
+        }
+        List<Map<String, Object>> rows = db.queryForList(sql + "order by sh.start_time", args.toArray());
+        Map<Long, Map<String, Object>> byId = new java.util.HashMap<>();
+        List<com.sujaytumu.bms.service.PlanMyDay.Slot> slots = new java.util.ArrayList<>();
+        for (Map<String, Object> r : rows) {
+            long id = ((Number) r.get("id")).longValue();
+            byId.put(id, r);
+            slots.add(new com.sujaytumu.bms.service.PlanMyDay.Slot(id, ((Number) r.get("movie_id")).longValue(),
+                    ((Number) r.get("theatre_id")).longValue(), ((java.sql.Time) r.get("start_time")).toLocalTime(),
+                    ((java.sql.Time) r.get("end_time")).toLocalTime()));
+        }
+        var plans = com.sujaytumu.bms.service.PlanMyDay.plan(slots, ids, 15, 150, 6);
+        List<Map<String, Object>> out = new java.util.ArrayList<>();
+        for (var p : plans) {
+            List<Map<String, Object>> shows = new java.util.ArrayList<>();
+            for (var sl : p.slots()) shows.add(byId.get(sl.id()));
+            Map<String, Object> m = new java.util.LinkedHashMap<>();
+            m.put("theatre_id", p.theatreId());
+            m.put("theatre_name", shows.get(0).get("theatre_name"));
+            m.put("gap_minutes", p.gapMinutes());
+            m.put("ends_at_minutes", p.endMinutes());
+            m.put("shows", shows);
+            out.add(m);
+        }
+        return Map.of("date", day.toString(), "plans", out);
+    }
+
     @GetMapping("/api/shows/{id}")
     public Map<String, Object> show(@PathVariable long id) {
         Map<String, Object> show = db.queryForMap(
