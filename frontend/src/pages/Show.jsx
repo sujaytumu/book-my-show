@@ -355,6 +355,54 @@ function fmtTime12(t) {
   return String(h % 12 || 12).padStart(2, "0") + ":" + mm + " " + (h < 12 ? "AM" : "PM");
 }
 
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+// Network drops, cold starts and gateway hiccups are worth retrying; a clear "no" from the server is not.
+const transient = (e) => !e.response || e.response.status >= 500 || e.response.status === 429 || e.response.status === 408;
+
+async function createOrderWithRetry(bookingId) {
+  for (let i = 0; ; i++) {
+    try {
+      return await api.post("/payments/create-order/" + bookingId);
+    } catch (e) {
+      if (i >= 2 || !transient(e)) throw e;
+      await sleep(1500 * (i + 1));
+    }
+  }
+}
+
+async function bookingConfirmed(id) {
+  try {
+    const r = await api.get("/bookings/me");
+    const b = r.data.find((x) => x.id === id);
+    return !!b && b.status === "CONFIRMED";
+  } catch {
+    return false;
+  }
+}
+
+// Confirms a payment with the server, retrying blips. If the server still cannot be reached, the money has been
+// taken, so wait for the gateway's own confirmation to land (up to about a minute) instead of failing.
+async function confirmPayment(bookingId, response) {
+  for (let i = 0; i < 4; i++) {
+    try {
+      await api.post("/payments/verify", {
+        razorpayOrderId: response.razorpay_order_id,
+        razorpayPaymentId: response.razorpay_payment_id,
+        razorpaySignature: response.razorpay_signature,
+      });
+      return "confirmed";
+    } catch (e) {
+      if (!transient(e)) throw e;
+      await sleep(1500 * (i + 1));
+    }
+  }
+  for (let i = 0; i < 12; i++) {
+    if (await bookingConfirmed(bookingId)) return "confirmed";
+    await sleep(4000);
+  }
+  return "pending";
+}
+
 export default function Show() {
 
   const { id } = useParams();
@@ -415,6 +463,7 @@ export default function Show() {
   const [foodQty, setFoodQty] = useState({}); // { itemId: qty }
   const [walletBal, setWalletBal] = useState(null); // wallet balance, loaded when the review sheet opens
   const [useWallet, setUseWallet] = useState(false);
+  const [payNote, setPayNote] = useState("");
   const [secsLeft, setSecsLeft] = useState(null); // countdown while the seats are held for payment
 
 
@@ -887,13 +936,32 @@ export default function Show() {
 
 
 
-      const order = await api.post("/payments/create-order/" + hold.bookingId);
+      const order = await createOrderWithRetry(hold.bookingId);
 
       await loadRazorpayScript();
 
+      let finished = false;
+      const complete = (confirmed) => {
+        if (finished) return;
+        finished = true;
+        document.removeEventListener("visibilitychange", onVisible);
+        setPayNote("");
+        if (confirmed) {
+          openTicketInNewTab(hold.bookingId);
+          markCelebrate();
+        }
+        finishTo(navigate, "/bookings");
+      };
+      // Paying in a UPI app takes the user out of this app. When they come back, the checkout callback may never
+      // arrive, so look at the booking: the gateway's own confirmation (webhook) has usually confirmed it by then.
+      async function onVisible() {
+        if (document.visibilityState !== "visible" || finished) return;
+        await sleep(2500);
+        if (!finished && (await bookingConfirmed(hold.bookingId))) complete(true);
+      }
+      document.addEventListener("visibilitychange", onVisible);
 
-
-      new window.Razorpay({
+      const rzp = new window.Razorpay({
 
         key: order.data.keyId,
 
@@ -907,26 +975,36 @@ export default function Show() {
 
         prefill: { email: contactEmail, contact: contactPhone },
 
-        handler: async (response) => {
+        retry: { enabled: true, max_count: 4 },
 
-          await api.post("/payments/verify", {
-
-            razorpayOrderId: response.razorpay_order_id,
-
-            razorpayPaymentId: response.razorpay_payment_id,
-
-            razorpaySignature: response.razorpay_signature,
-
-          });
-
-          openTicketInNewTab(hold.bookingId);
-
-          markCelebrate();
-          finishTo(navigate, "/bookings");
-
+        modal: {
+          ondismiss: async () => {
+            if (finished) return;
+            document.removeEventListener("visibilitychange", onVisible);
+            if (await bookingConfirmed(hold.bookingId)) complete(true);
+          },
         },
 
-      }).open();
+        handler: async (response) => {
+          setPayNote("Payment received. Confirming your booking...");
+          try {
+            const outcome = await confirmPayment(hold.bookingId, response);
+            if (outcome === "pending") {
+              alert("Your payment went through. Your ticket is being confirmed and will show in My Bookings in a moment.");
+            }
+            complete(outcome === "confirmed");
+          } catch (err) {
+            setPayNote("");
+            alert(err.response?.data?.message || "We could not confirm the payment. If money was deducted, your ticket will appear in My Bookings or the amount will be refunded to your wallet.");
+            complete(false);
+          }
+        },
+
+      });
+      rzp.on("payment.failed", (resp) => {
+        setPayNote((resp && resp.error && resp.error.description) || "The payment failed. You can try again.");
+      });
+      rzp.open();
 
     } catch (err) {
 
@@ -1352,6 +1430,7 @@ export default function Show() {
 
           <h2>Confirm booking</h2>
 
+          {payNote && <p className="pay-note">{payNote}</p>}
           {secsLeft != null && (
             <div className={"hold-timer ring" + (secsLeft <= 60 ? " low" : "")}>
               <svg viewBox="0 0 44 44" width="46" height="46" aria-hidden="true">
