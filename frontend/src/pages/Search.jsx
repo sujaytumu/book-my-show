@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { thumb } from "../img";
 import { goBack } from "../nav";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api";
@@ -82,7 +83,7 @@ export default function Search() {
           <div className="sp-grid">
             {results.map((m) => (
               <Link key={m.id} to={"/movie/" + m.id} className="sp-item" onClick={() => remember(m.title)}>
-                <img loading="lazy" decoding="async" src={m.poster_url} alt="" />
+                <img loading="lazy" decoding="async" src={thumb(m.poster_url)} alt="" />
                 <span>
                   <b>{m.title}</b>
                   <small>{m.upcoming ? "Coming Soon" : "Movies"}</small>
@@ -121,7 +122,7 @@ export default function Search() {
           <div className="sp-grid">
             {running.slice(0, 10).map((m) => (
               <Link key={m.id} to={"/movie/" + m.id} className="sp-item">
-                <img src={m.poster_url} alt="" loading="lazy" decoding="async" />
+                <img src={thumb(m.poster_url)} alt="" loading="lazy" decoding="async" />
                 <span>
                   <b>{m.title}</b>
                   <small>Movies</small>
@@ -133,7 +134,7 @@ export default function Search() {
           <div className="rec-row">
             {running.slice(0, 8).map((m) => (
               <Link key={m.id} to={"/movie/" + m.id} className="rec-big">
-                <img src={m.poster_url} alt={m.title} loading="lazy" />
+                <img src={thumb(m.poster_url)} alt={m.title} loading="lazy" />
               </Link>
             ))}
           </div>
