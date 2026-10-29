@@ -1648,3 +1648,22 @@ html[data-theme=dark] .ptr{background:#171717}
 .bk-card.tucked:nth-of-type(odd){transform:scale(.955)}
 .bk-card.tucked .bk-foot,.bk-card.tucked .bk-divider,.bk-card.tucked .bk-food{display:none}
 .bk-card.tucked .bk-when{opacity:.9}
+
+/* Trip chip + split the cost */
+.trip-chip{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:8px 14px 0;padding:8px 10px;border-radius:10px;background:#f1f6ff;color:#1d4ed8;font-size:12.5px;font-weight:700}
+.trip-chip.soon{background:#fff1e6;color:#c2410c}
+.trip-chip em{font-style:normal;font-weight:600;color:#333}
+.trip-chip button,.trip-chip a{padding:4px 10px;border-radius:99px;border:1.5px solid currentColor;background:none;color:inherit;font-size:12px;font-weight:700;letter-spacing:0;text-transform:none;text-decoration:none}
+.split{padding:0 16px 8px}
+.split-toggle{width:100%;background:#f6f6f8;color:#333;border:1.5px dashed #c9c9d3;border-radius:10px;padding:10px;text-transform:none;letter-spacing:0;font-size:13.5px}
+.split-body{margin-top:10px;padding:12px;border-radius:12px;background:#f6f6f8}
+.split-row{display:flex;align-items:center;justify-content:space-between;font-weight:700}
+.split-row div{display:flex;align-items:center;gap:12px}
+.split-row button{width:32px;height:32px;border-radius:50%;padding:0;font-size:18px;line-height:1}
+.split-amt{margin:10px 0;font-size:24px;font-weight:800}
+.split-amt small{font-size:12px;font-weight:600;color:#6b6b76}
+.split-body input{margin:0 0 10px}
+.split-go{display:flex;gap:8px}
+.split-go a,.split-go button{flex:1;text-align:center;padding:11px;border-radius:10px;font-weight:800;font-size:13px;text-decoration:none;text-transform:none;letter-spacing:0}
+.split-go a{background:#1ea83c;color:#fff}
+.split-go button{background:#fff;color:#333;border:1.5px solid #d4d4dc}
