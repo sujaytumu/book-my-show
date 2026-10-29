@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { thumb } from "../img";
 import { Link } from "react-router-dom";
 import { api } from "../api";
 import { swrGet } from "../cache";
@@ -23,7 +24,7 @@ function Poster({ movie }) {
   return (
     <Link className="poster-card" to={"/movie/" + movie.id}>
       <div className="pc-img">
-        <img src={movie.poster_url} alt={movie.title} loading="lazy" />
+        <img src={thumb(movie.poster_url)} alt={movie.title} loading="lazy" />
         {movie.upcoming && <span className="pc-rate soon">Coming Soon</span>}
         {!movie.upcoming && flagFor(movie) && <i className="pc-flag">{flagFor(movie)}</i>}
       </div>
@@ -153,7 +154,7 @@ export default function Home({ mode = "now-showing" }) {
               <div className="hero-row" ref={heroRef} onScroll={onHeroScroll}>
                 {hero.map((m) => (
                   <Link key={m.id} to={"/movie/" + m.id} className="hero-card">
-                    <img className="hc-bg" src={m.poster_url} alt="" />
+                    <img className="hc-bg" src={thumb(m.poster_url, "w185")} alt="" />
                     <img decoding="async" className="hc-poster" src={m.poster_url} alt={m.title} />
                     <div>
                       <span className="hc-tag">NOW SHOWING</span>
@@ -203,7 +204,7 @@ export default function Home({ mode = "now-showing" }) {
                 </button>
               </div>
               <div className="rc-body">
-                {last.poster_url && <img src={last.poster_url} alt="" />}
+                {last.poster_url && <img src={thumb(last.poster_url)} alt="" />}
                 <div>
                   <b>{last.title}</b>
                   <small>★ {Number(last.rating || 0).toFixed(1)}</small>
@@ -267,7 +268,7 @@ export default function Home({ mode = "now-showing" }) {
                   .map((m, i) => (
                     <Link to={"/movie/" + m.id} className="trend-card" key={m.id}>
                       <span className="trend-n">{i + 1}</span>
-                      <img src={m.poster_url} alt={m.title} loading="lazy" />
+                      <img src={thumb(m.poster_url)} alt={m.title} loading="lazy" />
                     </Link>
                   ))}
               </div>

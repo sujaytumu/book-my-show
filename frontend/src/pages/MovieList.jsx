@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { thumb } from "../img";
 import { goBack } from "../nav";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api";
@@ -129,7 +130,7 @@ export default function MovieList({ upcoming = false }) {
       <div className="ml-grid">
         {list.map((m) => (
           <Link key={m.id} to={"/movie/" + m.id} className="ml-card">
-            <img src={m.poster_url} alt={m.title} loading="lazy" />
+            <img src={thumb(m.poster_url)} alt={m.title} loading="lazy" />
             {!upcoming && Number(m.rating) >= 9 && <i className="ml-promo">TOP RATED</i>}
             {upcoming ? (
               <span className="ml-pill">{m.release_date ? fmtRelease(m.release_date) : "Coming Soon"}</span>
