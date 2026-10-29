@@ -16,6 +16,7 @@ const MovieList = lazy(() => import("./pages/MovieList"));
 const City = lazy(() => import("./pages/City"));
 const Notifications = lazy(() => import("./pages/Notifications"));
 const Offers = lazy(() => import("./pages/Offers"));
+const Plan = lazy(() => import("./pages/Plan"));
 const Help = lazy(() => import("./pages/Help"));
 const Cinemas = lazy(() => import("./pages/Cinemas"));
 const Wallet = lazy(() => import("./pages/Wallet"));
@@ -301,6 +302,7 @@ function AppRoutes({ location }) {
       <Route path="/city" element={<City />} />
       <Route path="/notifications" element={<Notifications />} />
       <Route path="/offers" element={<Offers />} />
+      <Route path="/plan" element={<Plan />} />
       <Route path="/help" element={<Help />} />
       <Route path="/wallet" element={<Wallet />} />
       <Route path="/cinemas" element={<Cinemas />} />
