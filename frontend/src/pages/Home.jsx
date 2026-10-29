@@ -178,7 +178,7 @@ export default function Home({ mode = "now-showing" }) {
           )}
 
           <div className="quick-row">
-            {[["/offers", "🏷️", "Offers"], ["/wallet", "👛", "Wallet"], ["/bookings", "🎟️", "My tickets"], ["/plan", "🗓️", "Plan my day"]].map(([to, ic, label]) => (
+            {[["/offers", "🏷️", "Offers"], ["/wallet", "👛", "Wallet"], ["/bookings", "🎟️", "My tickets"], ["/plan", "🗓️", "Plan my day"], ["/help", "💬", "Help"]].map(([to, ic, label]) => (
               <Link to={to} key={to}>
                 <span>{ic}</span>
                 <small>{label}</small>
