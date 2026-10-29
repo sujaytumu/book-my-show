@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { swrGet } from "../cache";
 import { IcBack } from "../components/Icons";
+import { searchMovies, similarTo } from "../fuzzy";
 
 const RKEY = "bms_recent";
 function loadRecent() {
@@ -46,7 +47,21 @@ export default function Search() {
   const telugu = useMemo(() => movies.filter((m) => m.language === "Telugu"), [movies]);
   const running = telugu.filter((m) => !m.upcoming).sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0));
   const needle = q.trim().toLowerCase();
-  const results = needle ? telugu.filter((m) => m.title.toLowerCase().includes(needle)) : null;
+  const found = useMemo(() => (needle ? searchMovies(telugu, needle) : null), [telugu, needle]);
+  const results = found ? found.list : null;
+  // "Because you viewed X": the movie opened most recently, and films like it.
+  const because = useMemo(() => {
+    try {
+      const seen = JSON.parse(localStorage.getItem("bms_recent_movies") || "[]");
+      for (const r of seen) {
+        const seed = telugu.find((m) => m.id === r.id);
+        if (!seed) continue;
+        const list = similarTo(seed, telugu);
+        if (list.length >= 2) return { seed, list };
+      }
+    } catch {}
+    return null;
+  }, [telugu]);
 
   return (
     <div className="search-page">
@@ -79,7 +94,7 @@ export default function Search() {
         </>
       ) : results ? (
         <>
-          <h2 className="sp-h">Movies</h2>
+          <h2 className="sp-h">{found.fuzzy ? "Closest matches for \u201C" + q.trim() + "\u201D" : "Movies"}</h2>
           <div className="sp-grid">
             {results.map((m) => (
               <Link key={m.id} to={"/movie/" + m.id} className="sp-item" onClick={() => remember(m.title)}>
@@ -130,6 +145,18 @@ export default function Search() {
               </Link>
             ))}
           </div>
+          {because && (
+            <>
+              <h2 className="sp-h">Because you viewed {because.seed.title}</h2>
+              <div className="rec-row">
+                {because.list.map((m) => (
+                  <Link key={m.id} to={"/movie/" + m.id} className="rec-big">
+                    <img src={thumb(m.poster_url)} alt={m.title} loading="lazy" />
+                  </Link>
+                ))}
+              </div>
+            </>
+          )}
           <h2 className="sp-h">Recommended For You</h2>
           <div className="rec-row">
             {running.slice(0, 8).map((m) => (

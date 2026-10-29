@@ -286,6 +286,7 @@ import { watchShowSeats } from "../liveSeats";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
+import { markCelebrate } from "../confetti";
 import { sheetDrag } from "../components/sheetDrag";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
@@ -857,6 +858,7 @@ export default function Show() {
       if (useWallet) {
         await api.post("/payments/wallet-pay/" + hold.bookingId);
         openTicketInNewTab(hold.bookingId);
+        markCelebrate();
         finishTo(navigate, "/bookings");
         return;
       }
@@ -867,6 +869,7 @@ export default function Show() {
 
         openTicketInNewTab(hold.bookingId);
 
+        markCelebrate();
         finishTo(navigate, "/bookings");
 
         return;
@@ -909,6 +912,7 @@ export default function Show() {
 
           openTicketInNewTab(hold.bookingId);
 
+          markCelebrate();
           finishTo(navigate, "/bookings");
 
         },
