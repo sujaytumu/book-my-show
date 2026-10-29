@@ -29,7 +29,8 @@ public class PaymentService {
     private final JdbcTemplate db;
     private final String razorpayKeyId;
     private final String razorpaySecret;
-    private final HttpClient httpClient = HttpClient.newHttpClient();
+    // Timeouts matter: without them one slow call to the gateway can hang the request until the phone gives up.
+    private final HttpClient httpClient = HttpClient.newBuilder().connectTimeout(java.time.Duration.ofSeconds(8)).build();
 
     private final String webhookSecret;
     private final com.fasterxml.jackson.databind.ObjectMapper json = new com.fasterxml.jackson.databind.ObjectMapper();
@@ -56,17 +57,23 @@ public class PaymentService {
 
         // Retry-safe: if this booking already has an unpaid order, hand the same order back so the customer can
         // simply try the payment again (a new attempt on the same order) instead of creating duplicate orders.
-        java.util.List<String> existing = db.queryForList(
-                "select p.razorpay_order_id from payments p where p.booking_id=? and p.status in ('CREATED','FAILED') order by p.id desc limit 1",
-                String.class, bookingId);
-        if (!existing.isEmpty()) {
-            db.update("update payments set status='CREATED' where razorpay_order_id=? and status='FAILED'", existing.get(0));
+        java.util.List<Map<String, Object>> existing = db.queryForList(
+                "select p.razorpay_order_id, p.amount from payments p where p.booking_id=? and p.status in ('CREATED','FAILED') order by p.id desc limit 1",
+                bookingId);
+        // Only reuse an order for the same amount; if the total changed since, Razorpay would charge the old figure.
+        if (!existing.isEmpty() && existing.get(0).get("amount") != null
+                && Math.abs(((Number) existing.get(0).get("amount")).doubleValue() - amountRupees) < 0.005) {
+            String orderId = (String) existing.get(0).get("razorpay_order_id");
+            db.update("update payments set status='CREATED' where razorpay_order_id=? and status='FAILED'", orderId);
             return Map.of(
                     "bookingId", bookingId,
-                    "orderId", existing.get(0),
+                    "orderId", orderId,
                     "amount", amountPaise,
                     "currency", "INR",
                     "keyId", razorpayKeyId);
+        }
+        if (!existing.isEmpty()) {
+            db.update("update payments set status='CANCELLED' where booking_id=? and status in ('CREATED','FAILED')", bookingId);
         }
 
         String body = "{\"amount\":" + amountPaise + ",\"currency\":\"INR\",\"receipt\":\"" + receipt + "\"}";
@@ -76,33 +83,43 @@ public class PaymentService {
         HttpRequest request = HttpRequest.newBuilder(URI.create("https://api.razorpay.com/v1/orders"))
                 .header("Authorization", "Basic " + basicAuth)
                 .header("Content-Type", "application/json")
+                .timeout(java.time.Duration.ofSeconds(15))
                 .POST(HttpRequest.BodyPublishers.ofString(body))
                 .build();
 
-        // Up to 3 attempts with backoff for network errors and 5xx/429 from the gateway.
-        String responseJson = null;
-        Exception last = null;
-        for (int attempt = 1; attempt <= 3 && responseJson == null; attempt++) {
+        // Up to 3 attempts with backoff for network errors, timeouts and 5xx/429 from the gateway.
+        String orderId = null;
+        String last = "no answer";
+        for (int attempt = 1; attempt <= 3 && orderId == null; attempt++) {
             try {
                 HttpResponse<String> resp = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-                if (resp.statusCode() >= 500 || resp.statusCode() == 429) {
-                    last = new IllegalStateException("Razorpay returned " + resp.statusCode());
+                int code = resp.statusCode();
+                if (code >= 500 || code == 429) {
+                    last = "gateway status " + code;
                 } else {
-                    responseJson = resp.body();
+                    com.fasterxml.jackson.databind.JsonNode n = json.readTree(resp.body());
+                    if (code >= 200 && code < 300 && n.hasNonNull("id")) {
+                        orderId = n.get("id").asText();
+                    } else {
+                        // A clear "no" (bad keys, bad request): retrying will not help. Keep the reason in the server log.
+                        System.err.println("Razorpay rejected order for booking " + bookingId + ": HTTP " + code + " "
+                                + n.path("error").path("code").asText("") + " - " + n.path("error").path("description").asText(resp.body()));
+                        throw new ResponseStatusException(HttpStatus.BAD_GATEWAY,
+                                "We could not start the payment. Please try again in a moment.");
+                    }
                 }
             } catch (java.io.IOException e) {
-                last = e;
+                last = e.getClass().getSimpleName() + ": " + e.getMessage();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Payment was interrupted, please try again");
             }
-            if (responseJson == null && attempt < 3) Thread.sleep(400L * attempt);
+            if (orderId == null && attempt < 3) Thread.sleep(500L * attempt);
         }
-        if (responseJson == null) {
+        if (orderId == null) {
+            System.err.println("Razorpay order failed for booking " + bookingId + " after 3 attempts (" + last + ")");
             throw new ResponseStatusException(HttpStatus.BAD_GATEWAY,
-                    "Payment gateway is not responding, please try again" + (last == null ? "" : ""));
-        }
-
-        String orderId = responseJson.replaceAll(".*\"id\"\\s*:\\s*\"([^\"]+)\".*", "$1");
-        if (orderId.equals(responseJson)) {
-            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Razorpay order creation failed");
+                    "Payment gateway is not responding, please try again");
         }
 
         db.update("update bookings set razorpay_order_id=? where id=?", orderId, bookingId);
