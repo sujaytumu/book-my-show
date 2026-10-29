@@ -85,6 +85,7 @@ import { confetti, takeCelebrate } from "../confetti";
 import { Link } from "react-router-dom";
 import { api } from "../api";
 import { isNativeApp, shareTicketNative } from "../ticket";
+import { SplitBill, TripChip } from "../components/TicketExtras";
 
 // .ics file so the show lands in the phone's calendar (times are India time).
 function addToCalendar(b) {
@@ -152,6 +153,7 @@ function TicketModal({ b, poster, onClose }) {
           <b className="tk-id">{b.reference}</b>
           <p>Show this QR code at the cinema entrance.</p>
         </div>
+        <SplitBill b={b} />
         <div className="tk-actions">
           <button type="button" onClick={() => addToCalendar(b)}>📅 Add to calendar</button>
           <button type="button" onClick={() => shareTicket(b)}>↗ Share</button>
@@ -344,6 +346,8 @@ export default function Bookings() {
             </div>
 
             {b.food_summary && <p className="bk-food">🍿 {b.food_summary}</p>}
+
+            {b.status === "CONFIRMED" && bucket === "upcoming" && (stacked ? b.id === openKey : true) && <TripChip b={b} />}
 
             <div className="bk-divider" />
 
