@@ -58,3 +58,5 @@ alter table movies add column if not exists tmdb_id bigint;
 alter table movies add column if not exists meta_source varchar(20);
 alter table movies add column if not exists details_synced_at timestamptz;
 create unique index if not exists uq_movies_tmdb on movies(tmdb_id) where tmdb_id is not null;
+alter table movies add column if not exists trailer_key varchar(20);
+alter table bookings add column if not exists hold_extended boolean not null default false;
