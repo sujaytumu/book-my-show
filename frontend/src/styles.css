@@ -1671,3 +1671,11 @@ html[data-theme=dark] .ptr{background:#171717}
 
 .quick-row small{font-size:11.5px;text-align:center;line-height:1.15}
 .quick-row span{width:46px;height:46px}
+
+/* In-page trailer + hold extension */
+button.mv-trailer{border:0;cursor:pointer;font-family:inherit}
+.trailer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:250;display:flex;align-items:center;justify-content:center;padding:12px}
+.trailer-box{width:100%;max-width:720px;display:flex;flex-direction:column;gap:10px}
+.trailer-box iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:12px;background:#000}
+.trailer-box button{align-self:center;background:#fff;color:#222;border:0;border-radius:99px;padding:9px 26px;text-transform:none;letter-spacing:0}
+.hold-extend{width:100%;margin:0 0 10px;background:#fff7ed;color:#c2410c;border:1.5px solid #fdba74;border-radius:10px;padding:10px;text-transform:none;letter-spacing:0;font-size:13.5px}

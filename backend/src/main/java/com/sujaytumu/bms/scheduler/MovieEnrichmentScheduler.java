@@ -51,7 +51,8 @@ public class MovieEnrichmentScheduler {
                       and (poster_url is null or poster_url = '' or description is null or description = ''
                            or genre is null or genre = '' or language is null or language = ''
                            or duration_minutes is null or release_date is null
-                           or cast_crew is null or cast_crew = '')
+                           or cast_crew is null or cast_crew = ''
+                           or (tmdb_id is not null and trailer_key is null))
                       and (details_synced_at is null or details_synced_at < now() - interval '3 days')
                     order by id limit 12
                     """, Long.class);
