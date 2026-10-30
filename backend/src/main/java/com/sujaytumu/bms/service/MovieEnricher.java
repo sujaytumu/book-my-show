@@ -74,11 +74,11 @@ public class MovieEnricher {
         boolean upcoming = isFuture(d.releaseDate());
         Long id = db.queryForObject(
                 "insert into movies(title,description,poster_url,language,genre,duration_minutes,certificate,rating," +
-                        "release_date,upcoming,cast_crew,tmdb_id,meta_source,details_synced_at,active) " +
-                        "values(?,?,?,?,?,?,?,?,?,?,?,?,'tmdb',now(),true) returning id",
+                        "release_date,upcoming,cast_crew,tmdb_id,trailer_key,meta_source,details_synced_at,active) " +
+                        "values(?,?,?,?,?,?,?,?,?,?,?,?,?,'tmdb',now(),true) returning id",
                 Long.class, d.title(), d.description(), d.posterUrl(), d.language(), d.genre(), d.durationMinutes(),
                 d.certificate(), d.rating() == null ? 0 : d.rating(), d.releaseDate() == null ? null : Date.valueOf(d.releaseDate()),
-                upcoming, d.castCrewJson(), d.tmdbId());
+                upcoming, d.castCrewJson(), d.tmdbId(), d.trailerKey());
         out.put("status", "created");
         out.put("id", id);
         out.put("title", d.title());
@@ -125,7 +125,7 @@ public class MovieEnricher {
 
     private Result apply(long movieId, Details d, boolean overwrite) {
         Map<String, Object> before = db.queryForMap(
-                "select description, poster_url, language, genre, duration_minutes, certificate, rating, release_date, cast_crew " +
+                "select description, poster_url, language, genre, duration_minutes, certificate, rating, release_date, cast_crew, trailer_key " +
                         "from movies where id = ?", movieId);
         List<String> sets = new ArrayList<>();
         List<Object> args = new ArrayList<>();
@@ -138,6 +138,7 @@ public class MovieEnricher {
         put(sets, args, filled, overwrite, before.get("certificate"), "certificate", "certificate", d.certificate());
         put(sets, args, filled, overwrite, before.get("rating"), "rating", "rating", d.rating());
         put(sets, args, filled, overwrite, before.get("cast_crew"), "cast_crew", "cast & crew", d.castCrewJson());
+        put(sets, args, filled, overwrite, before.get("trailer_key"), "trailer_key", "trailer", d.trailerKey());
         boolean hadDate = !blank(before.get("release_date"));
         if (d.releaseDate() != null && (overwrite || !hadDate)) {
             sets.add("release_date = ?");

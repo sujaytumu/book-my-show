@@ -447,6 +447,7 @@ export default function Movie() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [movie, setMovie] = useState();
   const heroRef = useRef(null);
+  const [trailerOpen, setTrailerOpen] = useState(false);
   // Parallax: the hero picture drifts slower than the page as you scroll.
   useEffect(() => {
     let raf = 0;
@@ -734,6 +735,14 @@ export default function Movie() {
 
       <div className="mv-hero" ref={heroRef}>
         <img src={movie.poster_url} alt={movie.title} ref={(el) => el && landPoster(movie.id, el)} />
+        {movie.trailer_key ? (
+          <button type="button" className="mv-trailer" onClick={() => setTrailerOpen(true)}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+          Trailer
+          </button>
+        ) : (
         <a
           className="mv-trailer"
           href={"https://www.youtube.com/results?search_query=" + encodeURIComponent(movie.title + " official trailer")}
@@ -745,8 +754,22 @@ export default function Movie() {
           </svg>
           Trailer
         </a>
+        )}
         <span className="mv-strip">{movie.upcoming ? "Coming soon" : "In cinemas"}</span>
       </div>
+      {trailerOpen && movie.trailer_key && (
+        <div className="trailer-overlay" onClick={() => setTrailerOpen(false)}>
+          <div className="trailer-box" onClick={(e) => e.stopPropagation()}>
+            <iframe
+              src={"https://www.youtube-nocookie.com/embed/" + movie.trailer_key + "?autoplay=1&rel=0&playsinline=1"}
+              title={movie.title + " trailer"}
+              allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+              allowFullScreen
+            />
+            <button type="button" onClick={() => setTrailerOpen(false)}>Close</button>
+          </div>
+        </div>
+      )}
 
       <div className="mv-info">
         {!movie.upcoming && <RatingPill movieId={id} fallback={movie.rating} total={movie.votes} />}

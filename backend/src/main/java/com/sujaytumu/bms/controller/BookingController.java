@@ -57,6 +57,12 @@ public class BookingController {
         return bookingService.myBookings(auth.getName());
     }
 
+    /** One-time +5 minutes on a seat hold that is about to expire. */
+    @PostMapping("/{id}/extend-hold")
+    public Map<String, Object> extendHold(Authentication auth, @PathVariable long id) {
+        return bookingService.extendHold(auth.getName(), id);
+    }
+
     @PostMapping("/{id}/cancel")
     public Map<String, String> cancel(Authentication auth, @PathVariable long id) {
         bookingService.cancel(auth.getName(), id);
