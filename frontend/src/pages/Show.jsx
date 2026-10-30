@@ -463,6 +463,19 @@ export default function Show() {
   const [walletBal, setWalletBal] = useState(null); // wallet balance, loaded when the review sheet opens
   const [useWallet, setUseWallet] = useState(false);
   const [payNote, setPayNote] = useState("");
+  const [extending, setExtending] = useState(false);
+  async function extendHold() {
+    setExtending(true);
+    try {
+      const r = await api.post("/bookings/" + hold.bookingId + "/extend-hold");
+      setHold({ ...hold, expiresAt: r.data.expiresAt, extended: true });
+      setPayNote("Added 5 more minutes.");
+    } catch (e) {
+      setPayNote((e.response && e.response.data && e.response.data.message) || "Could not extend the hold.");
+    } finally {
+      setExtending(false);
+    }
+  }
   const [secsLeft, setSecsLeft] = useState(null); // countdown while the seats are held for payment
 
 
@@ -1439,6 +1452,11 @@ export default function Show() {
                 </b>
               </span>
             </div>
+          )}
+          {secsLeft != null && secsLeft <= 150 && !hold.extended && (
+            <button type="button" className="hold-extend" disabled={extending} onClick={extendHold}>
+              {extending ? "Adding time..." : "Need more time? Add 5 minutes"}
+            </button>
           )}
 
           <p>

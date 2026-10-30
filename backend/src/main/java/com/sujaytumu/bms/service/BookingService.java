@@ -258,6 +258,25 @@ public class BookingService {
                 razorpayOrderId, email);
     }
 
+    /**
+     * Gives the customer 5 more minutes on a seat hold that is about to run out (once per booking), e.g. while a UPI
+     * app is slow. The seats' own lock time moves with it, so nobody else can grab them in between.
+     */
+    @Transactional
+    public Map<String, Object> extendHold(String email, long bookingId) {
+        bookingForPayment(email, bookingId); // fails if this booking is not theirs
+        int changed = db.update(
+                "update bookings set expires_at = expires_at + interval '5 minutes', hold_extended = true " +
+                        "where id=? and status='PENDING' and expires_at>now() and hold_extended=false", bookingId);
+        if (changed == 0) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "The hold cannot be extended (it was already extended or has expired)");
+        }
+        db.update("update show_seats set locked_until = locked_until + interval '5 minutes' where locked_by=? and status='LOCKED'", bookingId);
+        Timestamp until = db.queryForObject("select expires_at from bookings where id=?", Timestamp.class, bookingId);
+        return Map.of("expiresAt", until.toInstant().toString());
+    }
+
     public boolean holdStillValid(long bookingId) {
         Integer count = db.queryForObject(
                 "select count(*) from bookings where id=? and expires_at>now() and status='PENDING'",
