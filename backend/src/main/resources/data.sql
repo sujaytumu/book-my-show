@@ -735,3 +735,25 @@ on conflict(name) do nothing;
 
 -- Ranabaali releases on 16 October 2026; the release scheduler moves it to Now Showing automatically.
 update movies set release_date = date '2026-10-16' where title = 'Ranabaali' and release_date is null;
+
+-- ============================================================
+-- Aadarsha Kutumbam (House No: 47 / AK 47) and Cult, both releasing 30 October 2026.
+-- Details from the film trade press (Hans India, Filmibeat). Runtime and Cult's certificate are not announced, so they
+-- are left empty rather than guessed. Posters are placeholders until the real ones are filled in (see MovieEnricher).
+-- Idempotent: safe to re-run on every boot, a movie with the same title is never duplicated or overwritten.
+-- ============================================================
+insert into movies(title,description,poster_url,language,genre,duration_minutes,certificate,rating,release_date,upcoming,cast_crew)
+select 'Aadarsha Kutumbam',
+       'Family entertainer written and directed by Trivikram, starring Venkatesh and Srinidhi Shetty with Nara Rohith, Nivetha Pethuraj and Rao Ramesh. A middle-class family story mixing comedy, action and crime. Produced by Haarika & Hassine Creations, music by Thaman S. Releasing 30 October 2026.',
+       '/posters/placeholder-aadarsha-kutumbam.svg','Telugu','Family, Action, Comedy',null,'UA',0,
+       date '2026-10-30', (date '2026-10-30' > (now() at time zone 'Asia/Kolkata')::date),
+       '[{"name":"Venkatesh Daggubati","role":"Actor","character":"Chitti Babu"},{"name":"Srinidhi Shetty","role":"Actor","character":"Swarna"},{"name":"Nara Rohith","role":"Actor"},{"name":"Nivetha Pethuraj","role":"Actor"},{"name":"Rao Ramesh","role":"Actor"},{"name":"Brahmaji","role":"Actor"},{"name":"Vennela Kishore","role":"Actor"},{"name":"Satya","role":"Actor"},{"name":"Raghu Babu","role":"Actor"},{"name":"Trivikram Srinivas","role":"Director"},{"name":"Trivikram Srinivas","role":"Writer"},{"name":"S Radha Krishna","role":"Producer"},{"name":"Thaman S","role":"Music Director"},{"name":"Haarika & Hassine Creations","role":"Banner"}]'
+where not exists(select 1 from movies where lower(title) in ('aadarsha kutumbam','adarsha kutumbam','aadarsha kutumbam house no 47'));
+
+insert into movies(title,description,poster_url,language,genre,duration_minutes,certificate,rating,release_date,upcoming,cast_crew)
+select 'Cult',
+       'Slasher thriller starring, written and directed by Vishwak Sen, with Gayatri Bharadwaj and Yagnya Turlapati. Music by Ravi Basrur, produced under the Tarak Cinemas and Vanmaye Creations banners. Releasing 30 October 2026.',
+       '/posters/placeholder-cult.svg','Telugu','Action, Thriller',null,null,0,
+       date '2026-10-30', (date '2026-10-30' > (now() at time zone 'Asia/Kolkata')::date),
+       '[{"name":"Vishwak Sen","role":"Actor"},{"name":"Gayatri Bharadwaj","role":"Actor"},{"name":"Yagnya Turlapati","role":"Actor"},{"name":"Vishwak Sen","role":"Director"},{"name":"Sandeep Kakarala","role":"Producer"},{"name":"Karate Raju","role":"Producer"},{"name":"Ravi Basrur","role":"Music Director"},{"name":"Tarak Cinemas","role":"Banner"},{"name":"Vanmaye Creations","role":"Banner"}]'
+where not exists(select 1 from movies where lower(title) = 'cult');
