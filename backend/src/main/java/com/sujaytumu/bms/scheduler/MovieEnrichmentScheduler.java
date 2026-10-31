@@ -48,7 +48,7 @@ public class MovieEnrichmentScheduler {
             ids = db.queryForList("""
                     select id from movies
                     where active = true
-                      and (poster_url is null or poster_url = '' or description is null or description = ''
+                      and (poster_url is null or poster_url = '' or poster_url like '/posters/placeholder-%' or description is null or description = ''
                            or genre is null or genre = '' or language is null or language = ''
                            or duration_minutes is null or release_date is null
                            or cast_crew is null or cast_crew = ''
