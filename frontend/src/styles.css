@@ -1679,3 +1679,20 @@ button.mv-trailer{border:0;cursor:pointer;font-family:inherit}
 .trailer-box iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:12px;background:#000}
 .trailer-box button{align-self:center;background:#fff;color:#222;border:0;border-radius:99px;padding:9px 26px;text-transform:none;letter-spacing:0}
 .hold-extend{width:100%;margin:0 0 10px;background:#fff7ed;color:#c2410c;border:1.5px solid #fdba74;border-radius:10px;padding:10px;text-transform:none;letter-spacing:0;font-size:13.5px}
+
+/* Now Showing / Coming Soon grid: big posters that nearly fill the screen width, like the real app */
+@media(max-width:699px){
+  .ml-grid{margin:0 -6px;gap:22px 12px}
+}
+.ml-card{display:flex;flex-direction:column}
+.ml-card img{border-radius:20px;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.ml-card .ml-likes{order:1;display:flex;align-items:center;gap:5px;margin:10px 2px 0;font-size:14.5px;font-weight:700;color:#222}
+.ml-card .ml-likes i{font-size:15px;filter:hue-rotate(0deg)}
+.ml-card .ml-rate,.ml-card .ml-pill{order:2}
+.ml-card .ml-rate{margin:4px 2px 0;font-size:13.2px}
+.ml-card .ml-pill{align-self:flex-start;margin:6px 2px 0}
+.ml-card b{order:3;margin:6px 2px 0;font-size:17px;font-weight:700;line-height:1.22;letter-spacing:-.1px}
+.ml-card small:not(.ml-likes){order:4;margin:4px 2px 0}
+.ml-card .ml-promo{top:12px}
+html[data-theme=dark] .ml-card .ml-likes{color:#dedede}
+.ml-card img{flex:none;height:auto}
