@@ -143,7 +143,7 @@ export default function MovieList({ upcoming = false }) {
               </span>
             )}
             <b>{m.title}</b>
-            {upcoming && Number(m.interested_base) > 0 && (
+            {Number(m.interested_base) > 0 && (
               <small className="ml-likes">
                 <i>👍</i> {fmtVotes(m.interested_base).replace("+ votes", "+").replace(" votes", "")} likes
               </small>
