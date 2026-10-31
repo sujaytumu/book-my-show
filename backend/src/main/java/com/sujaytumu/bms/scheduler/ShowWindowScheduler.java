@@ -32,6 +32,7 @@ public class ShowWindowScheduler {
     public void onStartup() {
         releaseDueMovies();
         applyOneTimeFixes();
+        allocateNewReleases();
         removeClashingShows();
         topUpWindow();
     }
@@ -41,6 +42,7 @@ public class ShowWindowScheduler {
     public void daily() {
         releaseDueMovies();
         applyOneTimeFixes();
+        allocateNewReleases();
         removeClashingShows();
         topUpWindow();
     }
@@ -120,6 +122,40 @@ public class ShowWindowScheduler {
                   and (sh.show_date + sh.start_time) > (now() at time zone 'Asia/Kolkata')
                   and not exists (select 1 from bookings b where b.show_id = sh.id and b.status in ('PENDING','CONFIRMED'))
                 """, ranabaali, ranabaali, ranabaali);
+    }
+
+    /**
+     * One-off, run exactly once (guarded by app_flags): Aadarsha Kutumbam and Cult both release on 30 October 2026 but
+     * the calendar for the next 10 days was already filled, and the daily job never rewrites existing shows. So each of
+     * the two films takes a quarter of the unbooked future Telugu shows of the next 10 days (half in total), spread over
+     * every cinema and every time of day; all other current movies keep the other half. A show that has a pending or
+     * confirmed booking is never touched, and nothing is deleted: only the movie on an unbooked show changes.
+     */
+    public void allocateNewReleases() {
+        java.util.List<Long> ak = db.queryForList(
+                "select id from movies where lower(title) = 'aadarsha kutumbam' and active = true and upcoming = false order by id limit 1", Long.class);
+        java.util.List<Long> cult = db.queryForList(
+                "select id from movies where lower(title) = 'cult' and active = true and upcoming = false order by id limit 1", Long.class);
+        if (ak.isEmpty() || cult.isEmpty()) return; // both must be released and listed first
+        int fresh = db.update("insert into app_flags(flag) values('new_releases_aadarsha_cult_2026_10_30') on conflict do nothing");
+        if (fresh == 0) return;
+        db.update("""
+                with slots as (
+                    select sh.id show_id,
+                           row_number() over (partition by sc.theatre_id, sh.show_date order by sh.start_time, sh.screen_id) rn
+                    from shows sh
+                    join screens sc on sc.id = sh.screen_id
+                    join theatres t on t.id = sc.theatre_id and t.active = true
+                    where sh.show_date <= (now() at time zone 'Asia/Kolkata')::date + 9
+                      and (sh.show_date + sh.start_time) > (now() at time zone 'Asia/Kolkata')
+                      and (select language from movies where id = sh.movie_id) = 'Telugu'
+                      and not exists (select 1 from bookings b where b.show_id = sh.id and b.status in ('PENDING','CONFIRMED'))
+                ), assign as (
+                    select show_id, case rn % 4 when 1 then 1 when 3 then 2 else 0 end who from slots
+                )
+                update shows sh set movie_id = case a.who when 1 then ? else ? end, language = 'Telugu'
+                from assign a where a.show_id = sh.id and a.who > 0
+                """, ak.get(0), cult.get(0));
     }
 
     public void topUpWindow() {

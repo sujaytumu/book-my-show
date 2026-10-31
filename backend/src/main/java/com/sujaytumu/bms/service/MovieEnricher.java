@@ -131,7 +131,9 @@ public class MovieEnricher {
         List<Object> args = new ArrayList<>();
         List<String> filled = new ArrayList<>();
         put(sets, args, filled, overwrite, before.get("description"), "description", "description", d.description());
-        put(sets, args, filled, overwrite, before.get("poster_url"), "poster_url", "poster", d.posterUrl());
+        Object curPoster = before.get("poster_url");
+        if (curPoster != null && String.valueOf(curPoster).startsWith("/posters/placeholder-")) curPoster = null; // stand-in, replace it
+        put(sets, args, filled, overwrite, curPoster, "poster_url", "poster", d.posterUrl());
         put(sets, args, filled, overwrite, before.get("language"), "language", "language", d.language());
         put(sets, args, filled, overwrite, before.get("genre"), "genre", "genre", d.genre());
         put(sets, args, filled, overwrite, before.get("duration_minutes"), "duration_minutes", "duration", d.durationMinutes());
