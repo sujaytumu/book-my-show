@@ -2,7 +2,7 @@ name: android-apk
 on:
   workflow_dispatch:
   push:
-    branches: [feature/android-apk]
+    branches: [main]
 permissions:
   contents: write
 jobs:
