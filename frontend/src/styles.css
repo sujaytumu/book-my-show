@@ -1711,3 +1711,5 @@ html[data-theme=dark] .ml-card .ml-likes{color:#dedede}
 .nt-item .nt-star.on{color:#f5a623}
 html[data-theme=dark] .nt-tab{background:#171717;border-color:#444447}
 html[data-theme=dark] .nt-tab.on{background:#e0415a;border-color:#e0415a}
+.nt-count{font-style:normal;display:inline-block;min-width:20px;margin-left:7px;padding:1px 6px;border-radius:99px;background:rgba(224,65,90,.12);color:#e0415a;font-size:11.5px;font-weight:700;text-align:center;line-height:1.5}
+.nt-tab.on .nt-count{background:rgba(255,255,255,.28);color:#fff}

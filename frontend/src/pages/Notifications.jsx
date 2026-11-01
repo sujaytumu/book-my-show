@@ -54,6 +54,7 @@ export default function Notifications() {
   }
   const shown = list.filter((n) => (tab === "unread" ? n.at > seenAtOpen.current : tab === "fav" ? favs.includes(n.id) : true));
   const unreadCount = list.filter((n) => n.at > seenAtOpen.current).length;
+  const counts = { all: list.length, unread: unreadCount, fav: list.filter((n) => favs.includes(n.id)).length };
   useEffect(() => {
     if (list.length) markSeen();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -84,8 +85,7 @@ export default function Notifications() {
               )}
               <button type="button" className="nt-tab-main" onClick={() => setTab(k)}>
                 {TABS[k]}
-                {k === "unread" && unreadCount > 0 ? " (" + unreadCount + ")" : ""}
-                {k === "fav" && favs.length > 0 ? " (" + favs.filter((id) => list.some((n) => n.id === id)).length + ")" : ""}
+                <em className="nt-count">{counts[k]}</em>
               </button>
               {editing && (
                 <button type="button" onClick={() => move(i, 1)} disabled={i === order.length - 1} aria-label={"Move " + TABS[k] + " later"}>
