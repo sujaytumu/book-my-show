@@ -8,11 +8,10 @@ import { useNotifications } from "../notifications";
 const ICON = { confirmed: "🎟", reminder: "⏰", cancelled: "✕", seats: "💺", release: "🎬" };
 
 // Filter tabs. The person can reorder them with "Edit order"; the order and starred items are remembered on this device.
-const TABS = { all: "All", unread: "Unread", fav: "Favourites", top: "💯" };
-const DEFAULT_ORDER = ["all", "unread", "fav", "top"];
+const TABS = { all: "All", unread: "Unread", fav: "Favourites" };
+const DEFAULT_ORDER = ["all", "unread", "fav"];
 const ORDER_KEY = "bms_notif_tab_order";
 const FAV_KEY = "bms_notif_favs";
-const TOP_KEY = "bms_notif_top";
 const read = (k, d) => {
   try {
     const v = JSON.parse(localStorage.getItem(k));
@@ -39,7 +38,6 @@ export default function Notifications() {
   const [tab, setTab] = useState(() => cleanOrder(read(ORDER_KEY, DEFAULT_ORDER))[0]);
   const [editing, setEditing] = useState(false);
   const [favs, setFavs] = useState(() => read(FAV_KEY, []));
-  const [tops, setTops] = useState(() => read(TOP_KEY, []));
   function move(i, d) {
     const j = i + d;
     if (j < 0 || j >= order.length) return;
@@ -54,15 +52,7 @@ export default function Notifications() {
     setFavs(f);
     write(FAV_KEY, f);
   }
-  function toggleTop(e, id) {
-    e.stopPropagation();
-    const t = tops.includes(id) ? tops.filter((x) => x !== id) : [...tops, id];
-    setTops(t);
-    write(TOP_KEY, t);
-  }
-  const shown = list.filter((n) =>
-    tab === "unread" ? n.at > seenAtOpen.current : tab === "fav" ? favs.includes(n.id) : tab === "top" ? tops.includes(n.id) : true
-  );
+  const shown = list.filter((n) => (tab === "unread" ? n.at > seenAtOpen.current : tab === "fav" ? favs.includes(n.id) : true));
   const unreadCount = list.filter((n) => n.at > seenAtOpen.current).length;
   useEffect(() => {
     if (list.length) markSeen();
@@ -95,9 +85,6 @@ export default function Notifications() {
               <button type="button" className="nt-tab-main" onClick={() => setTab(k)}>
                 {TABS[k]}
                 {k === "unread" && unreadCount > 0 ? " (" + unreadCount + ")" : ""}
-                {k === "top" && tops.filter((id) => list.some((n) => n.id === id)).length > 0
-                  ? " " + tops.filter((id) => list.some((n) => n.id === id)).length
-                  : ""}
                 {k === "fav" && favs.length > 0 ? " (" + favs.filter((id) => list.some((n) => n.id === id)).length + ")" : ""}
               </button>
               {editing && (
@@ -125,8 +112,8 @@ export default function Notifications() {
       ) : (
         shown.length === 0 ? (
           <div className="nt-empty">
-            <b>{tab === "unread" ? "No unread notifications" : tab === "top" ? "Nothing marked 💯 yet" : "No favourites yet"}</b>
-            <span>{tab === "unread" ? "New ones will show up here." : tab === "top" ? "Tap 💯 on a notification to keep it here." : "Tap the star on a notification to keep it here."}</span>
+            <b>{tab === "unread" ? "No unread notifications" : "No favourites yet"}</b>
+            <span>{tab === "unread" ? "New ones will show up here." : "Tap the star on a notification to keep it here."}</span>
           </div>
         ) : (
         shown.map((n) => (
@@ -136,9 +123,6 @@ export default function Notifications() {
               <b>{n.title}</b>
               <p>{n.text}</p>
             </div>
-            <button type="button" className={"nt-star nt-top" + (tops.includes(n.id) ? " on" : "")} onClick={(e) => toggleTop(e, n.id)} aria-label={tops.includes(n.id) ? "Remove 100 mark" : "Mark 100"}>
-              💯
-            </button>
             <button type="button" className={"nt-star" + (favs.includes(n.id) ? " on" : "")} onClick={(e) => toggleFav(e, n.id)} aria-label={favs.includes(n.id) ? "Remove from favourites" : "Add to favourites"}>
               {favs.includes(n.id) ? "★" : "☆"}
             </button>
