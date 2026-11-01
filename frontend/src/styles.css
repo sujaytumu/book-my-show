@@ -1696,18 +1696,3 @@ button.mv-trailer{border:0;cursor:pointer;font-family:inherit}
 .ml-card .ml-promo{top:12px}
 html[data-theme=dark] .ml-card .ml-likes{color:#dedede}
 .ml-card img{flex:none;height:auto}
-
-/* Notification tabs (reorderable) and favourites */
-.nt-tabs{display:flex;gap:8px;align-items:center;overflow-x:auto;padding:2px 0 14px;scrollbar-width:none}
-.nt-tabs::-webkit-scrollbar{display:none}
-.nt-tab{flex:none;display:inline-flex;align-items:center;background:#fff;border:1.5px solid #cfcfd4;border-radius:24px;color:#e0415a;overflow:hidden}
-.nt-tab.on{background:#e0415a;border-color:#e0415a;color:#fff}
-.nt-tab button{background:none;border:0;color:inherit;text-transform:none;letter-spacing:0;font-size:13.5px;font-weight:600;padding:8px 14px;border-radius:0}
-.nt-tab.edit button:not(.nt-tab-main){padding:8px 9px;font-size:18px;line-height:1}
-.nt-tab button:disabled{opacity:.3}
-.nt-tabs .nt-edit{flex:none;margin-left:auto;background:none;border:0;color:#5a67b5;text-transform:none;letter-spacing:0;font-size:13px;font-weight:600;padding:8px 6px}
-.nt-item{position:relative}
-.nt-item .nt-star{margin-left:auto;align-self:flex-start;background:none;border:0;padding:4px 6px;font-size:20px;line-height:1;color:#9a9aa1;text-transform:none}
-.nt-item .nt-star.on{color:#f5a623}
-html[data-theme=dark] .nt-tab{background:#171717;border-color:#444447}
-html[data-theme=dark] .nt-tab.on{background:#e0415a;border-color:#e0415a}
