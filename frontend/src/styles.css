@@ -1711,6 +1711,3 @@ html[data-theme=dark] .ml-card .ml-likes{color:#dedede}
 .nt-item .nt-star.on{color:#f5a623}
 html[data-theme=dark] .nt-tab{background:#171717;border-color:#444447}
 html[data-theme=dark] .nt-tab.on{background:#e0415a;border-color:#e0415a}
-.nt-item .nt-star{margin-left:0}
-.nt-item .nt-top{margin-left:auto;font-size:17px;filter:grayscale(1);opacity:.45}
-.nt-item .nt-top.on{filter:none;opacity:1}
