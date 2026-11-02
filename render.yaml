@@ -4,7 +4,7 @@ services:
     runtime: java
     rootDir: backend
     buildCommand: mvn clean package -DskipTests
-    startCommand: java -jar target/book-my-show-api-1.0.0.jar
+    startCommand: java -XX:TieredStopAtLevel=1 -XX:+UseSerialGC -XX:MaxRAMPercentage=75 -Xshare:auto -Dspring.jmx.enabled=false -jar target/book-my-show-api-1.0.0.jar
     envVars:
       - key: DATABASE_URL
         sync: false

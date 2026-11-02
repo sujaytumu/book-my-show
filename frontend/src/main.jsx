@@ -4,6 +4,9 @@ import App from "./App";
 import ErrorBoundary from "./components/ErrorBoundary";
 import UpdatePrompt from "./UpdatePrompt";
 import "./styles.css";
+import { prefetchScreens, startWarmup } from "./warm";
+
+startWarmup();
 
 createRoot(document.getElementById("root")).render(
   <BrowserRouter>
@@ -29,3 +32,5 @@ document.addEventListener(
   },
   { passive: true }
 );
+
+prefetchScreens();
