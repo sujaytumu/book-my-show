@@ -112,6 +112,24 @@ async function shareTicket(b) {
   } catch {}
 }
 
+// "Starts in 2h 15m" for confirmed upcoming shows (show times are IST).
+function startsIn(b) {
+  if (b.status !== "CONFIRMED") return "";
+  const t = Date.parse(String(b.show_date).slice(0, 10) + "T" + String(b.start_time).slice(0, 5) + ":00+05:30");
+  const ms = t - Date.now();
+  if (!(ms > 0)) return "";
+  const m = Math.floor(ms / 60000);
+  const d = Math.floor(m / 1440);
+  if (d >= 2) return "Starts in " + d + " days";
+  if (d === 1) return "Starts tomorrow";
+  const h = Math.floor(m / 60);
+  return "Starts in " + (h ? h + "h " : "") + (m % 60) + "m";
+}
+
+function directionsUrl(b) {
+  return "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent([b.theatre_name, b.city].filter(Boolean).join(", "));
+}
+
 function TicketModal({ b, poster, onClose }) {
   const [qr, setQr] = useState("");
   useEffect(() => {
@@ -146,6 +164,7 @@ function TicketModal({ b, poster, onClose }) {
         <div className="tk-actions">
           <button type="button" onClick={() => addToCalendar(b)}>📅 Add to calendar</button>
           <button type="button" onClick={() => shareTicket(b)}>↗ Share</button>
+          <a href={directionsUrl(b)} target="_blank" rel="noopener noreferrer">📍 Directions</a>
         </div>
         <button type="button" className="tk-close" onClick={onClose}>
           Close
@@ -328,6 +347,7 @@ export default function Bookings() {
                   <span className={"bk-status " + info.cls}>{info.label}</span>
                 </div>
                 <p className="bk-theatre">{b.theatre_name}</p>
+                {startsIn(b) && <span className="bk-soon">⏱ {startsIn(b)}</span>}
                 <div className="bk-when">
                   <div>
                     <small>Date</small>

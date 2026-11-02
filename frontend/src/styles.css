@@ -1696,3 +1696,8 @@ button.mv-trailer{border:0;cursor:pointer;font-family:inherit}
 .ml-card .ml-promo{top:12px}
 html[data-theme=dark] .ml-card .ml-likes{color:#dedede}
 .ml-card img{flex:none;height:auto}
+
+.bk-soon{display:inline-block;margin:-6px 0 10px;padding:3px 9px;border-radius:99px;background:#e6f6ec;color:#15803d;font-size:10px;font-weight:700}
+html[data-theme=dark] .bk-soon{background:#1f3327;color:#6fd39a}
+.tk-actions a{flex:1;padding:11px 8px;font-size:12px;font-weight:700;border-radius:10px;background:#fff;color:var(--red);border:1.5px solid var(--red);text-align:center;text-decoration:none}
+html[data-theme=dark] .tk-actions a,html[data-theme=dark] .tk-actions button{background:#1d1d23}
