@@ -757,3 +757,16 @@ select 'Cult',
        date '2026-10-30', (date '2026-10-30' > (now() at time zone 'Asia/Kolkata')::date),
        '[{"name":"Vishwak Sen","role":"Actor"},{"name":"Gayatri Bharadwaj","role":"Actor"},{"name":"Yagnya Turlapati","role":"Actor"},{"name":"Vishwak Sen","role":"Director"},{"name":"Sandeep Kakarala","role":"Producer"},{"name":"Karate Raju","role":"Producer"},{"name":"Ravi Basrur","role":"Music Director"},{"name":"Tarak Cinemas","role":"Banner"},{"name":"Vanmaye Creations","role":"Banner"}]'
 where not exists(select 1 from movies where lower(title) = 'cult');
+
+-- Real posters for Aadarsha Kutumbam and Cult (replace the placeholders), and Ramayana (Part 1) releasing 5 November 2026.
+-- Idempotent: the poster swap only touches rows still on a placeholder; Ramayana is inserted once.
+update movies set poster_url='/posters/aadarsha-kutumbam.jpg' where lower(title)='aadarsha kutumbam' and poster_url like '%placeholder%';
+update movies set poster_url='/posters/cult.jpg' where lower(title)='cult' and poster_url like '%placeholder%';
+
+insert into movies(title,description,poster_url,language,genre,duration_minutes,certificate,rating,release_date,upcoming,cast_crew)
+select 'Ramayana',
+       'Namit Malhotra''s epic retelling of the Ramayana, directed by Nitesh Tiwari, starring Ranbir Kapoor as Rama, Sai Pallavi as Sita, Yash as Ravana, Sunny Deol as Hanuman and Ravie Dubey as Lakshman. Filmed for IMAX, VFX by DNEG. Presented by Prime Focus Studios and Monster Mind Creations, releasing 5 November 2026.',
+       '/posters/ramayana.jpg','Hindi','Epic, Mythology, Drama',null,null,0,
+       date '2026-11-05', (date '2026-11-05' > (now() at time zone 'Asia/Kolkata')::date),
+       '[{"name":"Ranbir Kapoor","role":"Actor","character":"Rama"},{"name":"Sai Pallavi","role":"Actor","character":"Sita"},{"name":"Yash","role":"Actor","character":"Ravana"},{"name":"Sunny Deol","role":"Actor","character":"Hanuman"},{"name":"Ravie Dubey","role":"Actor","character":"Lakshman"},{"name":"Nitesh Tiwari","role":"Director"},{"name":"Namit Malhotra","role":"Producer"},{"name":"Prime Focus Studios","role":"Banner"}]'
+where not exists(select 1 from movies where lower(title) in ('ramayana','ramayanam'));
