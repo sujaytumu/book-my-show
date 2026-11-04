@@ -7,7 +7,9 @@
     "url": "https://book-my-show-nu-three.vercel.app",
     "allowNavigation": [
       "book-my-show-nu-three.vercel.app",
-      "*.onrender.com"
+      "*.onrender.com",
+      "*.razorpay.com",
+      "*.razorpay.in"
     ]
   },
   "android": {
