@@ -46,12 +46,16 @@ public class PaymentService {
     }
 
     public boolean isConfigured() {
-        return !razorpayKeyId.isBlank() && !razorpaySecret.isBlank();
+        return !razorpayKeyId.isBlank() && !razorpaySecret.isBlank() && razorpayKeyId.startsWith("rzp_test_");
     }
 
     public Map<String, Object> createOrder(long bookingId, double amountRupees, String receipt) throws Exception {
         if (razorpayKeyId.isBlank() || razorpaySecret.isBlank()) {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Razorpay keys are not configured");
+        }
+        // Safety: this project is test-mode only. A live key is refused so real money can never move.
+        if (!razorpayKeyId.startsWith("rzp_test_")) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Only Razorpay test keys (rzp_test_) are allowed");
         }
         long amountPaise = Math.round(amountRupees * 100);
 
