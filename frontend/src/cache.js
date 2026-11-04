@@ -14,8 +14,16 @@ export function swrGet(path, onData) {
   } catch (e) {
     /* storage unavailable */
   }
-  return api
-    .get(path)
+  // The first /movies request was already started by index.html before the app code loaded; use it once.
+  let early = null;
+  if (path === "/movies" && window.__bmsMovies) {
+    early = window.__bmsMovies;
+    window.__bmsMovies = null;
+  }
+  const fetched = early
+    ? early.then((d) => (Array.isArray(d) ? { data: d } : api.get(path)))
+    : api.get(path);
+  return fetched
     .then((res) => {
       onData(res.data);
       try {
