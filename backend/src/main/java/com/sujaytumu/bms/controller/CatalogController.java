@@ -26,8 +26,18 @@ public class CatalogController {
         return db.queryForList("select id,name from cities order by name");
     }
 
+    private volatile List<Map<String, Object>> moviesCache;
+    private volatile long moviesCachedAt;
+
     @GetMapping("/api/movies")
     public List<Map<String, Object>> movies(@RequestParam(required = false) String q) {
+        // The full list is the same for everyone and is asked for on every app open, so keep it for a few seconds
+        // instead of reading the whole table (with its large cast column) each time. Admin edits show up within 20 s.
+        boolean all = q == null || q.isBlank();
+        if (all) {
+            List<Map<String, Object>> hit = moviesCache;
+            if (hit != null && System.currentTimeMillis() - moviesCachedAt < 20_000) return hit;
+        }
         String base = "select m.*,coalesce(m.votes_base,0) + coalesce(rv.c,0) votes from movies m " +
                 "left join (select movie_id,count(*) c from reviews group by movie_id) rv on rv.movie_id=m.id where m.active=true ";
         List<Map<String, Object>> rows = (q == null || q.isBlank())
@@ -37,6 +47,10 @@ public class CatalogController {
         for (Map<String, Object> r : rows) {
             Object cast = r.remove("cast_crew");
             r.put("has_cast", cast != null && !String.valueOf(cast).isBlank());
+        }
+        if (all) {
+            moviesCache = rows;
+            moviesCachedAt = System.currentTimeMillis();
         }
         return rows;
     }
