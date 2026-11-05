@@ -37,8 +37,8 @@ public class PaymentController {
     @GetMapping("/mode")
     public Map<String, Object> mode() {
         return paymentService.isConfigured()
-                ? Map.of("mode", "razorpay")
-                : Map.of("mode", "mock");
+                ? Map.of("mode", "razorpay", "reason", "ok")
+                : Map.of("mode", "mock", "reason", paymentService.modeReason());
     }
 
     @PostMapping("/create-order/{bookingId}")

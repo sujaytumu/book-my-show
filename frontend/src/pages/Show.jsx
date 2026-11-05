@@ -26,6 +26,7 @@ import { watchShowSeats } from "../liveSeats";
 //   const [seats, setSeats] = useState([]);
 //   const [selected, setSelected] = useState([]);
 //   const [mode, setMode] = useState(null); // "mock" | "razorpay" | null (unknown yet)
+  const [modeReason, setModeReason] = useState("");
 //   const [loadError, setLoadError] = useState("");
 //   const [pending, setPending] = useState(false);
 //   const [slow, setSlow] = useState(false);
@@ -493,7 +494,17 @@ export default function Show() {
 
       .catch(() => setLoadError("Could not load seats. The server may be waking up — try refreshing in a bit."));
 
-    api.get("/payments/mode").then((res) => setMode(res.data.mode));
+    const readMode = (left) =>
+      api
+        .get("/payments/mode")
+        .then((res) => {
+          setMode(res.data.mode);
+          setModeReason(res.data.reason || "");
+        })
+        .catch(() => {
+          if (left > 0) setTimeout(() => readMode(left - 1), 3000);
+        });
+    readMode(3);
 
   }, [id]);
 
@@ -1444,6 +1455,13 @@ export default function Show() {
           <h2>Confirm booking</h2>
 
           {payNote && <p className="pay-note">{payNote}</p>}
+          {mode === "mock" && (
+            <p className="pay-note">
+              {modeReason === "not_test_key"
+                ? "Simulated payment: the server's Razorpay key is not a test key."
+                : "Simulated payment: Razorpay keys are not set on the server yet."}
+            </p>
+          )}
           {secsLeft != null && (
             <div className={"hold-timer ring" + (secsLeft <= 60 ? " low" : "")}>
               <svg viewBox="0 0 44 44" width="46" height="46" aria-hidden="true">

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import AdminAnalytics from "../components/AdminAnalytics";
 import { AddByName, NeedsDetails } from "../components/MovieByName";
+import PaymentCheck from "../components/PaymentCheck";
 import { api, currentUser } from "../api";
 
 const emptyMovie = {
@@ -152,6 +153,7 @@ export default function Admin() {
         </form>
       </div>
 
+      <PaymentCheck />
       <AddByName onChange={loadLookups} />
       <NeedsDetails movies={movies} onChange={loadLookups} />
 

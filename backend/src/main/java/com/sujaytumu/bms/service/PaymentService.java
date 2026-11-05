@@ -40,9 +40,75 @@ public class PaymentService {
                            @Value("${razorpay.secret}") String razorpaySecret,
                            @Value("${razorpay.webhook-secret:}") String webhookSecret) {
         this.db = db;
-        this.razorpayKeyId = razorpayKeyId;
-        this.razorpaySecret = razorpaySecret;
-        this.webhookSecret = webhookSecret == null ? "" : webhookSecret;
+        // Keys pasted into the Render dashboard often carry a trailing space, a newline or quotes; any of those makes
+        // the key look wrong and silently drops the app into the simulated payment, so they are cleaned here.
+        this.razorpayKeyId = clean(razorpayKeyId);
+        this.razorpaySecret = clean(razorpaySecret);
+        this.webhookSecret = clean(webhookSecret);
+    }
+
+    private static String clean(String v) {
+        if (v == null) return "";
+        String s = v.strip();
+        if (s.length() >= 2 && ((s.startsWith("\"") && s.endsWith("\"")) || (s.startsWith("'") && s.endsWith("'")))) {
+            s = s.substring(1, s.length() - 1).strip();
+        }
+        return s;
+    }
+
+    /** Why the app is (not) using Razorpay: "ok", "keys_missing" or "not_test_key". Safe to show to anyone. */
+    public String modeReason() {
+        if (razorpayKeyId.isBlank() || razorpaySecret.isBlank()) return "keys_missing";
+        if (!razorpayKeyId.startsWith("rzp_test_")) return "not_test_key";
+        return "ok";
+    }
+
+    /**
+     * Admin check: what the server has, and whether Razorpay accepts it (one harmless read call to Razorpay).
+     * Never returns the secret; the key id is only shown in part.
+     */
+    public Map<String, Object> diagnose() {
+        Map<String, Object> out = new java.util.LinkedHashMap<>();
+        out.put("keyIdSet", !razorpayKeyId.isBlank());
+        out.put("secretSet", !razorpaySecret.isBlank());
+        out.put("keyIdHint", razorpayKeyId.isBlank() ? "" : razorpayKeyId.substring(0, Math.min(12, razorpayKeyId.length())) + "...");
+        out.put("testKey", razorpayKeyId.startsWith("rzp_test_"));
+        out.put("webhookSecretSet", !webhookSecret.isBlank());
+        String reason = modeReason();
+        if (reason.equals("keys_missing")) {
+            out.put("ok", false);
+            out.put("message", "RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET are not set on the server, so the app uses the simulated payment "
+                    + "and never opens Razorpay. Add both in Render > Environment, save, and let it redeploy.");
+            return out;
+        }
+        if (reason.equals("not_test_key")) {
+            out.put("ok", false);
+            out.put("message", "The key id does not start with rzp_test_. This app only allows Razorpay test keys. Use the Test mode key pair.");
+            return out;
+        }
+        try {
+            String basic = java.util.Base64.getEncoder().encodeToString((razorpayKeyId + ":" + razorpaySecret).getBytes(StandardCharsets.UTF_8));
+            HttpRequest req = HttpRequest.newBuilder(URI.create("https://api.razorpay.com/v1/orders?count=1"))
+                    .header("Authorization", "Basic " + basic).timeout(java.time.Duration.ofSeconds(10)).GET().build();
+            HttpResponse<String> res = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+            out.put("httpStatus", res.statusCode());
+            if (res.statusCode() == 200) {
+                out.put("ok", true);
+                out.put("message", "Razorpay accepted the keys. Payments open the Razorpay test checkout."
+                        + (webhookSecret.isBlank() ? " (No webhook secret set: the API secret is used for webhooks.)" : ""));
+            } else if (res.statusCode() == 401) {
+                out.put("ok", false);
+                out.put("message", "Razorpay rejected the keys (401). The key id and secret are not a matching Test mode pair, "
+                        + "or the secret was regenerated. Copy both again from Razorpay > Account & Settings > API Keys (Test mode).");
+            } else {
+                out.put("ok", false);
+                out.put("message", "Razorpay answered with HTTP " + res.statusCode() + ". Try again in a minute.");
+            }
+        } catch (Exception e) {
+            out.put("ok", false);
+            out.put("message", "Could not reach Razorpay from the server (" + e.getClass().getSimpleName() + "). Try again in a minute.");
+        }
+        return out;
     }
 
     public boolean isConfigured() {

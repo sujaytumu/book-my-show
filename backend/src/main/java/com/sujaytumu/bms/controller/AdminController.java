@@ -2,6 +2,7 @@ package com.sujaytumu.bms.controller;
 
 import com.sujaytumu.bms.service.MovieEnricher;
 import com.sujaytumu.bms.service.MovieLookupService;
+import com.sujaytumu.bms.service.PaymentService;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
@@ -21,11 +22,19 @@ public class AdminController {
     private final JdbcTemplate db;
     private final MovieLookupService lookup;
     private final MovieEnricher enricher;
+    private final PaymentService payments;
 
-    public AdminController(JdbcTemplate db, MovieLookupService lookup, MovieEnricher enricher) {
+    public AdminController(JdbcTemplate db, MovieLookupService lookup, MovieEnricher enricher, PaymentService payments) {
+        this.payments = payments;
         this.db = db;
         this.lookup = lookup;
         this.enricher = enricher;
+    }
+
+    /** Is Razorpay set up and does it accept the server's keys? Shown on the admin page. */
+    @GetMapping("/payments/check")
+    public Map<String, Object> paymentsCheck() {
+        return payments.diagnose();
     }
 
     /** Business analytics for the admin dashboard (revenue, bookings, top movies/cinemas, occupancy, peak hours). */

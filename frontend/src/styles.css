@@ -1701,3 +1701,10 @@ html[data-theme=dark] .ml-card .ml-likes{color:#dedede}
 html[data-theme=dark] .bk-soon{background:#1f3327;color:#6fd39a}
 .tk-actions a{flex:1;padding:11px 8px;font-size:12px;font-weight:700;border-radius:10px;background:#fff;color:var(--red);border:1.5px solid var(--red);text-align:center;text-decoration:none}
 html[data-theme=dark] .tk-actions a,html[data-theme=dark] .tk-actions button{background:#1d1d23}
+
+/* Admin: payments check */
+.paycheck .pc-result{margin-top:12px;border-radius:12px;padding:12px 14px;font-size:13.5px;line-height:1.4}
+.paycheck .pc-result.ok{background:#ecfdf3;border:1.5px solid #86efac;color:#166534}
+.paycheck .pc-result.bad{background:#fef2f2;border:1.5px solid #fca5a5;color:#991b1b}
+.paycheck .pc-result p{margin:6px 0}
+.paycheck .pc-result small{display:block;opacity:.85}
