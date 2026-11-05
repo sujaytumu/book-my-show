@@ -35,6 +35,7 @@ public class ShowWindowScheduler {
         allocateNewReleases();
         removeClashingShows();
         topUpWindow();
+        rebalanceByRecency();
     }
 
     /** Runs daily at 00:05 server time: new releases first, then the rolling window. */
@@ -45,6 +46,7 @@ public class ShowWindowScheduler {
         allocateNewReleases();
         removeClashingShows();
         topUpWindow();
+        rebalanceByRecency();
     }
 
     /**
@@ -156,6 +158,61 @@ public class ShowWindowScheduler {
                 update shows sh set movie_id = case a.who when 1 then ? else ? end, language = 'Telugu'
                 from assign a where a.show_id = sh.id and a.who > 0
                 """, ak.get(0), cult.get(0));
+    }
+
+    /**
+     * Shares the next 10 days of Telugu shows between the running movies by how new they are, so recent releases get
+     * more screens and older ones fewer, in order of priority. A movie's weight on a day is 100 / (5 + days since its
+     * release) (never below 2): a release day is about 20, a week old about 8, a month old about 3. Inside every cinema
+     * and day the free slots are spread over the movies in that proportion, mixed across the day's times.
+     * The slot order counts every show of that cinema and day, so the result is stable from run to run.
+     * Only unbooked shows are touched: any show with a pending or confirmed booking, or a held seat, keeps its movie,
+     * as does a show starting within 3 hours. Nothing is deleted.
+     */
+    public void rebalanceByRecency() {
+        db.update("""
+                with ist as (select (now() at time zone 'Asia/Kolkata') t),
+                slots as (
+                    select sh.id show_id, sh.show_date d, sc.theatre_id th,
+                           row_number() over (partition by sc.theatre_id, sh.show_date order by sh.start_time, sh.screen_id, sh.id) rn,
+                           ((sh.show_date + sh.start_time) > (select t from ist) + interval '3 hours'
+                            and not exists (select 1 from bookings b where b.show_id = sh.id and b.status in ('PENDING','CONFIRMED'))
+                            and not exists (select 1 from show_seats ss where ss.show_id = sh.id and ss.status <> 'AVAILABLE')) free
+                    from shows sh
+                    join screens sc on sc.id = sh.screen_id
+                    join theatres t on t.id = sc.theatre_id and t.active = true
+                    where sh.show_date between (select t from ist)::date and (select t from ist)::date + 9
+                      and (select language from movies where id = sh.movie_id) = 'Telugu'
+                ), days as (
+                    select distinct d from slots
+                ), cm as (
+                    select dd.d, m.id,
+                           greatest(2.0, 100.0 / (5 + greatest(0, dd.d - coalesce(m.release_date, dd.d - 60)))) wt,
+                           m.release_date
+                    from days dd
+                    join movies m on m.active = true and m.language = 'Telugu'
+                         and (m.release_date is null or m.release_date <= dd.d)
+                         and (m.upcoming = false or m.release_date is not null)
+                ), ranked as (
+                    select d, id, wt,
+                           sum(wt) over (partition by d) tot,
+                           sum(wt) over (partition by d order by wt desc, release_date desc nulls last, id
+                                         rows between unbounded preceding and current row) cum_end
+                    from cm
+                ), spread as (
+                    select show_id, d, free,
+                           (rn * 0.6180339887 + th * 0.7548776662 + (d - date '2000-01-01') * 0.5698402909)
+                         - floor(rn * 0.6180339887 + th * 0.7548776662 + (d - date '2000-01-01') * 0.5698402909) p
+                    from slots
+                ), pick as (
+                    select s.show_id, r.id movie_id
+                    from spread s
+                    join ranked r on r.d = s.d and s.p * r.tot >= r.cum_end - r.wt and s.p * r.tot < r.cum_end
+                    where s.free
+                )
+                update shows sh set movie_id = p.movie_id, language = 'Telugu'
+                from pick p where p.show_id = sh.id and sh.movie_id <> p.movie_id
+                """);
     }
 
     public void topUpWindow() {

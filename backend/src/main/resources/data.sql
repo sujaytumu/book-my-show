@@ -770,3 +770,17 @@ select 'Ramayana',
        date '2026-11-05', (date '2026-11-05' > (now() at time zone 'Asia/Kolkata')::date),
        '[{"name":"Ranbir Kapoor","role":"Actor","character":"Rama"},{"name":"Sai Pallavi","role":"Actor","character":"Sita"},{"name":"Yash","role":"Actor","character":"Ravana"},{"name":"Sunny Deol","role":"Actor","character":"Hanuman"},{"name":"Ravie Dubey","role":"Actor","character":"Lakshman"},{"name":"Nitesh Tiwari","role":"Director"},{"name":"Namit Malhotra","role":"Producer"},{"name":"Prime Focus Studios","role":"Banner"}]'
 where not exists(select 1 from movies where lower(title) in ('ramayana','ramayanam'));
+
+-- Ramayana is listed in Telugu (it was added as Hindi). Done once, guarded by app_flags, so a later admin edit is never undone.
+with f as (insert into app_flags(flag) values('ramayana_telugu_2026_11_04') on conflict do nothing returning 1)
+update movies set language='Telugu' where lower(title) = 'ramayana' and exists(select 1 from f);
+
+-- Scene (Telugu), starring Suriya, releasing 6 November 2026. Details are what the poster states: writer-director Jithu Madhavan,
+-- music Sushin Shyam, produced by Jyotika and Suriya (2D Entertainment). Runtime, certificate and genre are not announced.
+insert into movies(title,description,poster_url,language,genre,duration_minutes,certificate,rating,release_date,upcoming,cast_crew)
+select 'Scene',
+       'Suriya stars in Scene, written and directed by Jithu Madhavan with music by Sushin Shyam. Produced by Jyotika and Suriya under 2D Entertainment. Releasing 6 November 2026.',
+       '/posters/scene.jpg','Telugu','Action, Drama',null,null,0,
+       date '2026-11-06', (date '2026-11-06' > (now() at time zone 'Asia/Kolkata')::date),
+       '[{"name":"Suriya","role":"Actor"},{"name":"Jithu Madhavan","role":"Director"},{"name":"Jithu Madhavan","role":"Writer"},{"name":"Jyotika","role":"Producer"},{"name":"Suriya","role":"Producer"},{"name":"Sushin Shyam","role":"Music Director"},{"name":"2D Entertainment","role":"Banner"}]'
+where not exists(select 1 from movies where lower(title) = 'scene');
