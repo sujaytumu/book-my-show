@@ -436,6 +436,33 @@ public class BookingService {
                 """, bookingId, email);
     }
 
+    /**
+     * Test-mode tool: lets the owner settle a booking stuck on "Payment pending" by hand.
+     * success=true confirms it (as if the payment arrived); success=false marks the payment failed, expires the booking
+     * and frees its seats. Only a PENDING booking can be settled, and only by its owner.
+     */
+    @Transactional
+    public String resolvePending(String email, long bookingId, boolean success) {
+        List<String> rows = db.queryForList(
+                "select b.status from bookings b where b.id=? and b.user_id=(select id from users where email=?) for update of b",
+                String.class, bookingId, email);
+        if (rows.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found");
+        if (!"PENDING".equals(rows.get(0))) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Only a booking with a pending payment can be changed");
+        }
+        if (success) {
+            confirmBooking(bookingId, "manual_test_" + bookingId);
+            return "CONFIRMED";
+        }
+        db.update("update bookings set status='EXPIRED' where id=? and status='PENDING'", bookingId);
+        db.update("update show_seats set status='AVAILABLE',locked_by=null,locked_until=null where locked_by=?", bookingId);
+        notifyBookingShow(bookingId);
+        for (Long sid : db.queryForList("select show_id from bookings where id=?", Long.class, bookingId)) {
+            waitlist.onSeatsFreed(sid);
+        }
+        return "FAILED";
+    }
+
     @Transactional
     public void cancel(String email, long bookingId) {
         int updated = db.update(

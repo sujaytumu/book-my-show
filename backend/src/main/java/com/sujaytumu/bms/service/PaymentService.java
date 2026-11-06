@@ -56,6 +56,11 @@ public class PaymentService {
         return s;
     }
 
+    /** Test-mode tools (mark a pending payment paid/failed by hand) are never allowed with a live key. */
+    public boolean manualResolveAllowed() {
+        return !razorpayKeyId.startsWith("rzp_live_");
+    }
+
     /** Why the app is (not) using Razorpay: "ok", "keys_missing" or "not_test_key". Safe to show to anyone. */
     public String modeReason() {
         if (razorpayKeyId.isBlank() || razorpaySecret.isBlank()) return "keys_missing";
