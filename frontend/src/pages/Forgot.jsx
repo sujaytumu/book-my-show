@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { api, currentUser, logout } from "../api";
 
@@ -32,6 +32,15 @@ export default function Forgot() {
       setBusy(false);
     }
   }
+
+  // Coming from a wrong-password login (?auto=1): send the code right away.
+  const autoSent = useRef(false);
+  useEffect(() => {
+    if (!change && params.get("auto") === "1" && email && !autoSent.current) {
+      autoSent.current = true;
+      sendCode();
+    }
+  }, []);
 
   async function reset(e) {
     e.preventDefault();
