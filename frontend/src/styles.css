@@ -1708,3 +1708,9 @@ html[data-theme=dark] .tk-actions a,html[data-theme=dark] .tk-actions button{bac
 .paycheck .pc-result.bad{background:#fef2f2;border:1.5px solid #fca5a5;color:#991b1b}
 .paycheck .pc-result p{margin:6px 0}
 .paycheck .pc-result small{display:block;opacity:.85}
+
+.forgot-cta{display:flex;flex-direction:column;gap:4px;margin:12px 0 4px;padding:12px 14px;border-radius:12px;background:#fdecef;border:1px solid #f3d5db;font-size:12px;color:#444}
+.forgot-cta b{font-size:13px;color:#222}
+.forgot-cta a{align-self:flex-start;margin-top:6px;padding:8px 14px;border-radius:8px;background:var(--red);color:#fff;font-weight:700;font-size:12px;text-decoration:none}
+html[data-theme=dark] .forgot-cta{background:#3a2226;border-color:#4a2c31;color:#c4c4cf}
+html[data-theme=dark] .forgot-cta b{color:#ececf0}

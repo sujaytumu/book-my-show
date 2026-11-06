@@ -160,6 +160,13 @@ export default function Auth({ register = false }) {
         </p>
       )}
       {error && <p className="error">{error}</p>}
+      {!register && error && /invalid credentials|incorrect|wrong/i.test(error) && (
+        <div className="forgot-cta">
+          <b>Wrong password?</b>
+          <span>No problem, we will email a 6-digit code so you can set a new one.</span>
+          <Link to={"/forgot" + (form.email ? "?email=" + encodeURIComponent(form.email) : "")}>Reset password</Link>
+        </div>
+      )}
       {!register && (
         <p className="auth-links">
           <Link to="/forgot">Forgot password?</Link>

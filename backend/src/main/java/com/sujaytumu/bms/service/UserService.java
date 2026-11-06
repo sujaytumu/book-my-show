@@ -48,7 +48,7 @@ public class UserService {
         db.update("insert into password_resets(email,otp_hash,expires_at) values(?,?,now() + interval '10 minutes')",
                 email, encoder.encode(otp));
         final String code = otp;
-        java.util.concurrent.CompletableFuture.runAsync(() -> emailService.sendSimple(email,
+        java.util.concurrent.CompletableFuture.runAsync(() -> emailService.sendCode(email,
                 "Your Book My Show verification code",
                 "<p>Your verification code is <b style=\"font-size:20px;letter-spacing:3px\">" + code + "</b></p>"
                         + "<p>It is valid for 10 minutes. If you did not ask for it, you can ignore this email.</p>"));
