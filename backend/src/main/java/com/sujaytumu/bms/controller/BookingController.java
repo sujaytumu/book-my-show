@@ -1,13 +1,16 @@
 package com.sujaytumu.bms.controller;
 
 import com.sujaytumu.bms.service.BookingService;
+import com.sujaytumu.bms.service.PaymentService;
 import com.sujaytumu.bms.service.TicketService;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Map;
@@ -18,10 +21,12 @@ public class BookingController {
 
     private final BookingService bookingService;
     private final TicketService ticketService;
+    private final PaymentService paymentService;
 
-    public BookingController(BookingService bookingService, TicketService ticketService) {
+    public BookingController(BookingService bookingService, TicketService ticketService, PaymentService paymentService) {
         this.bookingService = bookingService;
         this.ticketService = ticketService;
+        this.paymentService = paymentService;
     }
 
     @PostMapping("/hold")
@@ -61,6 +66,20 @@ public class BookingController {
     @PostMapping("/{id}/extend-hold")
     public Map<String, Object> extendHold(Authentication auth, @PathVariable long id) {
         return bookingService.extendHold(auth.getName(), id);
+    }
+
+    /** Test mode only: settle a booking stuck on "Payment pending" as paid or failed. Body: {"outcome":"success"|"fail"} */
+    @PostMapping("/{id}/resolve-payment")
+    public Map<String, String> resolvePayment(Authentication auth, @PathVariable long id, @RequestBody Map<String, Object> body) {
+        if (!paymentService.manualResolveAllowed()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not available with live payment keys");
+        }
+        String outcome = String.valueOf(body.get("outcome"));
+        if (!"success".equals(outcome) && !"fail".equals(outcome)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "outcome must be success or fail");
+        }
+        String status = bookingService.resolvePending(auth.getName(), id, "success".equals(outcome));
+        return Map.of("status", status);
     }
 
     @PostMapping("/{id}/cancel")

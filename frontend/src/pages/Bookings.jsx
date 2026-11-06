@@ -19,7 +19,17 @@
 //     }
 //   }
 
-//   // A plain <a href> can't carry the Authorization header, so fetch the PDF
+//   // Test mode: settle a booking stuck on "Payment pending" by hand (paid or failed).
+  async function resolvePayment(id, outcome) {
+    try {
+      await api.post("/bookings/" + id + "/resolve-payment", { outcome });
+      load();
+    } catch (err) {
+      alert(err.response?.data?.message || err.message);
+    }
+  }
+
+  // A plain <a href> can't carry the Authorization header, so fetch the PDF
 //   // as a blob via axios (which does attach it) and trigger the download manually.
 //   async function downloadTicket(id, reference) {
 //     try {
@@ -198,7 +208,7 @@ function startsAt(b) {
 }
 
 function bucketOf(b) {
-  if (b.status === "CANCELLED") return "cancelled";
+  if (b.status === "CANCELLED" || b.status === "EXPIRED") return "cancelled";
   return startsAt(b) < new Date() ? "past" : "upcoming";
 }
 
@@ -206,6 +216,7 @@ function statusInfo(b) {
   if (b.status === "CONFIRMED") return { label: "Confirmed", cls: "ok" };
   if (b.status === "CANCELLED") return { label: "Cancelled", cls: "bad" };
   if (b.status === "PENDING") return { label: "Payment pending", cls: "wait" };
+  if (b.status === "EXPIRED") return { label: "Payment failed", cls: "bad" };
   return { label: b.status, cls: "wait" };
 }
 
@@ -390,6 +401,16 @@ export default function Bookings() {
                   <button className="bk-btn primary" onClick={() => downloadTicket(b.id, b.reference)}>
                     Download ticket
                   </button>
+                )}
+                {b.status === "PENDING" && (
+                  <>
+                    <button className="bk-btn" onClick={() => resolvePayment(b.id, "success")}>
+                      Mark payment success
+                    </button>
+                    <button className="bk-btn danger" onClick={() => resolvePayment(b.id, "fail")}>
+                      Mark payment failed
+                    </button>
+                  </>
                 )}
                 {b.status === "CONFIRMED" && bucket === "upcoming" && b.cancellable !== false && (
                   <button className="bk-btn danger" onClick={() => cancel(b.id)}>
