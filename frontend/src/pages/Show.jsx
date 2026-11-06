@@ -26,7 +26,6 @@ import { watchShowSeats } from "../liveSeats";
 //   const [seats, setSeats] = useState([]);
 //   const [selected, setSelected] = useState([]);
 //   const [mode, setMode] = useState(null); // "mock" | "razorpay" | null (unknown yet)
-  const [modeReason, setModeReason] = useState("");
 //   const [loadError, setLoadError] = useState("");
 //   const [pending, setPending] = useState(false);
 //   const [slow, setSlow] = useState(false);
@@ -419,6 +418,7 @@ export default function Show() {
   const [selected, setSelected] = useState([]);
 
   const [mode, setMode] = useState(null); // "mock" | "razorpay" | null (unknown yet)
+  const [modeReason, setModeReason] = useState("");
 
   const [loadError, setLoadError] = useState("");
 
