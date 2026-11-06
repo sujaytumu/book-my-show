@@ -1,10 +1,6 @@
 package com.sujaytumu.bms.service;
 
-import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
@@ -15,75 +11,45 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 /**
- * Emails the PDF ticket after a booking is confirmed.
- *
- * Primary path: Gmail SMTP (via a Gmail account + App Password). This is free
- * and, unlike Resend without a verified sending domain, works for any
- * recipient address - not just the account owner's own inbox.
- *
- * Fallback: Resend's HTTP API, used only if Gmail isn't configured. Kept as
- * a fallback rather than removed so nothing breaks if Gmail credentials are
- * ever unset.
- *
- * Both paths are best-effort: any failure is logged and swallowed, so a
- * booking never fails because of email.
+ * Sends email over Resend's HTTPS API only (no SMTP: free hosts such as Render block SMTP ports).
+ * Without a verified sending domain Resend only delivers to the Resend account owner's inbox.
+ * Everything is best-effort: a failure is logged and swallowed, so a booking never fails because of email.
  */
 @Service
 public class EmailService {
 
-    private final JavaMailSender mailSender;
-    private final String gmailUsername;
     private final String resendApiKey;
     private final String resendFrom;
     /** When set, verification codes are mailed to this address (shown with the requester's email). Needed while Resend has no verified domain: it only delivers to the Resend account owner's inbox. */
     private final String otpRedirect;
     private final HttpClient httpClient = HttpClient.newHttpClient();
 
-    public EmailService(JavaMailSender mailSender,
-                         @Value("${spring.mail.username:}") String gmailUsername,
+    public EmailService(
                          @Value("${resend.api-key}") String resendApiKey,
                          @Value("${resend.from:onboarding@resend.dev}") String resendFrom,
                          @Value("${mail.otp-redirect:}") String otpRedirect) {
         this.otpRedirect = otpRedirect == null ? "" : otpRedirect.trim();
-        this.mailSender = mailSender;
-        this.gmailUsername = gmailUsername;
         this.resendApiKey = resendApiKey;
         this.resendFrom = resendFrom;
-        // Confirms at boot whether the Gmail credential actually reached the app -
-        // if this ever logs blank, the env var isn't wired up server-side, full stop.
-        System.out.println("[EMAIL] Startup config: gmailUsername=" +
-                (gmailUsername.isBlank() ? "<BLANK - not configured>" : "'" + gmailUsername + "' (configured)") +
-                ", resendConfigured=" + !resendApiKey.isBlank());
+        System.out.println("[EMAIL] Startup config: Resend " + (resendApiKey.isBlank() ? "<NOT CONFIGURED - set RESEND_API_KEY>" : "configured")
+                + ", from=" + resendFrom + ", otpRedirect=" + (this.otpRedirect.isBlank() ? "<none>" : this.otpRedirect));
     }
 
     public boolean isConfigured() {
-        return !gmailUsername.isBlank() || !resendApiKey.isBlank();
+        return !resendApiKey.isBlank();
     }
 
     public void sendTicket(String toEmail, String toName, String subject, String htmlBody, byte[] pdfBytes, String pdfFilename) {
-        if (!gmailUsername.isBlank()) {
-            System.out.println("[EMAIL] Attempting Gmail SMTP send: from=" + gmailUsername + " to=" + toEmail);
-            try {
-                sendViaGmail(toEmail, subject, htmlBody, pdfBytes, pdfFilename);
-                System.out.println("[EMAIL] Gmail SMTP send SUCCEEDED to=" + toEmail);
-                return;
-            } catch (Exception e) {
-                System.err.println("[EMAIL] Gmail SMTP send FAILED to=" + toEmail + " - " + describe(e)
-                        + " - trying Resend fallback");
-            }
-        } else {
-            System.out.println("[EMAIL] Skipping Gmail (not configured), trying Resend for to=" + toEmail);
+        if (resendApiKey.isBlank()) {
+            System.err.println("[EMAIL] RESEND_API_KEY is not set - ticket for " + toEmail + " was not sent.");
+            return;
         }
-        if (!resendApiKey.isBlank()) {
-            sendViaResend(toEmail, subject, htmlBody, pdfBytes, pdfFilename);
-        } else {
-            System.err.println("[EMAIL] No email provider configured at all - ticket for " + toEmail + " was not sent.");
-        }
+        sendViaResend(toEmail, subject, htmlBody, pdfBytes, pdfFilename);
     }
 
     /**
      * One-time codes (forgot / change password). Goes over HTTPS via Resend first, because free hosts such as Render
-     * block SMTP ports; Gmail SMTP is only the fallback. If OTP_REDIRECT_EMAIL is set, the code is mailed there instead
+     * block SMTP ports). If OTP_REDIRECT_EMAIL is set, the code is mailed there instead
      * and the body names the account it was requested for.
      */
     public void sendCode(String requestedEmail, String subject, String htmlBody) {
@@ -130,17 +96,6 @@ public class EmailService {
             t = t.getCause();
         }
         return sb.toString();
-    }
-
-    private void sendViaGmail(String toEmail, String subject, String htmlBody, byte[] pdfBytes, String pdfFilename) throws Exception {
-        MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-        helper.setFrom(gmailUsername, "Book My Show");
-        helper.setTo(toEmail);
-        helper.setSubject(subject);
-        helper.setText(htmlBody, true);
-        helper.addAttachment(pdfFilename, new ByteArrayResource(pdfBytes), "application/pdf");
-        mailSender.send(message);
     }
 
     private void sendViaResend(String toEmail, String subject, String htmlBody, byte[] pdfBytes, String pdfFilename) {
