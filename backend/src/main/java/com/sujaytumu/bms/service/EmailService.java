@@ -93,7 +93,7 @@ public class EmailService {
         sendSimple(to, subject, body);
     }
 
-    /** Plain HTML email without an attachment. Best-effort: Resend (HTTPS) first, then Gmail SMTP. */
+    /** Plain HTML email without an attachment. Best-effort: Resend (HTTPS) only - no SMTP. */
     public void sendSimple(String toEmail, String subject, String htmlBody) {
         if (!resendApiKey.isBlank()) {
             try {
@@ -116,23 +116,8 @@ public class EmailService {
                 System.err.println("[EMAIL] Resend simple send FAILED to=" + toEmail + " - " + describe(e));
             }
         }
-        if (!gmailUsername.isBlank()) {
-            try {
-                MimeMessage message = mailSender.createMimeMessage();
-                MimeMessageHelper helper = new MimeMessageHelper(message, false, "UTF-8");
-                helper.setFrom(gmailUsername, "Book My Show");
-                helper.setTo(toEmail);
-                helper.setSubject(subject);
-                helper.setText(htmlBody, true);
-                mailSender.send(message);
-                System.out.println("[EMAIL] Gmail SMTP simple send SUCCEEDED to=" + toEmail);
-                return;
-            } catch (Exception e) {
-                System.err.println("[EMAIL] Gmail SMTP simple send FAILED to=" + toEmail + " - " + describe(e));
-            }
-        }
-        if (resendApiKey.isBlank() && gmailUsername.isBlank()) {
-            System.err.println("[EMAIL] No email provider configured - message to " + toEmail + " was not sent.");
+        if (resendApiKey.isBlank()) {
+            System.err.println("[EMAIL] RESEND_API_KEY is not set - message to " + toEmail + " was not sent.");
         }
     }
 
