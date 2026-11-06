@@ -8,7 +8,7 @@ export default function Forgot() {
   const [params] = useSearchParams();
   const change = params.get("change") === "1";
   const user = currentUser();
-  const [email, setEmail] = useState(change && user ? user.email : "");
+  const [email, setEmail] = useState(change && user ? user.email : params.get("email") || "");
   const [step, setStep] = useState(1);
   const [otp, setOtp] = useState("");
   const [pw, setPw] = useState("");

@@ -35,12 +35,16 @@ public class EmailService {
     private final String gmailUsername;
     private final String resendApiKey;
     private final String resendFrom;
+    /** When set, verification codes are mailed to this address (shown with the requester's email). Needed while Resend has no verified domain: it only delivers to the Resend account owner's inbox. */
+    private final String otpRedirect;
     private final HttpClient httpClient = HttpClient.newHttpClient();
 
     public EmailService(JavaMailSender mailSender,
                          @Value("${spring.mail.username:}") String gmailUsername,
                          @Value("${resend.api-key}") String resendApiKey,
-                         @Value("${resend.from:onboarding@resend.dev}") String resendFrom) {
+                         @Value("${resend.from:onboarding@resend.dev}") String resendFrom,
+                         @Value("${mail.otp-redirect:}") String otpRedirect) {
+        this.otpRedirect = otpRedirect == null ? "" : otpRedirect.trim();
         this.mailSender = mailSender;
         this.gmailUsername = gmailUsername;
         this.resendApiKey = resendApiKey;
@@ -77,8 +81,41 @@ public class EmailService {
         }
     }
 
-    /** Plain HTML email without an attachment (used for one-time codes). Best-effort like the ticket email. */
+    /**
+     * One-time codes (forgot / change password). Goes over HTTPS via Resend first, because free hosts such as Render
+     * block SMTP ports; Gmail SMTP is only the fallback. If OTP_REDIRECT_EMAIL is set, the code is mailed there instead
+     * and the body names the account it was requested for.
+     */
+    public void sendCode(String requestedEmail, String subject, String htmlBody) {
+        String to = otpRedirect.isBlank() ? requestedEmail : otpRedirect;
+        String body = otpRedirect.isBlank() ? htmlBody
+                : "<p style=\"color:#666\">Requested for account: <b>" + requestedEmail + "</b></p>" + htmlBody;
+        sendSimple(to, subject, body);
+    }
+
+    /** Plain HTML email without an attachment. Best-effort: Resend (HTTPS) first, then Gmail SMTP. */
     public void sendSimple(String toEmail, String subject, String htmlBody) {
+        if (!resendApiKey.isBlank()) {
+            try {
+                String body = "{\"from\": \"" + escape(resendFrom.contains("<") ? resendFrom : "Book My Show <" + resendFrom + ">") + "\", \"to\": [\"" + escape(toEmail) + "\"], \"subject\": \""
+                        + escape(subject) + "\", \"html\": \"" + escape(htmlBody) + "\"}";
+                HttpRequest request = HttpRequest.newBuilder(URI.create("https://api.resend.com/emails"))
+                        .header("Authorization", "Bearer " + resendApiKey)
+                        .header("Content-Type", "application/json")
+                        .timeout(java.time.Duration.ofSeconds(15))
+                        .POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8))
+                        .build();
+                HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+                if (response.statusCode() / 100 == 2) {
+                    System.out.println("[EMAIL] Resend simple send OK to=" + toEmail);
+                    return;
+                }
+                System.err.println("[EMAIL] Resend simple send REJECTED status=" + response.statusCode() + " to=" + toEmail + " body="
+                        + response.body());
+            } catch (Exception e) {
+                System.err.println("[EMAIL] Resend simple send FAILED to=" + toEmail + " - " + describe(e));
+            }
+        }
         if (!gmailUsername.isBlank()) {
             try {
                 MimeMessage message = mailSender.createMimeMessage();
@@ -94,21 +131,7 @@ public class EmailService {
                 System.err.println("[EMAIL] Gmail SMTP simple send FAILED to=" + toEmail + " - " + describe(e));
             }
         }
-        if (!resendApiKey.isBlank()) {
-            try {
-                String body = "{\"from\": \"" + escape(resendFrom) + "\", \"to\": [\"" + escape(toEmail) + "\"], \"subject\": \""
-                        + escape(subject) + "\", \"html\": \"" + escape(htmlBody) + "\"}";
-                HttpRequest request = HttpRequest.newBuilder(URI.create("https://api.resend.com/emails"))
-                        .header("Authorization", "Bearer " + resendApiKey)
-                        .header("Content-Type", "application/json")
-                        .POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8))
-                        .build();
-                HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-                System.out.println("[EMAIL] Resend simple send status=" + response.statusCode() + " to=" + toEmail);
-            } catch (Exception e) {
-                System.err.println("[EMAIL] Resend simple send FAILED to=" + toEmail + " - " + describe(e));
-            }
-        } else if (gmailUsername.isBlank()) {
+        if (resendApiKey.isBlank() && gmailUsername.isBlank()) {
             System.err.println("[EMAIL] No email provider configured - message to " + toEmail + " was not sent.");
         }
     }
