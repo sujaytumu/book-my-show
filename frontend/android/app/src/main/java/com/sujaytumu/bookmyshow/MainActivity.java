@@ -17,6 +17,7 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        registerPlugin(RazorpayCheckoutPlugin.class); // must be before super.onCreate
         super.onCreate(savedInstanceState);
 
         // Added after Capacitor's own handler, so this one runs first on every back press.

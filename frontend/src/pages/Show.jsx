@@ -292,6 +292,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 
 import { api, currentUser } from "../api";
 import { isNativeApp, shareTicketNative } from "../ticket";
+import { hasNativeCheckout, openNativeCheckout } from "../nativeCheckout";
 
 const MAX_SEATS = 10;
 
@@ -962,7 +963,8 @@ export default function Show() {
 
       const order = await createOrderWithRetry(hold.bookingId);
 
-      await loadRazorpayScript();
+      const native = hasNativeCheckout();
+      if (!native) await loadRazorpayScript();
 
       let finished = false;
       const complete = (confirmed) => {
@@ -985,7 +987,7 @@ export default function Show() {
       }
       document.addEventListener("visibilitychange", onVisible);
 
-      const rzp = new window.Razorpay({
+      const options = {
 
         key: order.data.keyId,
 
@@ -1024,7 +1026,22 @@ export default function Show() {
           }
         },
 
-      });
+      };
+
+      if (native) {
+        // Android app: Razorpay's native checkout (cards, netbanking, UPI apps) instead of the web checkout.
+        const { handler, modal, retry, ...nativeOptions } = options;
+        const result = await openNativeCheckout({ ...nativeOptions, theme: { color: "#d2232a" } });
+        if (result.ok) await handler(result.response);
+        else if (result.cancelled) await modal.ondismiss();
+        else {
+          document.removeEventListener("visibilitychange", onVisible);
+          setPayNote((result.error && result.error.description) || "The payment failed. You can try again.");
+        }
+        return;
+      }
+
+      const rzp = new window.Razorpay(options);
       rzp.on("payment.failed", (resp) => {
         setPayNote((resp && resp.error && resp.error.description) || "The payment failed. You can try again.");
       });
