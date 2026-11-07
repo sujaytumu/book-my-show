@@ -1757,3 +1757,8 @@ html[data-theme=dark] .pc-img{background:linear-gradient(110deg,#222226 30%,#2e2
 .pc-likes svg,.ml-likes svg{flex:none;width:16px;height:16px;fill:#3da65a}
 .ml-likes svg{margin-right:5px;vertical-align:-2px}
 html[data-theme=dark] .pc-likes{color:#dedede}
+
+/* Language and format picker: a little smaller and lighter */
+.lf-sheet .lf-lang{font-size:13px;font-weight:600;padding:13px 22px;letter-spacing:.2px}
+.lf-sheet .lf-chips{gap:10px;padding:16px 0 10px}
+.lf-sheet .lf-chips button{font-size:14.2px;font-weight:500;padding:9px 20px;border-radius:22px;line-height:1.2}
