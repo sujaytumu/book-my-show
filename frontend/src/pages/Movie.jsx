@@ -787,10 +787,15 @@ export default function Movie() {
           {(() => {
             const plus = (arr) => (arr.length > 3 ? arr.slice(0, 3).join(", ") + ", +" + (arr.length - 3) : arr.join(", "));
             const fm = [...new Set(shows.map((x) => x.format || "2D"))].sort();
-            const lg = String(movie.language || "")
-              .split(/[,/&]/)
-              .map((l) => l.trim().toUpperCase())
-              .filter(Boolean);
+            const lg = [
+              ...new Set([
+                ...String(movie.language || "")
+                  .split(/[,/&]/)
+                  .map((l) => l.trim().toUpperCase())
+                  .filter(Boolean),
+                ...shows.map((x) => String(x.language || "").toUpperCase()).filter(Boolean),
+              ]),
+            ];
             return (
               <>
                 {fm.length > 0 && <span>{plus(fm)}</span>}
@@ -1121,34 +1126,56 @@ export default function Movie() {
             <i className="grab" />
             <small className="lf-movie">{movie.title}</small>
             <h3 className="lf-title">Select language and format</h3>
-            <div className="lf-lang">{String(movie.language || "").toUpperCase()}</div>
-            <div className="lf-chips">
-              {formatOptions.map((f) => (
-                <button
-                  type="button"
-                  key={f}
-                  onClick={() => {
-                    setFormats([f]);
-                    setSheet(null);
-                    openBooking();
-                  }}
-                >
-                  {f}
-                </button>
-              ))}
-              {formatOptions.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFormats([]);
-                    setSheet(null);
-                    openBooking();
-                  }}
-                >
-                  Select all
-                </button>
-              )}
-            </div>
+            {(() => {
+              const byLang = showLanguages
+                .map((l) => ({
+                  l,
+                  fs: [...new Set(shows.filter((x) => (x.language || movie.language) === l).map((x) => x.format || "2D"))].sort(),
+                }))
+                .filter((x) => x.fs.length > 0);
+              const rows = byLang.length > 1 ? byLang : [{ l: String(movie.language || ""), fs: formatOptions }];
+              const many = byLang.length > 1;
+              return (
+                <>
+                  {rows.map(({ l, fs }) => (
+                    <div key={l}>
+                      <div className="lf-lang">{l.toUpperCase()}</div>
+                      <div className="lf-chips">
+                        {fs.map((f) => (
+                          <button
+                            type="button"
+                            key={l + f}
+                            onClick={() => {
+                              setFormats([f]);
+                              setLangFilter(many ? [l] : []);
+                              setSheet(null);
+                              openBooking();
+                            }}
+                          >
+                            {f}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                  {(formatOptions.length > 1 || many) && (
+                    <div className="lf-chips">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormats([]);
+                          setLangFilter([]);
+                          setSheet(null);
+                          openBooking();
+                        }}
+                      >
+                        Select all
+                      </button>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
         </div>
       )}
@@ -1239,7 +1266,7 @@ export default function Movie() {
 
             <h4 className="sheet-label">Format</h4>
             <div className="chip-row">
-              {["2D", "3D"].map((f) => (
+              {(formatOptions.length ? formatOptions : ["2D", "3D"]).map((f) => (
                 <button
                   key={f}
                   className={"chip" + (formats.includes(f) ? " active" : "")}
