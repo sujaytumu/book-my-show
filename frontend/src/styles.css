@@ -1735,3 +1735,19 @@ html[data-theme=dark] .forgot-cta b{color:#ececf0}
 .poster-row .poster-card{scroll-snap-align:start}
 html[data-theme=dark] .pc-img{background:linear-gradient(110deg,#222226 30%,#2e2e33 50%,#222226 70%);background-size:200% 100%}
 .pc-img:has(img.ld),.pc-img:has(.pc-fallback){animation:none}
+
+/* ---- Poster sizing and spacing matched to the real BookMyShow app (360dp phone: 16dp sides, 20dp gap, ~154dp wide 2:3 posters, 10dp corners) ---- */
+.home-page,.ml-page{margin-left:-2px;margin-right:-2px}
+.ml-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:28px 20px}
+.ml-card img{border-radius:10px}
+.ml-card b{margin-top:8px;font-size:16px;font-weight:500;line-height:1.25}
+.ml-rate{margin-top:10px;font-size:14px}
+.poster-row{gap:20px;padding-left:16px;padding-right:16px;margin-left:-16px;margin-right:-16px}
+.poster-row .poster-card{flex:0 0 calc((100vw - 52px) / 2)}
+.poster-grid{gap:28px 20px}
+.pc-img{border-radius:10px}
+.pc-meta{margin:10px 0 2px;font-size:13.5px;font-weight:600}
+.pc-meta em{font-size:12px;color:#5a67b5;font-weight:500}
+.poster-card b{margin-top:2px;font-size:16px;font-weight:500;line-height:1.25;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.poster-card small{font-size:12px;margin-top:2px;display:block}
+@media(min-width:700px){.poster-row .poster-card{flex-basis:170px}.ml-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
