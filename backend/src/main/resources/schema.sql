@@ -61,3 +61,4 @@ create unique index if not exists uq_movies_tmdb on movies(tmdb_id) where tmdb_i
 alter table movies add column if not exists trailer_key varchar(20);
 alter table bookings add column if not exists hold_extended boolean not null default false;
 alter table movies add column if not exists multi_format boolean not null default false;
+alter table movies add column if not exists show_languages varchar(200);

@@ -858,3 +858,14 @@ on conflict (show_id,seat_number) do nothing;
 
 -- Ramayana plays in many languages and formats (see ReleaseVariants / ShowWindowScheduler.applyReleaseVariants).
 update movies set multi_format = true where lower(title) = 'ramayana' and multi_format = false;
+
+-- Languages each film is released in (only fills films that have none yet, so later edits stay). Ramayana is released in many;
+-- Ranabaali has a 5-language theatrical run; The Paradise is announced in several; Scene (Suriya) is set to Telugu and Tamil;
+-- every other film plays in its own language only.
+update movies set show_languages = case lower(title)
+    when 'ramayana' then 'Telugu, Hindi, Tamil, English, Kannada, Malayalam'
+    when 'ranabaali' then 'Telugu, Hindi, Tamil, Kannada, Malayalam'
+    when 'the paradise' then 'Telugu, Hindi, Tamil, English, Kannada, Malayalam'
+    when 'scene' then 'Telugu, Tamil'
+  end
+where show_languages is null and lower(title) in ('ramayana','ranabaali','the paradise','scene');

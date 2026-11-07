@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * How a big, multi-language release (Ramayana) is spread over the screens, the way it plays in real cinemas:
+ * How a release is spread over the screens in languages and formats, the way it plays in real cinemas:
  * single screens play it in the local language, in plain 2D with the odd 3D show; multiplexes mix languages
  * (local language and Hindi most, then Telugu, English, Tamil...) and put the premium formats (IMAX, Dolby, 4DX, PXL)
  * on the screens that have them, mostly in the evening. The choice is a pure function of the show, so running it
@@ -54,26 +54,51 @@ public final class ReleaseVariants {
         return x - Math.floor(x);
     }
 
-    public static Label label(long showId, String city, String theatreName, String theatreType, LocalTime start) {
+    /**
+     * @param allowed the languages this film is released in (movies.show_languages); empty means only its own language
+     * @param movieLanguage the film's own language, used when nothing else is allowed
+     */
+    public static Label label(long showId, String city, String theatreName, String theatreType, LocalTime start,
+                              List<String> allowed, String movieLanguage) {
         boolean multiplex = "MULTIPLEX".equalsIgnoreCase(theatreType);
         boolean evening = start != null && !start.isBefore(LocalTime.of(17, 30));
         double h1 = frac(showId, 0.6180339887);
         double h2 = frac(showId, 0.7548776662);
         double h3 = frac(showId, 0.5698402909);
 
-        if (!multiplex) {
-            // Single screens: local language, plain 2D, with the odd 3D show (more at a 3D-equipped hall like Arjun).
-            double threeD = theatreName != null && theatreName.contains("Arjun") ? 0.35 : 0.12;
-            return new Label(localLanguage(city), h2 < threeD ? "3D" : "2D");
+        String own = movieLanguage == null || movieLanguage.isBlank() ? "Telugu" : movieLanguage;
+        // The regional mix, cut down to the languages this film actually has and scaled back up to 100%.
+        java.util.List<String[]> rows = new java.util.ArrayList<>();
+        double total = 0;
+        for (String[] row : mix(city)) {
+            for (String a : allowed == null ? List.<String>of() : allowed) {
+                if (a.equalsIgnoreCase(row[0])) {
+                    rows.add(row);
+                    total += Double.parseDouble(row[1]);
+                    break;
+                }
+            }
         }
 
-        double cut = 0;
-        String language = mix(city)[0][0];
-        for (String[] row : mix(city)) {
-            cut += Double.parseDouble(row[1]) / 100.0;
-            if (h1 < cut) {
-                language = row[0];
-                break;
+        if (!multiplex) {
+            // Single screens: the local language if the film has it (else its own), plain 2D, the odd 3D show
+            // (more at a 3D-equipped hall like Arjun).
+            String local = localLanguage(city);
+            boolean hasLocal = rows.stream().anyMatch(r -> r[0].equalsIgnoreCase(local));
+            double threeD = theatreName != null && theatreName.contains("Arjun") ? 0.35 : 0.12;
+            return new Label(hasLocal ? local : own, h2 < threeD ? "3D" : "2D");
+        }
+
+        String language = own;
+        if (!rows.isEmpty()) {
+            double cut = 0;
+            language = rows.get(0)[0];
+            for (String[] row : rows) {
+                cut += Double.parseDouble(row[1]) / total;
+                if (h1 < cut) {
+                    language = row[0];
+                    break;
+                }
             }
         }
 
