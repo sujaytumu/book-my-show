@@ -36,6 +36,7 @@ public class ShowWindowScheduler {
         removeClashingShows();
         topUpWindow();
         rebalanceByRecency();
+        applyReleaseVariants();
     }
 
     /** Runs daily at 00:05 server time: new releases first, then the rolling window. */
@@ -47,6 +48,7 @@ public class ShowWindowScheduler {
         removeClashingShows();
         topUpWindow();
         rebalanceByRecency();
+        applyReleaseVariants();
     }
 
     /**
@@ -121,6 +123,7 @@ public class ShowWindowScheduler {
                 where sr.screen_id = sh.screen_id and (sr.theatre_type <> 'MULTIPLEX' or sr.screen_rank <= 2)
                   and sh.movie_id <> ? and sh.show_date <= (now() at time zone 'Asia/Kolkata')::date + 9
                   and (select language from movies where id = sh.movie_id) = 'Telugu'
+                      and (sh.language is null or sh.language = 'Telugu')
                   and (sh.show_date + sh.start_time) > (now() at time zone 'Asia/Kolkata')
                   and not exists (select 1 from bookings b where b.show_id = sh.id and b.status in ('PENDING','CONFIRMED'))
                 """, ranabaali, ranabaali, ranabaali);
@@ -213,6 +216,37 @@ public class ShowWindowScheduler {
                 update shows sh set movie_id = p.movie_id, language = 'Telugu'
                 from pick p where p.show_id = sh.id and sh.movie_id <> p.movie_id
                 """);
+    }
+
+    /**
+     * Gives a multi-language release (movies.multi_format, e.g. Ramayana) its languages and formats: Hindi, Telugu, Tamil,
+     * English... and 2D, 3D, IMAX, Dolby, 4DX, PXL, as ReleaseVariants decides per show. Only the next 10 days, only
+     * shows with no pending or confirmed booking and no held seat, and none starting within 3 hours. Nothing is deleted.
+     */
+    public void applyReleaseVariants() {
+        var rows = db.queryForList("""
+                select sh.id, sh.start_time, sh.language, sh.format, t.name theatre, t.theatre_type, c.name city
+                from shows sh
+                join movies m on m.id = sh.movie_id and m.multi_format = true
+                join screens sc on sc.id = sh.screen_id
+                join theatres t on t.id = sc.theatre_id and t.active = true
+                join cities c on c.id = t.city_id
+                where sh.show_date between (now() at time zone 'Asia/Kolkata')::date and (now() at time zone 'Asia/Kolkata')::date + 9
+                  and (sh.show_date + sh.start_time) > (now() at time zone 'Asia/Kolkata') + interval '3 hours'
+                  and (sh.language is null or sh.language = m.language)
+                  and not exists (select 1 from bookings b where b.show_id = sh.id and b.status in ('PENDING','CONFIRMED'))
+                  and not exists (select 1 from show_seats ss where ss.show_id = sh.id and ss.status <> 'AVAILABLE')
+                """);
+        java.util.List<Object[]> updates = new java.util.ArrayList<>();
+        for (var r : rows) {
+            long id = ((Number) r.get("id")).longValue();
+            var label = com.sujaytumu.bms.service.ReleaseVariants.label(id, (String) r.get("city"), (String) r.get("theatre"),
+                    (String) r.get("theatre_type"), ((java.sql.Time) r.get("start_time")).toLocalTime());
+            if (!label.language().equals(r.get("language")) || !label.format().equals(r.get("format"))) {
+                updates.add(new Object[] {label.language(), label.format(), id});
+            }
+        }
+        if (!updates.isEmpty()) db.batchUpdate("update shows set language = ?, format = ? where id = ?", updates);
     }
 
     public void topUpWindow() {

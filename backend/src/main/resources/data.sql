@@ -855,3 +855,6 @@ select sh.id, chr(65 + r) || n::text, case when r < 4 then 'PREMIUM' else 'REGUL
 from shows sh cross join generate_series(0,9) r cross join generate_series(1,15) n
 where (select count(*) from show_seats ss where ss.show_id = sh.id) < 150
 on conflict (show_id,seat_number) do nothing;
+
+-- Ramayana plays in many languages and formats (see ReleaseVariants / ShowWindowScheduler.applyReleaseVariants).
+update movies set multi_format = true where lower(title) = 'ramayana' and multi_format = false;
