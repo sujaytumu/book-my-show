@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { thumb } from "../img";
+import { thumb, prefetchPosters } from "../img";
 import { Link } from "react-router-dom";
 import { api } from "../api";
 import { swrGet } from "../cache";
-import { IcClap, IcFilm, IcReel } from "../components/Icons";
+import { IcClap, IcFilm, IcLike, IcReel } from "../components/Icons";
 
 function votesLabel(n) {
   n = Number(n) || 0;
@@ -22,7 +22,7 @@ function flagFor(m) {
 
 // Poster image that fades in once loaded and falls back to a title card if the picture is missing or broken,
 // so a poster that changes in the database (or fails to load) never leaves a blank hole in the row.
-function PosterImg({ url, title, size }) {
+function PosterImg({ url, title, size, eager }) {
   // State is tied to the url it was recorded for, so a changed poster starts fresh without an effect.
   const [rec, setRec] = useState({ url, v: "" });
   const state = rec.url === url ? rec.v : "";
@@ -39,21 +39,33 @@ function PosterImg({ url, title, size }) {
       className={state}
       src={size ? thumb(url, size) : thumb(url)}
       alt={title}
-      loading="lazy"
+      loading={eager ? "eager" : "lazy"}
+      decoding="async"
       onLoad={() => setState("ld")}
       onError={() => setState("err")}
     />
   );
 }
 
-function Poster({ movie }) {
+function likesLabel(n) {
+  n = Number(n) || 0;
+  if (n >= 1000) return (Math.floor(n / 100) / 10).toFixed(1).replace(/\.0$/, "") + "K+ likes";
+  return n + " likes";
+}
+
+function Poster({ movie, eager }) {
   return (
     <Link className="poster-card" to={"/movie/" + movie.id}>
       <div className="pc-img">
-        <PosterImg url={movie.poster_url} title={movie.title} />
+        <PosterImg url={movie.poster_url} title={movie.title} eager={eager} />
         {movie.upcoming && <span className="pc-rate soon">Coming Soon</span>}
         {!movie.upcoming && flagFor(movie) && <i className="pc-flag">{flagFor(movie)}</i>}
       </div>
+      {movie.upcoming && Number(movie.interested_base) > 0 && (
+        <span className="pc-likes">
+          <IcLike /> {likesLabel(movie.interested_base)}
+        </span>
+      )}
       {!movie.upcoming && (
         <span className="pc-meta">
           <span>
@@ -130,6 +142,10 @@ export default function Home({ mode = "now-showing" }) {
   const telugu = useMemo(() => movies.filter((m) => m.language === "Telugu"), [movies]);
   const running = useMemo(() => telugu.filter((m) => !m.upcoming), [telugu]);
   const soon = useMemo(() => telugu.filter((m) => m.upcoming), [telugu]);
+  // Warm every poster on the page (Coming Soon is far below the fold, so lazy loading would fetch it late).
+  useEffect(() => {
+    prefetchPosters([...soon, ...running], 30);
+  }, [soon, running]);
   // Top Rated row (unchanged): best rated running movies.
   const hero = useMemo(() => [...running].sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0)).slice(0, 5), [running]);
   // Banner carousel: freshest releases first, then by rating, so a new release is always up front.
@@ -264,7 +280,7 @@ export default function Home({ mode = "now-showing" }) {
           <h2 className="hp-h">Coming Soon</h2>
           <div className="poster-grid">
             {soon.map((m) => (
-              <Poster movie={m} key={m.id} />
+              <Poster movie={m} key={m.id} eager />
             ))}
           </div>
           {soon.length === 0 && <p className="empty-note">No upcoming Telugu movies right now.</p>}
@@ -385,7 +401,7 @@ export default function Home({ mode = "now-showing" }) {
               </div>
               <div className="poster-row">
                 {soon.map((m) => (
-                  <Poster movie={m} key={m.id} />
+                  <Poster movie={m} key={m.id} eager />
                 ))}
               </div>
             </>

@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { thumb } from "../img";
+import { thumb, prefetchPosters } from "../img";
 import { goBack } from "../nav";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { swrGet } from "../cache";
-import { IcBack, IcSearch } from "../components/Icons";
+import { IcBack, IcSearch, IcLike } from "../components/Icons";
 import { getCity } from "../location";
 
 const IcFilter = () => (
@@ -44,6 +44,10 @@ export default function MovieList({ upcoming = false }) {
   }, [upcoming]);
 
   const base = useMemo(() => movies.filter((m) => m.language === "Telugu" && !!m.upcoming === upcoming), [movies, upcoming]);
+  // Start downloading every poster on this page as soon as the list is known, instead of waiting for scroll.
+  useEffect(() => {
+    prefetchPosters(base, 30);
+  }, [base]);
   const genres = useMemo(() => {
     const set = new Set();
     base.forEach((m) =>
@@ -128,9 +132,9 @@ export default function MovieList({ upcoming = false }) {
       )}
 
       <div className="ml-grid">
-        {list.map((m) => (
+        {list.map((m, idx) => (
           <Link key={m.id} to={"/movie/" + m.id} className="ml-card">
-            <img src={thumb(m.poster_url)} alt={m.title} loading="lazy" />
+            <img src={thumb(m.poster_url)} alt={m.title} loading={idx < 8 ? "eager" : "lazy"} decoding="async" fetchpriority={idx < 4 ? "high" : "auto"} />
             {!upcoming && Number(m.rating) >= 9 && <i className="ml-promo">TOP RATED</i>}
             {upcoming ? (
               <span className="ml-pill">{m.release_date ? fmtRelease(m.release_date) : "Coming Soon"}</span>
@@ -145,7 +149,7 @@ export default function MovieList({ upcoming = false }) {
             <b>{m.title}</b>
             {Number(m.interested_base) > 0 && (
               <small className="ml-likes">
-                <i>👍</i> {fmtVotes(m.interested_base).replace("+ votes", "+").replace(" votes", "")} likes
+                <IcLike /> {fmtVotes(m.interested_base).replace("+ votes", "+").replace(" votes", "")} likes
               </small>
             )}
             {upcoming && <small>{m.genre}</small>}
