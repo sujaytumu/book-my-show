@@ -497,7 +497,25 @@ export default function Movie() {
   }, [movie]);
 
   useEffect(() => {
+    // Show the last saved copy of this movie and its showtimes straight away; the fresh copy replaces it below.
+    try {
+      const m0 = JSON.parse(localStorage.getItem("bms_swr_/movies/" + id) || "null");
+      if (m0 && String(m0.id) === String(id)) {
+        setMovie(m0);
+        if (!m0.upcoming) {
+          const s0 = JSON.parse(localStorage.getItem("bms_swr_/shows/" + id + "/" + getCity()) || "null");
+          if (Array.isArray(s0) && s0.length) {
+            setShows(s0);
+            setShowsLoaded(true);
+            setSelectedDate((cur) => cur || s0[0].show_date);
+          }
+        }
+      }
+    } catch {}
     api.get("/movies/" + id).then((res) => {
+      try {
+        localStorage.setItem("bms_swr_/movies/" + id, JSON.stringify(res.data));
+      } catch {}
       setMovie(res.data);
       try {
         const d = res.data;
@@ -512,9 +530,14 @@ export default function Movie() {
       }
       if (!res.data.upcoming) {
         api.get("/shows", { params: { movieId: id, city: getCity() } }).then((showsRes) => {
+          try {
+            localStorage.setItem("bms_swr_/shows/" + id + "/" + getCity(), JSON.stringify(showsRes.data));
+          } catch {}
           setShows(showsRes.data);
           setShowsLoaded(true);
-          if (showsRes.data.length) setSelectedDate(showsRes.data[0].show_date);
+          // Keep the date the viewer already picked while the fresh list arrives.
+          if (showsRes.data.length)
+            setSelectedDate((cur) => (cur && showsRes.data.some((x) => x.show_date === cur) ? cur : showsRes.data[0].show_date));
         });
       }
     });
