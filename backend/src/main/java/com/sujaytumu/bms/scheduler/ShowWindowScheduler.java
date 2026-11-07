@@ -219,15 +219,16 @@ public class ShowWindowScheduler {
     }
 
     /**
-     * Gives a multi-language release (movies.multi_format, e.g. Ramayana) its languages and formats: Hindi, Telugu, Tamil,
-     * English... and 2D, 3D, IMAX, Dolby, 4DX, PXL, as ReleaseVariants decides per show. Only the next 10 days, only
+     * Gives every release its languages and formats: the languages listed in movies.show_languages (just its own language when
+     * empty) and 2D, 3D, IMAX, Dolby, 4DX, PXL, as ReleaseVariants decides per show. Only the next 10 days, only
      * shows with no pending or confirmed booking and no held seat, and none starting within 3 hours. Nothing is deleted.
      */
     public void applyReleaseVariants() {
         var rows = db.queryForList("""
-                select sh.id, sh.start_time, sh.language, sh.format, t.name theatre, t.theatre_type, c.name city
+                select sh.id, sh.start_time, sh.language, sh.format, t.name theatre, t.theatre_type, c.name city,
+                       m.language movie_language, m.show_languages
                 from shows sh
-                join movies m on m.id = sh.movie_id and m.multi_format = true
+                join movies m on m.id = sh.movie_id
                 join screens sc on sc.id = sh.screen_id
                 join theatres t on t.id = sc.theatre_id and t.active = true
                 join cities c on c.id = t.city_id
@@ -240,8 +241,12 @@ public class ShowWindowScheduler {
         java.util.List<Object[]> updates = new java.util.ArrayList<>();
         for (var r : rows) {
             long id = ((Number) r.get("id")).longValue();
+            String langs = (String) r.get("show_languages");
+            java.util.List<String> allowed = langs == null || langs.isBlank() ? java.util.List.of()
+                    : java.util.Arrays.stream(langs.split("[,/&]")).map(String::trim).filter(x -> !x.isEmpty()).toList();
             var label = com.sujaytumu.bms.service.ReleaseVariants.label(id, (String) r.get("city"), (String) r.get("theatre"),
-                    (String) r.get("theatre_type"), ((java.sql.Time) r.get("start_time")).toLocalTime());
+                    (String) r.get("theatre_type"), ((java.sql.Time) r.get("start_time")).toLocalTime(),
+                    allowed, (String) r.get("movie_language"));
             if (!label.language().equals(r.get("language")) || !label.format().equals(r.get("format"))) {
                 updates.add(new Object[] {label.language(), label.format(), id});
             }
