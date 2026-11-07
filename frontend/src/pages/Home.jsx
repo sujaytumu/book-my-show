@@ -302,7 +302,7 @@ export default function Home({ mode = "now-showing" }) {
                 {slides.map((m, si) => (
                   <Link key={si + "-" + m.id} to={"/movie/" + m.id} className="hero-card" draggable={false}>
                     <img className="hc-bg" src={thumb(m.poster_url, "w185")} alt="" />
-                    <img decoding="async" className="hc-poster" src={m.poster_url} alt={m.title} draggable={false} />
+                    <img decoding="async" className="hc-poster" src={si === (loop ? 1 : 0) ? thumb(m.poster_url) : m.poster_url} alt={m.title} draggable={false} fetchpriority={si <= 1 ? "high" : "auto"} />
                     <div>
                       <span className="hc-tag">NOW SHOWING</span>
                       <b>{m.title}</b>
