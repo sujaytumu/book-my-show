@@ -121,7 +121,7 @@ from movies m join (values
   ('Sathi Leelavathi','Miraj Cinemas: Cinetown','14:30','16:41',210)
 ) as v(movie_title,theatre_name,start_time,end_time,price) on v.movie_title=m.title
 join theatres t on t.name=v.theatre_name
-join screens sc on sc.theatre_id=t.id
+join screens sc on sc.theatre_id=t.id and sc.name='Screen 1'
 where not exists(select 1 from shows sh where sh.movie_id=m.id and sh.screen_id=sc.id);
 
 -- Also keep each movie's original single show (from the first seeding pass) if present.
@@ -409,7 +409,7 @@ from movies m join (values
   ('Sathi Leelavathi','Sudarshan 35MM','19:30','22:00',160)
 ) as v(movie_title,theatre_name,start_time,end_time,price) on v.movie_title=m.title
 join theatres t on t.name=v.theatre_name and t.active=true
-join screens sc on sc.theatre_id=t.id
+join screens sc on sc.theatre_id=t.id and sc.name='Screen 1'
 cross join generate_series(0,6) as d(day_offset)
 where not exists(
   select 1 from shows sh where sh.movie_id=m.id and sh.screen_id=sc.id
@@ -460,7 +460,7 @@ from movies m join (values
   ('Sigma','Sudarshan 35MM','19:00','21:30',150)
 ) as v(movie_title,theatre_name,start_time,end_time,price) on v.movie_title=m.title
 join theatres t on t.name=v.theatre_name and t.active=true
-join screens sc on sc.theatre_id=t.id
+join screens sc on sc.theatre_id=t.id and sc.name='Screen 1'
 cross join generate_series(0,6) as d(day_offset)
 where not exists(
   select 1 from shows sh where sh.movie_id=m.id and sh.screen_id=sc.id
@@ -520,7 +520,7 @@ from movies m join (values
   ('Tella Kagitam','Asian CineSquare Multiplex','20:45','23:05',230)
 ) as v(movie_title,theatre_name,start_time,end_time,price) on v.movie_title=m.title
 join theatres t on t.name=v.theatre_name and t.active=true
-join screens sc on sc.theatre_id=t.id
+join screens sc on sc.theatre_id=t.id and sc.name='Screen 1'
 cross join generate_series(0,6) as d(day_offset)
 where not exists(
   select 1 from shows sh where sh.movie_id=m.id and sh.screen_id=sc.id
@@ -784,3 +784,74 @@ select 'Scene',
        date '2026-11-06', (date '2026-11-06' > (now() at time zone 'Asia/Kolkata')::date),
        '[{"name":"Suriya","role":"Actor"},{"name":"Jithu Madhavan","role":"Director"},{"name":"Jithu Madhavan","role":"Writer"},{"name":"Jyotika","role":"Producer"},{"name":"Suriya","role":"Producer"},{"name":"Sushin Shyam","role":"Music Director"},{"name":"2D Entertainment","role":"Banner"}]'
 where not exists(select 1 from movies where lower(title) = 'scene');
+
+-- ============================================================
+-- Kukatpally: three single-screen cinemas (Arjun, Sri Bhramaramba, Mallikarjuna) and three mall multiplexes
+-- (Lulu, Nexus, Lakeshore) with several screens each. Nothing existing is removed or rewritten: theatres are added by
+-- name only when missing, screens and starter shows only where a screen has none, and the one-time clean-up below
+-- is guarded by app_flags. The daily scheduler then repeats the starter shows across the rolling window and
+-- rebalanceByRecency shares the Telugu screens between films by how recent each release is.
+-- Screens: Lulu 10 and Lakeshore 9 as reported for those cinemas; Nexus 8 is an estimate.
+-- ============================================================
+insert into theatres(name,address,city_id,latitude,longitude,theatre_type)
+select 'Arjun Theatre','Arjun Theatre 2K 3D, Kukatpally, Hyderabad',c.id,17.4855,78.4095,'SINGLE'
+from cities c where c.name='Hyderabad' and not exists(select 1 from theatres t where t.name='Arjun Theatre');
+
+with f as (insert into app_flags(flag) values('kukatpally_cinemas_2026_11_07') on conflict do nothing returning 1)
+update theatres t set
+  theatre_type = case when t.name in ('Arjun Theatre','Sri Bhramaramba Cinema Hall','Mallikarjuna Theatre') then 'SINGLE' else 'MULTIPLEX' end,
+  active = true,
+  address = case t.name
+    when 'Cinepolis Lulu Mall' then 'Lulu Mall, Kukatpally, Hyderabad'
+    when 'PVR Nexus Mall' then 'Nexus Mall (Forum Sujana), KPHB Phase 6, Kukatpally, Hyderabad'
+    when 'PVR LakeShore Mall' then 'Lakeshore Mall, Y Junction, Kukatpally, Hyderabad'
+    when 'Sri Bhramaramba Cinema Hall' then 'Bhramaramba 70MM, Kukatpally, Hyderabad'
+    when 'Mallikarjuna Theatre' then 'Mallikarjuna 70MM, Kukatpally, Hyderabad'
+    else t.address end
+where exists(select 1 from f)
+  and t.name in ('Arjun Theatre','Sri Bhramaramba Cinema Hall','Mallikarjuna Theatre','Cinepolis Lulu Mall','PVR Nexus Mall','PVR LakeShore Mall');
+
+insert into screens(name,total_seats,theatre_id)
+select 'Screen ' || g, 150, t.id
+from theatres t
+join (values ('Arjun Theatre',1),('Sri Bhramaramba Cinema Hall',1),('Mallikarjuna Theatre',1),
+             ('Cinepolis Lulu Mall',10),('PVR LakeShore Mall',9),('PVR Nexus Mall',8)) v(name,cnt) on v.name = t.name
+cross join generate_series(1,10) g
+where g <= v.cnt and not exists(select 1 from screens s where s.theatre_id = t.id and s.name = 'Screen ' || g);
+
+-- Starter shows (four a day) for any of these screens that has none yet. On a mall, the first 70% of its screens play
+-- Telugu films and the rest play other languages (when none is running, they play Telugu too). Start times are staggered screen by screen.
+insert into shows(movie_id,screen_id,show_date,start_time,end_time,price,format,language)
+select mv.id, sc.id, (now() at time zone 'Asia/Kolkata')::date + 1,
+       sl.st + (sc.k % 4) * interval '15 minutes',
+       sl.st + (sc.k % 4) * interval '15 minutes' + interval '2 hours 30 minutes',
+       case when sc.theatre_type = 'MULTIPLEX' then 150 else 100 end,
+       case when sc.theatre_type = 'MULTIPLEX' and sl.st >= time '18:00' then '3D' else '2D' end,
+       mv.language
+from (
+  select z.* from (
+    select s.id, t.theatre_type,
+           row_number() over (partition by t.id order by s.id) k,
+           count(*) over (partition by t.id) n
+    from screens s join theatres t on t.id = s.theatre_id
+    where t.name in ('Arjun Theatre','Sri Bhramaramba Cinema Hall','Mallikarjuna Theatre','Cinepolis Lulu Mall','PVR LakeShore Mall','PVR Nexus Mall')
+  ) z
+  where not exists(select 1 from shows x where x.screen_id = z.id)
+) sc
+cross join (values (1,time '10:30'),(2,time '14:00'),(3,time '18:30'),(4,time '21:15')) as sl(n,st)
+cross join lateral (
+  select m.id, m.language
+  from movies m
+  where m.active = true and m.upcoming = false
+    and (m.language = 'Telugu') = not (sc.n >= 5 and sc.k > ceil(sc.n * 0.7) and exists(select 1 from movies o where o.active = true and o.upcoming = false and o.language <> 'Telugu'))
+  order by m.id
+  offset (sc.k + sl.n) % greatest((select count(*) from movies m2 where m2.active = true and m2.upcoming = false
+                                     and (m2.language = 'Telugu') = not (sc.n >= 5 and sc.k > ceil(sc.n * 0.7) and exists(select 1 from movies o where o.active = true and o.upcoming = false and o.language <> 'Telugu'))), 1)
+  limit 1
+) mv;
+
+insert into show_seats(show_id,seat_number,seat_type)
+select sh.id, chr(65 + r) || n::text, case when r < 4 then 'PREMIUM' else 'REGULAR' end
+from shows sh cross join generate_series(0,9) r cross join generate_series(1,15) n
+where (select count(*) from show_seats ss where ss.show_id = sh.id) < 150
+on conflict (show_id,seat_number) do nothing;
