@@ -1714,3 +1714,24 @@ html[data-theme=dark] .tk-actions a,html[data-theme=dark] .tk-actions button{bac
 .forgot-cta a{align-self:flex-start;margin-top:6px;padding:8px 14px;border-radius:8px;background:var(--red);color:#fff;font-weight:700;font-size:12px;text-decoration:none}
 html[data-theme=dark] .forgot-cta{background:#3a2226;border-color:#4a2c31;color:#c4c4cf}
 html[data-theme=dark] .forgot-cta b{color:#ececf0}
+
+/* ---- BMS-style poster motion: banner dots with a progress fill, fade-in posters, press feedback ---- */
+.hero-row{overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scroll-snap-stop:always}
+.hero-card{scroll-snap-stop:always;-webkit-user-drag:none;user-select:none;-webkit-touch-callout:none}
+.hero-dots i{position:relative;overflow:hidden;cursor:pointer}
+.hero-dots i.on::after{content:"";position:absolute;inset:0;background:rgba(255,255,255,.55);transform-origin:left;transform:scaleX(0);animation:heroFill 4s linear forwards}
+.hero-dots.hold i.on::after{animation-play-state:paused}
+@keyframes heroFill{to{transform:scaleX(1)}}
+@media (prefers-reduced-motion:reduce){.hero-dots i.on::after{animation:none}}
+.pc-img{background:linear-gradient(110deg,#e4e4e8 30%,#f1f1f4 50%,#e4e4e8 70%);background-size:200% 100%;animation:pcShimmer 1.4s linear infinite}
+@keyframes pcShimmer{to{background-position:-200% 0}}
+.pc-img img{opacity:0;transition:opacity .35s ease}
+.pc-img img.ld{opacity:1}
+.pc-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:10px;text-align:center;font-weight:800;font-size:13px;line-height:1.25;color:#fff;background:linear-gradient(160deg,#3a1c2c,#e0415a)}
+.poster-card{transition:transform .18s ease}
+.poster-card:active{transform:scale(.96)}
+@media(hover:hover){.poster-card:hover{transform:translateY(-3px)}}
+.poster-row{scroll-snap-type:x proximity;overscroll-behavior-x:contain}
+.poster-row .poster-card{scroll-snap-align:start}
+html[data-theme=dark] .pc-img{background:linear-gradient(110deg,#222226 30%,#2e2e33 50%,#222226 70%);background-size:200% 100%}
+.pc-img:has(img.ld),.pc-img:has(.pc-fallback){animation:none}

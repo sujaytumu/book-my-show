@@ -20,11 +20,37 @@ function flagFor(m) {
   return "";
 }
 
+// Poster image that fades in once loaded and falls back to a title card if the picture is missing or broken,
+// so a poster that changes in the database (or fails to load) never leaves a blank hole in the row.
+function PosterImg({ url, title, size }) {
+  // State is tied to the url it was recorded for, so a changed poster starts fresh without an effect.
+  const [rec, setRec] = useState({ url, v: "" });
+  const state = rec.url === url ? rec.v : "";
+  const setState = (v) => setRec({ url, v });
+  const ref = (el) => {
+    if (el && el.complete && el.naturalWidth > 0 && !state) setState("ld");
+  };
+  if (!url || state === "err") {
+    return <span className="pc-fallback">{title}</span>;
+  }
+  return (
+    <img
+      ref={ref}
+      className={state}
+      src={size ? thumb(url, size) : thumb(url)}
+      alt={title}
+      loading="lazy"
+      onLoad={() => setState("ld")}
+      onError={() => setState("err")}
+    />
+  );
+}
+
 function Poster({ movie }) {
   return (
     <Link className="poster-card" to={"/movie/" + movie.id}>
       <div className="pc-img">
-        <img src={thumb(movie.poster_url)} alt={movie.title} loading="lazy" />
+        <PosterImg url={movie.poster_url} title={movie.title} />
         {movie.upcoming && <span className="pc-rate soon">Coming Soon</span>}
         {!movie.upcoming && flagFor(movie) && <i className="pc-flag">{flagFor(movie)}</i>}
       </div>
@@ -83,29 +109,125 @@ export default function Home({ mode = "now-showing" }) {
     window.scrollTo(0, 0);
   }, [mode]);
 
+  // Keep the posters live: re-read the movie list every minute and whenever the app comes back to the
+  // foreground, so new releases, changed posters and "Coming Soon" -> "Now Showing" moves show up on their own.
+  useEffect(() => {
+    const refresh = () => {
+      if (document.hidden) return;
+      swrGet("/movies", (data) => {
+        if (Array.isArray(data)) setMovies(data);
+      }).catch(() => {});
+    };
+    const t = setInterval(refresh, 60000);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      clearInterval(t);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, []);
+
   // Telugu movies only.
   const telugu = useMemo(() => movies.filter((m) => m.language === "Telugu"), [movies]);
-  const running = telugu.filter((m) => !m.upcoming);
-  const soon = telugu.filter((m) => m.upcoming);
+  const running = useMemo(() => telugu.filter((m) => !m.upcoming), [telugu]);
+  const soon = useMemo(() => telugu.filter((m) => m.upcoming), [telugu]);
+  // Top Rated row (unchanged): best rated running movies.
+  const hero = useMemo(() => [...running].sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0)).slice(0, 5), [running]);
+  // Banner carousel: freshest releases first, then by rating, so a new release is always up front.
+  const featured = useMemo(() => {
+    const age = (m) => (m.release_date ? Date.now() - new Date(m.release_date + "T00:00:00").getTime() : Infinity);
+    const fresh = (m) => age(m) >= 0 && age(m) <= 10 * 86400000;
+    return [...running]
+      .sort((a, b) => Number(fresh(b)) - Number(fresh(a)) || Number(b.rating || 0) - Number(a.rating || 0))
+      .slice(0, 6);
+  }, [running]);
+
+  // ---- banner carousel: loops forever, auto-advances, and stops while the finger/mouse is on it ----------------
   const heroRef = useRef(null);
-  const [heroIdx, setHeroIdx] = useState(0);
-  function onHeroScroll(e) {
-    const el = e.currentTarget;
-    const w = el.firstChild ? el.firstChild.getBoundingClientRect().width + 12 : 1;
-    setHeroIdx(Math.round(el.scrollLeft / w));
+  const [heroIdx, setHeroIdx] = useState(0); // index into `slides` (includes the two loop clones)
+  const [held, setHeld] = useState(false);
+  const heldRef = useRef(false);
+  const lastTouch = useRef(0);
+  const settleTimer = useRef(0);
+  const loop = featured.length > 1;
+  const slides = useMemo(() => (loop ? [featured[featured.length - 1], ...featured, featured[0]] : featured), [featured, loop]);
+  const realIdx = loop ? (heroIdx - 1 + featured.length) % featured.length : heroIdx;
+
+  // Scroll offset that centres slide i (matches the CSS snap-align:center).
+  function offsetFor(el, i) {
+    const c = el.children[i];
+    if (!c) return 0;
+    const er = el.getBoundingClientRect();
+    const cr = c.getBoundingClientRect();
+    return el.scrollLeft + (cr.left - er.left) - (el.clientWidth - cr.width) / 2;
   }
-  const hero = [...running].sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0)).slice(0, 5);
+  function nearest(el) {
+    let best = 0;
+    let bd = Infinity;
+    const mid = el.getBoundingClientRect().left + el.clientWidth / 2;
+    for (let i = 0; i < el.children.length; i++) {
+      const r = el.children[i].getBoundingClientRect();
+      const d = Math.abs(r.left + r.width / 2 - mid);
+      if (d < bd) {
+        bd = d;
+        best = i;
+      }
+    }
+    return best;
+  }
+  function goTo(i, smooth = true) {
+    const el = heroRef.current;
+    if (!el) return;
+    el.scrollTo({ left: offsetFor(el, i), behavior: smooth ? "smooth" : "auto" });
+  }
+
+  // Start on the first real slide (index 1 when there are clones).
   useEffect(() => {
-    if (hero.length < 2) return undefined;
+    const el = heroRef.current;
+    if (!el || !loop) return;
+    goTo(1, false);
+    setHeroIdx(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loop, featured.length, loading, isSoon]);
+
+  function onHeroScroll() {
+    const el = heroRef.current;
+    if (!el) return;
+    setHeroIdx(nearest(el));
+    // Once scrolling stops on a clone, jump (invisibly) to the identical real slide: that is the endless loop.
+    clearTimeout(settleTimer.current);
+    settleTimer.current = setTimeout(() => {
+      if (!loop || heldRef.current) return;
+      const i = nearest(el);
+      if (i === 0) goTo(featured.length, false);
+      else if (i === slides.length - 1) goTo(1, false);
+    }, 140);
+  }
+  function hold() {
+    heldRef.current = true;
+    lastTouch.current = Date.now();
+    setHeld(true);
+  }
+  function release() {
+    heldRef.current = false;
+    lastTouch.current = Date.now();
+    setHeld(false);
+    // finger lifted while sitting on a clone: let the scroll settle, then the loop jump runs
+    onHeroScroll();
+  }
+
+  useEffect(() => {
+    if (!loop) return undefined;
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return undefined;
     const t = setInterval(() => {
       const el = heroRef.current;
-      if (!el || !el.firstChild) return;
-      const w = el.firstChild.getBoundingClientRect().width + 12;
-      const next = (Math.round(el.scrollLeft / w) + 1) % hero.length;
-      el.scrollTo({ left: next * w, behavior: "smooth" });
-    }, 4500);
+      if (!el || document.hidden || heldRef.current) return;
+      if (Date.now() - lastTouch.current < 1500) return; // just let go: give it a moment
+      goTo(nearest(el) + 1);
+    }, 4000);
     return () => clearInterval(t);
-  }, [hero.length]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loop, slides.length]);
+  useEffect(() => () => clearTimeout(settleTimer.current), []);
 
   return (
     <div className="home-page">
@@ -149,13 +271,22 @@ export default function Home({ mode = "now-showing" }) {
         </>
       ) : (
         <>
-          {hero.length > 0 && (
+          {featured.length > 0 && (
             <>
-              <div className="hero-row" ref={heroRef} onScroll={onHeroScroll}>
-                {hero.map((m) => (
-                  <Link key={m.id} to={"/movie/" + m.id} className="hero-card">
+              <div
+                className="hero-row"
+                ref={heroRef}
+                onScroll={onHeroScroll}
+                onTouchStart={hold}
+                onTouchEnd={release}
+                onTouchCancel={release}
+                onMouseEnter={hold}
+                onMouseLeave={release}
+              >
+                {slides.map((m, si) => (
+                  <Link key={si + "-" + m.id} to={"/movie/" + m.id} className="hero-card" draggable={false}>
                     <img className="hc-bg" src={thumb(m.poster_url, "w185")} alt="" />
-                    <img decoding="async" className="hc-poster" src={m.poster_url} alt={m.title} />
+                    <img decoding="async" className="hc-poster" src={m.poster_url} alt={m.title} draggable={false} />
                     <div>
                       <span className="hc-tag">NOW SHOWING</span>
                       <b>{m.title}</b>
@@ -169,9 +300,13 @@ export default function Home({ mode = "now-showing" }) {
                   </Link>
                 ))}
               </div>
-              <div className="hero-dots">
-                {hero.map((m, i) => (
-                  <i key={m.id} className={i === heroIdx ? "on" : ""} />
+              <div className={"hero-dots" + (held ? " hold" : "")}>
+                {featured.map((m, i) => (
+                  <i
+                    key={m.id + (i === realIdx ? "-on-" + heroIdx : "")}
+                    className={i === realIdx ? "on" : ""}
+                    onClick={() => goTo(loop ? i + 1 : i)}
+                  />
                 ))}
               </div>
             </>
