@@ -1765,3 +1765,9 @@ html[data-theme=dark] .pc-likes{color:#dedede}
 
 /* Shown when a request is still waiting after 5 s (the server is waking up) */
 .wake-banner{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 78px);z-index:60;background:#1f2937;color:#fff;border-radius:14px;padding:11px 16px;font-size:13.5px;font-weight:500;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+
+/* voice search mic */
+.sp-bar input{flex:1;min-width:0}
+.sp-bar .sp-mic{color:#e0415a}
+.sp-bar .sp-mic.on{animation:micPulse 1s ease-in-out infinite}
+@keyframes micPulse{50%{transform:scale(1.25);opacity:.6}}

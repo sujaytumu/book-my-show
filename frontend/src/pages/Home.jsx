@@ -47,6 +47,20 @@ function PosterImg({ url, title, size, eager }) {
   );
 }
 
+// "Releasing in 3 days" / "Releases tomorrow" / "Releases 12 Nov" for upcoming movies, like the real app.
+const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+function releaseChip(d) {
+  if (!d) return "Coming Soon";
+  const [y, m, day] = String(d).slice(0, 10).split("-").map(Number);
+  if (!y || !m || !day) return "Coming Soon";
+  const today = new Date();
+  const days = Math.round((new Date(y, m - 1, day) - new Date(today.getFullYear(), today.getMonth(), today.getDate())) / 86400000);
+  if (days === 0) return "Releases today";
+  if (days === 1) return "Releases tomorrow";
+  if (days > 1 && days <= 7) return "Releasing in " + days + " days";
+  return "Releases " + day + " " + MON[m - 1];
+}
+
 function likesLabel(n) {
   n = Number(n) || 0;
   if (n >= 1000) return (Math.floor(n / 100) / 10).toFixed(1).replace(/\.0$/, "") + "K+ likes";
@@ -58,7 +72,7 @@ function Poster({ movie, eager }) {
     <Link className="poster-card" to={"/movie/" + movie.id}>
       <div className="pc-img">
         <PosterImg url={movie.poster_url} title={movie.title} eager={eager} />
-        {movie.upcoming && <span className="pc-rate soon">Coming Soon</span>}
+        {movie.upcoming && <span className="pc-rate soon">{releaseChip(movie.release_date)}</span>}
         {!movie.upcoming && flagFor(movie) && <i className="pc-flag">{flagFor(movie)}</i>}
       </div>
       {movie.upcoming && Number(movie.interested_base) > 0 && (
