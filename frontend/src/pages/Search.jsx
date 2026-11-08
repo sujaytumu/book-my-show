@@ -5,6 +5,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { swrGet } from "../cache";
 import { IcBack } from "../components/Icons";
+
+const SR = typeof window !== "undefined" ? window.SpeechRecognition || window.webkitSpeechRecognition : null;
 import { searchMovies, similarTo } from "../fuzzy";
 
 const RKEY = "bms_recent";
@@ -27,6 +29,25 @@ export default function Search() {
   const [q, setQ] = useState(() => new URLSearchParams(window.location.search).get("q") || "");
   const [loading, setLoading] = useState(true);
   const [recent, setRecent] = useState(loadRecent);
+  const [listening, setListening] = useState(false);
+  function listen() {
+    if (!SR) return;
+    try {
+      const r = new SR();
+      r.lang = "en-IN";
+      r.interimResults = false;
+      r.onstart = () => setListening(true);
+      r.onend = () => setListening(false);
+      r.onerror = () => setListening(false);
+      r.onresult = (e) => {
+        const t = e.results && e.results[0] && e.results[0][0] ? e.results[0][0].transcript : "";
+        if (t) setQ(t.replace(/[.!?]+$/, ""));
+      };
+      r.start();
+    } catch (e) {
+      setListening(false);
+    }
+  }
   function remember(text) {
     const t = String(text || "").trim();
     if (!t) return;
@@ -75,6 +96,11 @@ export default function Search() {
           onChange={(e) => setQ(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && remember(q)}
         />
+        {SR && (
+          <button type="button" className={"sp-mic" + (listening ? " on" : "")} onClick={listen} aria-label="Search by voice">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg>
+          </button>
+        )}
       </div>
 
       {loading ? (
