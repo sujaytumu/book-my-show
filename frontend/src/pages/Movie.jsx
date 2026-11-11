@@ -339,6 +339,7 @@ const PRICE_BANDS = [
 
 const SORTS = [
   { key: "relevance", label: "Relevance", hint: "Best options for you first" },
+  { key: "frequent", label: "Frequently booked", hint: "Cinemas you book most come first" },
   { key: "distance", label: "Distance", hint: "Show nearest first" },
 ];
 
@@ -477,6 +478,7 @@ export default function Movie() {
   const [favs, setFavs] = useState(loadFavs);
   const [favOnly, setFavOnly] = useState(false);
   const [visited, setVisited] = useState([]);
+  const [booked, setBooked] = useState({}); // cinema name -> number of confirmed bookings by this viewer
   const [shareMsg, setShareMsg] = useState("");
   const [interested, setInterested] = useState(false);
   const [offers, setOffers] = useState([]);
@@ -559,6 +561,9 @@ export default function Movie() {
           })
           .map((b) => b.theatre_name);
         setVisited([...new Set(names)]);
+        const counts = {};
+        for (const b of res.data) if (b.status === "CONFIRMED") counts[b.theatre_name] = (counts[b.theatre_name] || 0) + 1;
+        setBooked(counts);
       })
       .catch(() => {});
   }, []);
@@ -669,16 +674,21 @@ export default function Movie() {
       groups.sort((a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity));
     } else {
       const minPrice = (g) => Math.min(...g.shows.map((s) => Number(s.price)));
+      const bk = (g) => booked[g.theatre_name] || 0;
+      const fav = (g) => Number(favs.includes(g.theatre_name));
+      // Frequently booked: your most-used cinemas first. Relevant: liked cinemas, then the ones you use, then the busiest.
       groups.sort(
         (a, b) =>
-          Number(favs.includes(b.theatre_name)) - Number(favs.includes(a.theatre_name)) ||
+          (sortBy === "frequent" ? bk(b) - bk(a) : 0) ||
+          fav(b) - fav(a) ||
+          bk(b) - bk(a) ||
           b.shows.length - a.shows.length ||
           minPrice(a) - minPrice(b) ||
           a.theatre_name.localeCompare(b.theatre_name)
       );
     }
     return favOnly ? groups.filter((g) => favs.includes(g.theatre_name)) : groups;
-  }, [shows, selectedDate, myLocation, sortBy, priceBands, favs, favOnly, formats, langFilter, movie]);
+  }, [shows, selectedDate, myLocation, sortBy, priceBands, favs, favOnly, formats, langFilter, movie, booked]);
 
   if (!movie) return <p>Loading...</p>;
 
@@ -979,6 +989,32 @@ export default function Movie() {
         </button>
       </div>
 
+      {(() => {
+        const active = favOnly ? "liked" : sortBy === "frequent" ? "frequent" : sortBy === "distance" ? "nearest" : "relevant";
+        const tabs = [
+          { key: "relevant", label: "Relevant", go: () => { setFavOnly(false); setSortBy("relevance"); } },
+          { key: "frequent", label: "Frequently booked", go: () => { setFavOnly(false); setSortBy("frequent"); } },
+          { key: "liked", label: "♥ Liked" + (favs.length ? " (" + favs.length + ")" : ""), go: () => setFavOnly(true) },
+          { key: "nearest", label: "Nearest", go: () => { setFavOnly(false); chooseSort("distance"); } },
+        ];
+        const hasHistory = Object.keys(booked).length > 0;
+        return (
+          <>
+            <div className="cin-tabs" role="tablist">
+              {tabs.map((t) => (
+                <button key={t.key} type="button" role="tab" aria-selected={active === t.key} className={active === t.key ? "on" : ""} onClick={t.go}>
+                  {t.label}
+                </button>
+              ))}
+            </div>
+            {active === "frequent" && !hasHistory && (
+              <p className="cin-tab-hint">Book a few tickets and the cinemas you use most will show up here first.</p>
+            )}
+            {active === "liked" && favs.length === 0 && <p className="cin-tab-hint">Tap the ♡ on a cinema to keep it in this tab.</p>}
+          </>
+        );
+      })()}
+
       </>
       )}
 
@@ -1033,6 +1069,7 @@ export default function Movie() {
                   i
                 </button>
                 {visited.includes(group.theatre_name) && <span className="visited-tag">Visited</span>}
+                {(booked[group.theatre_name] || 0) >= 2 && <span className="freq-tag">Frequently booked</span>}
               </h3>
               {group.shows[0]?.cancellable === false ? (
                 <p className="th-cancel no">Non-cancellable</p>
