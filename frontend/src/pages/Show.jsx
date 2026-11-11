@@ -1195,6 +1195,11 @@ export default function Show() {
                     ))}
                   </div>
                 )}
+                {Number(show?.format_fee) > 0 && (
+                  <p className="fee-note">
+                    {show.format} show: prices include a ₹{Math.round(Number(show.format_fee))} premium format fee per ticket.
+                  </p>
+                )}
                 <button type="button" className="qty-go" onClick={confirmQty}>
                   Select Seats
                 </button>

@@ -1771,3 +1771,5 @@ html[data-theme=dark] .pc-likes{color:#dedede}
 .sp-bar .sp-mic{color:#e0415a}
 .sp-bar .sp-mic.on{animation:micPulse 1s ease-in-out infinite}
 @keyframes micPulse{50%{transform:scale(1.25);opacity:.6}}
+
+.fee-note{margin:10px 2px 0;font-size:12.6px;font-weight:500;color:#6b7280;text-align:center}

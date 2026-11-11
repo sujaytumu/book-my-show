@@ -144,16 +144,18 @@ public class BookingService {
 
         Map<String, Object> user = db.queryForMap("select id,name,email from users where email=?", email);
         long userId = ((Number) user.get("id")).longValue();
-        String theatreType = db.queryForObject(
-                "select t.theatre_type from shows sh join screens sc on sc.id=sh.screen_id " +
-                        "join theatres t on t.id=sc.theatre_id where sh.id=?", String.class, showId);
+        Map<String, Object> showInfo = db.queryForMap(
+                "select t.theatre_type, sh.format from shows sh join screens sc on sc.id=sh.screen_id " +
+                        "join theatres t on t.id=sc.theatre_id where sh.id=?", showId);
+        String theatreType = (String) showInfo.get("theatre_type");
+        String showFormat = (String) showInfo.get("format");
 
         // Real ticketing platforms charge the seat price plus a convenience fee, with
         // GST applied to that fee (not to the ticket price itself, which already has
         // any entertainment tax baked in by the cinema). 3% is a representative rate.
-        // Seat price depends on the seat's class (row) and the theatre type - see Pricing.
+        // Seat price depends on the seat's class (row), the theatre type and the show format (IMAX, Dolby...) - see Pricing.
         double subtotal = 0;
-        for (String seatNumber : seatNumbers) subtotal += Pricing.seatPrice(theatreType, seatNumber);
+        for (String seatNumber : seatNumbers) subtotal += Pricing.seatPrice(theatreType, seatNumber, showFormat);
         subtotal = round2(subtotal);
         // Optional coupon: a percentage off the ticket price only. The convenience fee and GST stay on the full price.
         String appliedCoupon = null;
