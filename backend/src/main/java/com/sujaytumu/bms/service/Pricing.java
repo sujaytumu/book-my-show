@@ -13,6 +13,9 @@ import java.util.Map;
  *   B-D     Balcony       150%
  *   E-G     Second Class  125%
  *   H-J     Dress Class   100%
+ *
+ * Premium formats add a flat fee per ticket on top of the seat price (formatFee): 3D +40, Dolby +60, PXL +80,
+ * IMAX +120, 4DX 150 (4DX is always 3D, so it is all-in). 3D on top of Dolby, PXL or IMAX adds the 40 again.
  */
 public final class Pricing {
 
@@ -48,6 +51,27 @@ public final class Pricing {
 
     public static double seatPrice(String theatreType, String seatNumber) {
         return round2(base(theatreType) * multiplier(seatClass(seatNumber)));
+    }
+
+    /** Flat per-ticket fee for a show format such as "2D", "3D", "Dolby 3D", "IMAX 2D", "4DX 3D", "PXL 3D". */
+    public static double formatFee(String format) {
+        if (format == null) return 0;
+        String f = format.toUpperCase();
+        if (f.contains("4DX")) return 150;
+        double fee = f.contains("IMAX") ? 120 : f.contains("PXL") ? 80 : f.contains("DOLBY") ? 60 : 0;
+        if (f.contains("3D")) fee += 40;
+        return fee;
+    }
+
+    public static double seatPrice(String theatreType, String seatNumber, String format) {
+        return round2(seatPrice(theatreType, seatNumber) + formatFee(format));
+    }
+
+    /** Class name -> price for a given show format, ordered back of the hall to front. */
+    public static Map<String, Double> classPrices(String theatreType, String format) {
+        Map<String, Double> prices = new LinkedHashMap<>();
+        classPrices(theatreType).forEach((k, v) -> prices.put(k, round2(v + formatFee(format))));
+        return prices;
     }
 
     /** Class name -> price, ordered back of the hall to front. */

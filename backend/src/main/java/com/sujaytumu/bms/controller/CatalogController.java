@@ -128,6 +128,11 @@ public class CatalogController {
             rows = db.queryForList(sql + "and show_date=? order by t.name,start_time", args.toArray());
         }
         addCrowdForecast(rows);
+        // The price shown on a showtime includes the premium-format fee (IMAX, Dolby, 4DX...), so it matches the seat page.
+        for (Map<String, Object> r : rows) {
+            Object p0 = r.get("price");
+            if (p0 instanceof Number n) r.put("price", n.doubleValue() + com.sujaytumu.bms.service.Pricing.formatFee((String) r.get("format")));
+        }
         return rows;
     }
 
@@ -172,6 +177,7 @@ public class CatalogController {
         List<com.sujaytumu.bms.service.PlanMyDay.Slot> slots = new java.util.ArrayList<>();
         for (Map<String, Object> r : rows) {
             long id = ((Number) r.get("id")).longValue();
+            if (r.get("price") instanceof Number pn) r.put("price", pn.doubleValue() + com.sujaytumu.bms.service.Pricing.formatFee((String) r.get("format")));
             byId.put(id, r);
             slots.add(new com.sujaytumu.bms.service.PlanMyDay.Slot(id, ((Number) r.get("movie_id")).longValue(),
                     ((Number) r.get("theatre_id")).longValue(), ((java.sql.Time) r.get("start_time")).toLocalTime(),
@@ -201,7 +207,8 @@ public class CatalogController {
                         "join screens s on s.id=sh.screen_id join theatres t on t.id=s.theatre_id " +
                         "where sh.id=?", id);
         // Per-class prices (Recliner / Balcony / Second Class / Dress Class) for the seat picker.
-        show.put("class_prices", com.sujaytumu.bms.service.Pricing.classPrices((String) show.get("theatre_type")));
+        show.put("class_prices", com.sujaytumu.bms.service.Pricing.classPrices((String) show.get("theatre_type"), (String) show.get("format")));
+        show.put("format_fee", com.sujaytumu.bms.service.Pricing.formatFee((String) show.get("format")));
         return show;
     }
 
@@ -246,14 +253,15 @@ public class CatalogController {
     public com.sujaytumu.bms.service.SeatAdvisor.Advice bestSeats(@PathVariable long id,
                                                                   @RequestParam(defaultValue = "2") int count,
                                                                   @RequestParam(defaultValue = "view") String mode) {
-        String theatreType = db.queryForObject(
-                "select t.theatre_type from shows sh join screens s on s.id=sh.screen_id " +
-                        "join theatres t on t.id=s.theatre_id where sh.id=?", String.class, id);
+        Map<String, Object> info = db.queryForMap(
+                "select t.theatre_type, sh.format from shows sh join screens s on s.id=sh.screen_id " +
+                        "join theatres t on t.id=s.theatre_id where sh.id=?", id);
+        String theatreType = (String) info.get("theatre_type");
         List<com.sujaytumu.bms.service.SeatAdvisor.Seat> seats = db.query(
                 "select seat_number,status from show_seats where show_id=?",
                 (rs, n) -> new com.sujaytumu.bms.service.SeatAdvisor.Seat(rs.getString(1), "AVAILABLE".equals(rs.getString(2))),
                 id);
-        return com.sujaytumu.bms.service.SeatAdvisor.advise(seats, count, mode, theatreType);
+        return com.sujaytumu.bms.service.SeatAdvisor.advise(seats, count, mode, theatreType, (String) info.get("format"));
     }
 }
 

@@ -151,6 +151,10 @@ public final class SeatAdvisor {
     // ---- public entry point -------------------------------------------------------------------------------------
 
     public static Advice advise(List<Seat> seats, int count, String mode, String theatreType) {
+        return advise(seats, count, mode, theatreType, null);
+    }
+
+    public static Advice advise(List<Seat> seats, int count, String mode, String theatreType, String format) {
         boolean valueMode = "value".equalsIgnoreCase(mode);
         count = Math.max(1, Math.min(count, 10));
         Hall hall = parse(seats);
@@ -184,7 +188,7 @@ public final class SeatAdvisor {
                 usedRows.add(r.row);
                 alternatives.add(r.seats());
             }
-            explain(reasons, hall, top, theatreType, valueMode, rowCount);
+            explain(reasons, hall, top, theatreType, format, valueMode, rowCount);
         } else {
             // Nowhere has `count` seats together: take the biggest groups that exist, in neighbouring rows.
             together = false;
@@ -221,7 +225,7 @@ public final class SeatAdvisor {
         }
 
         double total = 0;
-        for (String s : chosen) total += Pricing.seatPrice(theatreType, s);
+        for (String s : chosen) total += Pricing.seatPrice(theatreType, s, format);
         int rounded = (int) Math.max(0, Math.min(100, Math.round(score)));
         return new Advice(count, together, chosen, rounded, label(rounded, chosen.isEmpty()), reasons, alternatives,
                 Math.round(total * 100.0) / 100.0, heat);
@@ -235,7 +239,7 @@ public final class SeatAdvisor {
         return "Best available";
     }
 
-    private static void explain(List<String> out, Hall hall, Run top, String theatreType, boolean valueMode, int rowCount) {
+    private static void explain(List<String> out, Hall hall, Run top, String theatreType, String format, boolean valueMode, int rowCount) {
         int ri = hall.rowIndex(top.row);
         double depth = rowCount <= 1 ? IDEAL_DEPTH : (double) (rowCount - 1 - ri) / (rowCount - 1);
         int maxCol = hall.maxCol(top.row);
@@ -247,7 +251,7 @@ public final class SeatAdvisor {
         if (top.orphans == 0) out.add("Leaves no lonely single seat beside you");
         if (top.aisle) out.add("Heads up: the aisle runs between two of these seats");
         String cls = Pricing.seatClass("" + top.row + top.from);
-        out.add(cls + " · ₹" + Math.round(Pricing.seatPrice(theatreType, "" + top.row + top.from)) + " per seat"
+        out.add(cls + " · ₹" + Math.round(Pricing.seatPrice(theatreType, "" + top.row + top.from, format)) + " per seat"
                 + (valueMode ? " (value mode weighs price against view)" : ""));
     }
 }
