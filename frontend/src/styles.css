@@ -1797,3 +1797,17 @@ button{font-size:13px;font-weight:700;letter-spacing:.2px;text-transform:none;pa
 .ml-grid b{font-size:14.5px;font-weight:700;line-height:1.25}
 .cin-tab-hint{font-size:12.5px}
 html[data-theme=dark] .seat-hint{color:#9a9aa5}
+
+/* ===== Polish: My Bookings ===== */
+.bk-heading{font-size:24px;font-weight:800;margin:6px 0 4px}
+.bk-tab,.bk-tab:hover{font-size:14px;font-weight:700;padding:12px 2px}
+.bk-title{font-size:16px;font-weight:800}
+.bk-theatre{font-size:13px;margin:4px 0 12px}
+.bk-when small,.bk-foot small{font-size:10.5px;font-weight:700;letter-spacing:.5px}
+.bk-when b,.bk-foot b{font-size:13.5px;font-weight:700}
+.bk-status{font-size:11.5px;font-weight:700;padding:5px 12px}
+.bk-btn,.bk-btn:hover{font-size:12.5px;font-weight:700;padding:11px 14px;border-radius:10px;white-space:nowrap;flex:1 1 auto}
+.bk-actions{flex:1 1 100%;margin-left:0}
+.bk-card{border-radius:16px;box-shadow:0 2px 14px rgba(20,20,40,.07)}
+@media (max-width:480px){.bk-title{font-size:15px}.bk-poster{width:78px;height:112px}}
+.bk-when{gap:10px 22px}.bk-when b{font-size:13px}.bk-btn{padding:11px 10px}
