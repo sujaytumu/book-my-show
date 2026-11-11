@@ -1235,6 +1235,7 @@ export default function Show() {
 
 
           {seats.some((x) => x.status === "AVAILABLE") && (
+            <>
             <div className="seat-tools">
               <button type="button" className="st-pick" disabled={!!picking} onClick={() => autoPick("view")}>
                 <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2zm7 12l.9 2.6 2.6.9-2.6.9L19 21l-.9-2.6-2.6-.9 2.6-.9L19 14z" fill="currentColor" /></svg>
@@ -1247,8 +1248,9 @@ export default function Show() {
                 <i className="st-dot" />
                 View quality
               </button>
-            {qty ? <p className="seat-hint">Tip: press a seat, hold, then slide along the row to move your group.</p> : null}
             </div>
+            {qty ? <p className="seat-hint">Tip: press a seat, hold, then slide along the row to move your group.</p> : null}
+            </>
           )}
           {pickNote && selected.length > 0 && (
             <div className="pick-note">
