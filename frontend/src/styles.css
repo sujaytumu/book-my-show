@@ -1773,3 +1773,14 @@ html[data-theme=dark] .pc-likes{color:#dedede}
 @keyframes micPulse{50%{transform:scale(1.25);opacity:.6}}
 
 .fee-note{margin:10px 2px 0;font-size:12.6px;font-weight:500;color:#6b7280;text-align:center}
+
+/* Cinema list tabs: Relevant / Frequently booked / Liked / Nearest */
+.cin-tabs{display:flex;gap:8px;overflow-x:auto;padding:10px 2px 6px;scrollbar-width:none}
+.cin-tabs::-webkit-scrollbar{display:none}
+.cin-tabs button{flex:none;background:#fff;border:1.5px solid #d4d4da;color:#444;border-radius:20px;padding:7px 15px;font-size:13.6px;font-weight:500;white-space:nowrap;text-transform:none;letter-spacing:0}
+.cin-tabs button.on{background:#e0415a;border-color:#e0415a;color:#fff;font-weight:600}
+.cin-tab-hint{margin:2px 4px 6px;font-size:12.8px;font-weight:500;color:#6b7280}
+.freq-tag{display:inline-block;margin-left:6px;background:#fff4e5;color:#b45309;border:1px solid #fcd9a8;border-radius:6px;padding:1px 7px;font-size:11.2px;font-weight:600;vertical-align:middle}
+html[data-theme=dark] .cin-tabs button{background:#171717;border-color:#444447;color:#d4d4d4}
+html[data-theme=dark] .cin-tabs button.on{background:#e0415a;border-color:#e0415a;color:#fff}
+html[data-theme=dark] .freq-tag{background:#2b2113;color:#f5b968;border-color:#5a4220}
