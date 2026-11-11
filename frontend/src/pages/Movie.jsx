@@ -339,7 +339,7 @@ const PRICE_BANDS = [
 
 const SORTS = [
   { key: "relevance", label: "Relevance", hint: "Best options for you first" },
-  { key: "frequent", label: "Frequently booked", hint: "Cinemas you book most come first" },
+  { key: "frequent", label: "Most visited / booked", hint: "Cinemas you visit and book most come first" },
   { key: "distance", label: "Distance", hint: "Show nearest first" },
 ];
 
@@ -986,6 +986,15 @@ export default function Movie() {
         </button>
         <button className={"mv-tool" + (favOnly ? " on" : "")} onClick={() => setFavOnly((x) => !x)}>
           <span>Favourites</span>
+        </button>
+        <button
+          className={"mv-tool" + (sortBy === "frequent" ? " on" : "")}
+          onClick={() => {
+            setFavOnly(false);
+            setSortBy((cur) => (cur === "frequent" ? "relevance" : "frequent"));
+          }}
+        >
+          <span>Most Visited</span>
         </button>
       </div>
 
