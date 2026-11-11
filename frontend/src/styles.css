@@ -1811,3 +1811,10 @@ html[data-theme=dark] .seat-hint{color:#9a9aa5}
 .bk-card{border-radius:16px;box-shadow:0 2px 14px rgba(20,20,40,.07)}
 @media (max-width:480px){.bk-title{font-size:15px}.bk-poster{width:78px;height:112px}}
 .bk-when{gap:10px 22px}.bk-when b{font-size:13px}.bk-btn{padding:11px 10px}
+
+/* ===== Polish: Wallet ===== */
+.wl-custom{align-items:stretch}
+.wl-custom input{height:auto;margin:0}
+.wl-custom button,.wl-custom button:hover:not(:disabled){flex:none;padding:0 22px;font-size:14px;font-weight:700;border-radius:10px;border-width:1.5px}
+.wl-custom button:not(:disabled){background:var(--red);color:#fff}
+.wl-chips button{font-size:14px;font-weight:700;padding:9px 16px;border-radius:22px}
