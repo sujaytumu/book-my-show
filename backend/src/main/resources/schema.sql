@@ -62,3 +62,4 @@ alter table movies add column if not exists trailer_key varchar(20);
 alter table bookings add column if not exists hold_extended boolean not null default false;
 alter table movies add column if not exists multi_format boolean not null default false;
 alter table movies add column if not exists show_languages varchar(200);
+alter table bookings add column if not exists show_reminded boolean not null default false;
