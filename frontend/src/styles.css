@@ -1932,3 +1932,19 @@ html[data-theme=dark] .lv-h em{background:#3a1f25;color:#ff8791}
 .rc-grid em{display:block;font-style:normal;font-size:11.5px;font-weight:600;color:#d9c9ce}
 .rc-grid b{display:block;margin-top:3px;font-size:15.5px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rc-recap p{margin:14px 0 0;font-size:13.5px;font-weight:600;color:#f3dfe1}
+
+/* ===== Bookings: progress timeline (Swiggy style) ===== */
+.tl{list-style:none;display:flex;margin:14px 14px 12px;padding:0}
+.tl li{flex:1;position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:#9aa0ad;text-align:center}
+.tl li::before{content:"";position:absolute;top:10px;right:50%;width:100%;height:3px;background:#e3e5ea;z-index:0}
+.tl li:first-child::before{display:none}
+.tl li.done::before{background:#2e9e5b}
+.tl i{position:relative;z-index:1;width:22px;height:22px;border-radius:50%;background:#e3e5ea;color:#fff;font-style:normal;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center}
+.tl li.done i{background:#2e9e5b}
+.tl li.done{color:#2e7d4f}
+.tl li.now i{background:#fff;border:3px solid #d2232a;box-shadow:0 0 0 4px rgba(210,35,42,.15)}
+.tl li.now{color:#d2232a}
+html[data-theme=dark] .tl li::before,html[data-theme=dark] .tl i{background:#34363c}
+html[data-theme=dark] .tl li.done::before,html[data-theme=dark] .tl li.done i{background:#2e9e5b}
+html[data-theme=dark] .tl li.now i{background:#17171b}
+html[data-theme=dark] .tl li.done{color:#6fcf97}
