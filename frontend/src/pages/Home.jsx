@@ -377,6 +377,25 @@ export default function Home({ mode = "now-showing" }) {
             ))}
           </div>
           {running.length === 0 && <p className="empty-note">No Telugu movies running right now.</p>}
+
+          {running.length > 2 && (
+            <>
+              <div className="hp-head">
+                <h2 className="hp-h">Trending now</h2>
+              </div>
+              <div className="trend-row">
+                {[...running]
+                  .sort((x, y) => Number(y.votes || 0) - Number(x.votes || 0))
+                  .slice(0, 5)
+                  .map((m, i) => (
+                    <Link to={"/movie/" + m.id} className="trend-card" key={m.id} aria-label={"#" + (i + 1) + " " + m.title}>
+                      <span className="trend-n">{i + 1}</span>
+                      <img src={thumb(m.poster_url)} alt={m.title} loading="lazy" />
+                    </Link>
+                  ))}
+              </div>
+            </>
+          )}
         </>
       )}
     </div>
