@@ -1899,3 +1899,24 @@ html[data-theme=dark] .hero-card em,html[data-theme=dark] .offer-banner em{backg
 html[data-theme=dark] .trend-n{color:#17171b;-webkit-text-stroke:3px rgba(226,58,71,.7);text-shadow:none}
 .hp-head a.hp-hl,.hp-head a.hp-hl h2{color:var(--ink)}
 html[data-theme=dark] .hp-head a.hp-hl,html[data-theme=dark] .hp-head a.hp-hl h2{color:#f2f2f4}
+
+/* ===== Profile: movie level + badges (Duolingo / Cred style) ===== */
+.lv-top{display:flex;align-items:center;justify-content:space-between}
+.lv-top small{color:var(--gray);font-size:12px;font-weight:700;letter-spacing:.4px}
+.lv-top h3{margin:2px 0 0;font-size:22px;font-weight:800;letter-spacing:-.02em}
+.lv-n{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;background:linear-gradient(135deg,#f84464,#c2185b);box-shadow:0 6px 16px rgba(210,35,42,.35)}
+.lv-bar{height:10px;border-radius:99px;background:#ececf0;margin:14px 0 8px;overflow:hidden}
+.lv-bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#f84464,#d2232a);transition:width .6s cubic-bezier(.2,.8,.3,1)}
+.lv-sub{margin:0 0 14px;color:var(--gray);font-size:13.5px;font-weight:600}
+.lv-h{margin:6px 0 10px;font-size:15px;font-weight:800;display:flex;align-items:center;gap:8px}
+.lv-h em{font-style:normal;font-size:12px;font-weight:700;color:var(--red);background:#fdecee;border-radius:99px;padding:2px 9px}
+.lv-badges{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.lv-badge{text-align:center;padding:12px 6px;border-radius:14px;background:#f5f5f8;opacity:.55;filter:grayscale(1)}
+.lv-badge.on{opacity:1;filter:none;background:linear-gradient(180deg,#fff6f7,#fdecee);box-shadow:0 2px 10px rgba(210,35,42,.12)}
+.lv-badge span{display:block;font-size:26px;line-height:1.1}
+.lv-badge b{display:block;margin-top:6px;font-size:12.5px;font-weight:800}
+.lv-badge small{display:block;margin-top:2px;color:var(--gray);font-size:10.5px;font-weight:600;line-height:1.3}
+html[data-theme=dark] .lv-bar{background:#2a2c32}
+html[data-theme=dark] .lv-badge{background:#222429}
+html[data-theme=dark] .lv-badge.on{background:linear-gradient(180deg,#2c1a1e,#3a1f25)}
+html[data-theme=dark] .lv-h em{background:#3a1f25;color:#ff8791}
