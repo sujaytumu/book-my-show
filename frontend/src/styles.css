@@ -1920,3 +1920,15 @@ html[data-theme=dark] .lv-bar{background:#2a2c32}
 html[data-theme=dark] .lv-badge{background:#222429}
 html[data-theme=dark] .lv-badge.on{background:linear-gradient(180deg,#2c1a1e,#3a1f25)}
 html[data-theme=dark] .lv-h em{background:#3a1f25;color:#ff8791}
+
+/* ===== Profile: movie recap (Spotify Wrapped style) ===== */
+.rc-recap{margin:0 0 14px;padding:20px;border-radius:20px;color:#fff;background:radial-gradient(120% 90% at 100% 0%,#d2232a 0%,transparent 60%),linear-gradient(160deg,#1c1424,#14141a);box-shadow:0 12px 30px rgba(20,10,30,.3)}
+.rc-recap>small{display:block;font-size:12px;font-weight:700;letter-spacing:.6px;color:#ffd3d6}
+.rc-big{display:flex;align-items:baseline;gap:10px;margin:6px 0 16px}
+.rc-big b{font-size:56px;font-weight:900;line-height:1;letter-spacing:-.03em}
+.rc-big span{font-size:16px;font-weight:700;color:#f3dfe1}
+.rc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.rc-grid div{padding:12px;border-radius:14px;background:rgba(255,255,255,.09);min-width:0}
+.rc-grid em{display:block;font-style:normal;font-size:11.5px;font-weight:600;color:#d9c9ce}
+.rc-grid b{display:block;margin-top:3px;font-size:15.5px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rc-recap p{margin:14px 0 0;font-size:13.5px;font-weight:600;color:#f3dfe1}

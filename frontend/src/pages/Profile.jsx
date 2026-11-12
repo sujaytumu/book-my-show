@@ -111,6 +111,54 @@ function MovieLevel({ bookings }) {
   );
 }
 
+// Spotify Wrapped style recap: your favourite cinema, day and time of day, worked out from your bookings.
+function MovieRecap({ bookings }) {
+  if (bookings.length === 0) return null;
+  const top = (arr) => {
+    const c = {};
+    arr.forEach((x) => (c[x] = (c[x] || 0) + 1));
+    return Object.entries(c).sort((a, b) => b[1] - a[1])[0];
+  };
+  const DAY = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const dayOf = (b) => {
+    const [y, m, d] = String(b.show_date).slice(0, 10).split("-").map(Number);
+    return DAY[new Date(y, m - 1, d).getDay()];
+  };
+  const slotOf = (b) => {
+    const h = Number(String(b.start_time).slice(0, 2));
+    return h < 12 ? "Morning" : h < 16 ? "Afternoon" : h < 20 ? "Evening" : "Night";
+  };
+  const cinema = top(bookings.map((b) => b.theatre_name));
+  const day = top(bookings.map(dayOf));
+  const slot = top(bookings.map(slotOf));
+  const movie = top(bookings.map((b) => b.title));
+  const spent = bookings.reduce((sum, b) => sum + Number(b.amount), 0);
+  const rows = [
+    ["Favourite cinema", cinema[0]],
+    ["Favourite day", day[0]],
+    ["Favourite time", slot[0]],
+    ["Most booked movie", movie[0]],
+  ];
+  return (
+    <div className="rc-recap">
+      <small>Your movie recap</small>
+      <div className="rc-big">
+        <b>{bookings.length}</b>
+        <span>{bookings.length === 1 ? "show booked" : "shows booked"}</span>
+      </div>
+      <div className="rc-grid">
+        {rows.map(([k, v]) => (
+          <div key={k}>
+            <em>{k}</em>
+            <b>{v}</b>
+          </div>
+        ))}
+      </div>
+      <p>You have spent ₹{spent.toFixed(0)} on movie nights.</p>
+    </div>
+  );
+}
+
 // LeetCode-style activity grid: one square per day for the last 16 weeks, darker = more shows that day.
 function MovieHeatmap({ bookings }) {
   const WEEKS = 16;
@@ -218,6 +266,8 @@ export default function Profile() {
           <small>Total spent</small>
         </div>
       </div>
+
+      <MovieRecap bookings={confirmed} />
 
       <MovieLevel bookings={confirmed} />
 
