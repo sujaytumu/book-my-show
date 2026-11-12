@@ -3,7 +3,6 @@ import { thumb, prefetchPosters } from "../img";
 import { Link } from "react-router-dom";
 import { api } from "../api";
 import { swrGet } from "../cache";
-import { loadWatchlist } from "../watchlist";
 import { IcLike } from "../components/Icons";
 
 function votesLabel(n) {
@@ -157,11 +156,6 @@ export default function Home({ mode = "now-showing" }) {
   const telugu = useMemo(() => movies.filter((m) => m.language === "Telugu"), [movies]);
   const running = useMemo(() => telugu.filter((m) => !m.upcoming), [telugu]);
   const soon = useMemo(() => telugu.filter((m) => m.upcoming), [telugu]);
-  // Movies the viewer tapped "I'm interested" on, refreshed with live data (rating, release chip) when we have it.
-  const saved = useMemo(() => {
-    const byId = new Map(movies.map((m) => [String(m.id), m]));
-    return loadWatchlist().map((w) => byId.get(String(w.id)) || w);
-  }, [movies]);
   // Warm every poster on the page (Coming Soon is far below the fold, so lazy loading would fetch it late).
   useEffect(() => {
     prefetchPosters([...soon, ...running], 30);
@@ -374,7 +368,7 @@ export default function Home({ mode = "now-showing" }) {
           )}
 
           <div className="hp-head">
-            <h2 className="hp-h">Recommended Movies</h2>
+            <Link to="/now-showing" className="hp-hl"><h2 className="hp-h">Recommended Movies</h2></Link>
             <Link to="/now-showing">See All ›</Link>
           </div>
           <div className="poster-row">
@@ -383,50 +377,6 @@ export default function Home({ mode = "now-showing" }) {
             ))}
           </div>
           {running.length === 0 && <p className="empty-note">No Telugu movies running right now.</p>}
-
-          {saved.length > 0 && (
-            <>
-              <div className="hp-head">
-                <h2 className="hp-h">Your Watchlist</h2>
-                <Link to="/profile">See all</Link>
-              </div>
-              <div className="poster-row">
-                {saved.map((m) => (
-                  <Poster movie={m} key={m.id} />
-                ))}
-              </div>
-            </>
-          )}
-
-          {recent.length > 1 && (
-            <>
-              <div className="hp-head">
-                <h2 className="hp-h">Recently Viewed</h2>
-                <a href="#clear" onClick={(e) => { e.preventDefault(); clearRecent(); }}>Clear</a>
-              </div>
-              <div className="poster-row">
-                {recent.map((m) => (
-                  <Poster movie={m} key={m.id} />
-                ))}
-              </div>
-            </>
-          )}
-
-          {soon.length > 0 && (
-            <>
-              <div className="hp-head">
-                <h2 className="hp-h">Coming Soon</h2>
-                <Link to="/coming-soon">See All ›</Link>
-              </div>
-              <div className="poster-row">
-                {soon.map((m) => (
-                  <Poster movie={m} key={m.id} eager />
-                ))}
-              </div>
-            </>
-          )}
-
-
         </>
       )}
     </div>
