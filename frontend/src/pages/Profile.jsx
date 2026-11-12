@@ -40,6 +40,77 @@ function pill(status) {
   return { label: status, cls: "wait" };
 }
 
+// Duolingo / Cred style progression: a level from confirmed bookings plus badges earned from how you watch.
+const LEVELS = [
+  { at: 0, name: "Newcomer" },
+  { at: 1, name: "Ticket Holder" },
+  { at: 3, name: "Regular" },
+  { at: 6, name: "Movie Buff" },
+  { at: 12, name: "Cinephile" },
+  { at: 25, name: "Legend" },
+];
+
+function badgeList(bookings) {
+  const hour = (b) => Number(String(b.start_time).slice(0, 2));
+  const dow = (b) => {
+    const [y, m, d] = String(b.show_date).slice(0, 10).split("-").map(Number);
+    return new Date(y, m - 1, d).getDay();
+  };
+  const seatsOf = (b) => String(b.seats).split(",").filter((x) => x.trim()).length;
+  const perTheatre = {};
+  bookings.forEach((b) => (perTheatre[b.theatre_name] = (perTheatre[b.theatre_name] || 0) + 1));
+  return [
+    { icon: "🎟️", name: "First show", hint: "Book your first ticket", on: bookings.length >= 1 },
+    { icon: "🌙", name: "Night owl", hint: "Watch a show at 9:30 PM or later", on: bookings.some((b) => hour(b) * 60 + Number(String(b.start_time).slice(3, 5)) >= 21 * 60 + 30) },
+    { icon: "🌅", name: "Early bird", hint: "Watch a show before 12 noon", on: bookings.some((b) => hour(b) < 12) },
+    { icon: "🎉", name: "Weekend warrior", hint: "3 shows on weekends", on: bookings.filter((b) => dow(b) === 0 || dow(b) === 6).length >= 3 },
+    { icon: "👥", name: "Squad goals", hint: "Book 4 or more seats at once", on: bookings.some((b) => seatsOf(b) >= 4) },
+    { icon: "🏠", name: "Home theatre", hint: "5 shows at the same cinema", on: Object.values(perTheatre).some((n) => n >= 5) },
+  ];
+}
+
+function MovieLevel({ bookings }) {
+  const n = bookings.length;
+  let idx = 0;
+  LEVELS.forEach((l, i) => {
+    if (n >= l.at) idx = i;
+  });
+  const cur = LEVELS[idx];
+  const next = LEVELS[idx + 1];
+  const pct = next ? Math.round(((n - cur.at) / (next.at - cur.at)) * 100) : 100;
+  const badges = badgeList(bookings);
+  const earned = badges.filter((b) => b.on).length;
+  return (
+    <div className="pf-card lv-card">
+      <div className="lv-top">
+        <div>
+          <small>Your level</small>
+          <h3>{cur.name}</h3>
+        </div>
+        <span className="lv-n">{idx + 1}</span>
+      </div>
+      <div className="lv-bar" role="progressbar" aria-valuenow={pct} aria-valuemin="0" aria-valuemax="100">
+        <i style={{ width: pct + "%" }} />
+      </div>
+      <p className="lv-sub">
+        {next ? (next.at - n) + (next.at - n === 1 ? " more show" : " more shows") + " to reach " + next.name : "You reached the top level"}
+      </p>
+      <h4 className="lv-h">
+        Badges <em>{earned}/{badges.length}</em>
+      </h4>
+      <div className="lv-badges">
+        {badges.map((b) => (
+          <div key={b.name} className={"lv-badge" + (b.on ? " on" : "")} title={b.hint}>
+            <span>{b.icon}</span>
+            <b>{b.name}</b>
+            <small>{b.on ? "Earned" : b.hint}</small>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // LeetCode-style activity grid: one square per day for the last 16 weeks, darker = more shows that day.
 function MovieHeatmap({ bookings }) {
   const WEEKS = 16;
@@ -147,6 +218,8 @@ export default function Profile() {
           <small>Total spent</small>
         </div>
       </div>
+
+      <MovieLevel bookings={confirmed} />
 
       <MovieHeatmap bookings={confirmed} />
 
