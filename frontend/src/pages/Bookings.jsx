@@ -136,6 +136,29 @@ function startsIn(b) {
   return "Starts in " + (h ? h + "h " : "") + (m % 60) + "m";
 }
 
+// Swiggy style order tracker for a confirmed booking: Booked -> Reminder (3h before) -> Show time -> Watched.
+function BookingTimeline({ b }) {
+  const start = startsAt(b).getTime();
+  const now = Date.now();
+  const steps = [
+    { label: "Booked", done: true },
+    { label: "Reminder", done: now >= start - 3 * 3600000 },
+    { label: "Show time", done: now >= start },
+    { label: "Watched", done: now >= start + 150 * 60000 },
+  ];
+  const cur = steps.findIndex((x) => !x.done);
+  return (
+    <ol className="tl" aria-label="Booking progress">
+      {steps.map((x, i) => (
+        <li key={x.label} className={x.done ? "done" : i === cur ? "now" : ""}>
+          <i>{x.done ? "✓" : ""}</i>
+          <span>{x.label}</span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
 function directionsUrl(b) {
   return "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent([b.theatre_name, b.city].filter(Boolean).join(", "));
 }
@@ -379,6 +402,7 @@ export default function Bookings() {
             {b.food_summary && <p className="bk-food">🍿 {b.food_summary}</p>}
 
             {b.status === "CONFIRMED" && bucket === "upcoming" && (stacked ? b.id === openKey : true) && <TripChip b={b} />}
+            {b.status === "CONFIRMED" && (stacked ? b.id === openKey : true) && <BookingTimeline b={b} />}
 
             <div className="bk-divider" />
 
