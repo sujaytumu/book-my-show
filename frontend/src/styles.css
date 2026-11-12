@@ -1873,3 +1873,20 @@ html[data-theme=dark] .trip-chip em{color:#cfd3dc}
 html[data-theme=dark] .pf-role{background:rgba(255,255,255,.16);color:#fff}
 html[data-theme=dark] .hero-card em,html[data-theme=dark] .offer-banner em{background:#fff;color:#d2232a}
 .home-tabs{grid-template-columns:repeat(2,1fr)}
+
+/* ===== Polish: Home rows sized like the real app (about 2.5 posters visible), premium finish ===== */
+.quick-row{grid-template-columns:repeat(6,1fr);gap:2px}
+.quick-row span{width:46px;height:46px;border-radius:15px;font-size:23px}
+.quick-row small{font-size:11.5px;font-weight:700;white-space:nowrap}
+.poster-row{gap:14px;padding-left:16px;padding-right:16px;margin-left:-16px;margin-right:-16px}
+.poster-row .poster-card{flex:0 0 clamp(128px,36.5vw,172px)}
+.poster-grid{gap:24px 14px}
+.pc-img{border-radius:12px;box-shadow:0 6px 18px rgba(20,20,40,.16)}
+.pc-meta{margin:9px 0 2px;font-size:12.5px;font-weight:700}
+.pc-meta em{font-size:11.5px}
+.poster-card b{margin-top:2px;font-size:14.5px;font-weight:600;line-height:1.25;letter-spacing:-.01em}
+.poster-card small{font-size:11.5px}
+.pc-likes{margin:9px 0 2px;font-size:12.5px}
+.hp-head{margin-top:6px}
+.hp-h{font-size:19px;font-weight:800;letter-spacing:-.02em}
+@media(min-width:700px){.poster-row .poster-card{flex-basis:170px}}
