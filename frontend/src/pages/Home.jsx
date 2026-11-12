@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { api } from "../api";
 import { swrGet } from "../cache";
 import { loadWatchlist } from "../watchlist";
-import { IcClap, IcFilm, IcLike, IcReel } from "../components/Icons";
+import { IcClap, IcLike, IcReel } from "../components/Icons";
 
 function votesLabel(n) {
   n = Number(n) || 0;
@@ -276,10 +276,6 @@ export default function Home({ mode = "now-showing" }) {
           <IcClap width={34} height={34} />
           Coming Soon
         </Link>
-        <a href="#top-rated" onClick={(e) => { e.preventDefault(); document.getElementById("top-rated")?.scrollIntoView({ behavior: "smooth" }); }}>
-          <IcFilm width={34} height={34} />
-          Top Rated
-        </a>
       </div>
 
       {loading ? (
@@ -441,33 +437,7 @@ export default function Home({ mode = "now-showing" }) {
             </>
           )}
 
-          {running.length > 2 && (
-            <>
-              <div className="hp-head">
-                <h2 className="hp-h">🔥 Trending now</h2>
-              </div>
-              <div className="trend-row">
-                {[...running]
-                  .sort((x, y) => Number(y.votes || 0) - Number(x.votes || 0))
-                  .slice(0, 5)
-                  .map((m, i) => (
-                    <Link to={"/movie/" + m.id} className="trend-card" key={m.id}>
-                      <span className="trend-n">{i + 1}</span>
-                      <img src={thumb(m.poster_url)} alt={m.title} loading="lazy" />
-                    </Link>
-                  ))}
-              </div>
-            </>
-          )}
 
-          <div className="hp-head" id="top-rated">
-            <h2 className="hp-h">Top Rated</h2>
-          </div>
-          <div className="poster-row">
-            {hero.map((m) => (
-              <Poster movie={m} key={m.id} />
-            ))}
-          </div>
         </>
       )}
     </div>
