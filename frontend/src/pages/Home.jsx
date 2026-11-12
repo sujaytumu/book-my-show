@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { api } from "../api";
 import { swrGet } from "../cache";
 import { loadWatchlist } from "../watchlist";
-import { IcClap, IcLike, IcReel } from "../components/Icons";
+import { IcLike } from "../components/Icons";
 
 function votesLabel(n) {
   n = Number(n) || 0;
@@ -267,17 +267,6 @@ export default function Home({ mode = "now-showing" }) {
 
   return (
     <div className="home-page">
-      <div className="home-tabs">
-        <Link to="/now-showing" className={!isSoon ? "on" : ""}>
-          <IcReel width={34} height={34} />
-          Movies
-        </Link>
-        <Link to="/coming-soon" className={isSoon ? "on" : ""}>
-          <IcClap width={34} height={34} />
-          Coming Soon
-        </Link>
-      </div>
-
       {loading ? (
         <>
           <div className="sk sk-hero" />
@@ -345,7 +334,7 @@ export default function Home({ mode = "now-showing" }) {
           )}
 
           <div className="quick-row">
-            {[["/offers", "🏷️", "Offers"], ["/wallet", "👛", "Wallet"], ["/bookings", "🎟️", "My tickets"], ["/plan", "🗓️", "Plan my day"], ["/help", "💬", "Help"]].map(([to, ic, label]) => (
+            {[["/now-showing", "🎬", "Movies"], ["/offers", "🏷️", "Offers"], ["/wallet", "👛", "Wallet"], ["/bookings", "🎟️", "Tickets"], ["/plan", "🗓️", "Plan day"], ["/help", "💬", "Help"]].map(([to, ic, label]) => (
               <Link to={to} key={to}>
                 <span>{ic}</span>
                 <small>{label}</small>
