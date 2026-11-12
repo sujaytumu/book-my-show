@@ -40,6 +40,46 @@ function pill(status) {
   return { label: status, cls: "wait" };
 }
 
+// LeetCode-style activity grid: one square per day for the last 16 weeks, darker = more shows that day.
+function MovieHeatmap({ bookings }) {
+  const WEEKS = 16;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const iso = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  const counts = {};
+  bookings.forEach((b) => {
+    const k = String(b.show_date).slice(0, 10);
+    counts[k] = (counts[k] || 0) + 1;
+  });
+  // Grid ends on today's weekday so the last column is the current week.
+  const start = new Date(today);
+  start.setDate(start.getDate() - ((WEEKS - 1) * 7 + today.getDay()));
+  const cells = [];
+  let total = 0;
+  for (let i = 0; i < WEEKS * 7; i++) {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    if (d > today) {
+      cells.push(<i key={i} className="hm-c off" />);
+      continue;
+    }
+    const n = counts[iso(d)] || 0;
+    total += n;
+    cells.push(<i key={i} className={"hm-c l" + Math.min(n, 3)} title={iso(d) + ": " + n + (n === 1 ? " show" : " shows")} />);
+  }
+  return (
+    <div className="pf-card hm-card">
+      <h3>Your movie activity</h3>
+      <p className="hm-sub">
+        <b>{total}</b> {total === 1 ? "show" : "shows"} in the last {WEEKS} weeks
+      </p>
+      <div className="hm-grid" role="img" aria-label={total + " shows booked in the last " + WEEKS + " weeks"}>
+        {cells}
+      </div>
+    </div>
+  );
+}
+
 export default function Profile() {
   const navigate = useNavigate();
   const user = currentUser();
@@ -107,6 +147,8 @@ export default function Profile() {
           <small>Total spent</small>
         </div>
       </div>
+
+      <MovieHeatmap bookings={confirmed} />
 
       <div className="pf-card">
         <h3>Account details</h3>
