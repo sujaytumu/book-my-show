@@ -398,7 +398,7 @@ public class BookingService {
 
     public List<Map<String, Object>> myBookings(String email) {
         return db.queryForList("""
-                select b.id, b.reference, b.status, b.amount, b.created_at, m.title,
+                select b.id, b.reference, b.status, b.amount, b.created_at, m.title, m.id movie_id,
                        sh.show_date, sh.start_time, t.name theatre_name, t.cancellable, b.food_summary,
                        t.latitude theatre_lat, t.longitude theatre_lng,
                        string_agg(bs.seat_number, ', ' order by bs.seat_number) seats
@@ -410,7 +410,7 @@ public class BookingService {
                 join theatres t on t.id = sc.theatre_id
                 join booking_seats bs on bs.booking_id = b.id
                 where u.email = ?
-                group by b.id, m.title, sh.show_date, sh.start_time, t.name, t.cancellable, t.latitude, t.longitude
+                group by b.id, m.id, m.title, sh.show_date, sh.start_time, t.name, t.cancellable, t.latitude, t.longitude
                 order by b.created_at desc
                 """, email);
     }

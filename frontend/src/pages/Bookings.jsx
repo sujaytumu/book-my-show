@@ -418,7 +418,7 @@ export default function Bookings() {
                   </button>
                 )}
                 {(bucket === "past" || b.status === "CANCELLED") && (
-                  <Link className="bk-btn" to={"/search?q=" + encodeURIComponent(b.title)}>
+                  <Link className="bk-btn" to={b.movie_id ? "/movie/" + b.movie_id + "?book=1" : "/search?q=" + encodeURIComponent(b.title)}>
                     Book again
                   </Link>
                 )}
