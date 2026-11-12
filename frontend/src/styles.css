@@ -1890,3 +1890,4 @@ html[data-theme=dark] .hero-card em,html[data-theme=dark] .offer-banner em{backg
 .hp-head{margin-top:6px}
 .hp-h{font-size:19px;font-weight:800;letter-spacing:-.02em}
 @media(min-width:700px){.poster-row .poster-card{flex-basis:170px}}
+.hp-hl{color:inherit;text-decoration:none}
