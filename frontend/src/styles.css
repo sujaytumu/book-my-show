@@ -1872,3 +1872,4 @@ html[data-theme=dark] .trip-chip.soon{background:#3a2314;color:#ffab76}
 html[data-theme=dark] .trip-chip em{color:#cfd3dc}
 html[data-theme=dark] .pf-role{background:rgba(255,255,255,.16);color:#fff}
 html[data-theme=dark] .hero-card em,html[data-theme=dark] .offer-banner em{background:#fff;color:#d2232a}
+.home-tabs{grid-template-columns:repeat(2,1fr)}
