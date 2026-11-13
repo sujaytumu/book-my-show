@@ -63,3 +63,4 @@ alter table bookings add column if not exists hold_extended boolean not null def
 alter table movies add column if not exists multi_format boolean not null default false;
 alter table movies add column if not exists show_languages varchar(200);
 alter table bookings add column if not exists show_reminded boolean not null default false;
+create table if not exists price_alerts(user_id bigint not null references users(id) on delete cascade,movie_id bigint not null references movies(id) on delete cascade,max_price numeric(8,2) not null,notified boolean not null default false,created_at timestamptz not null default now(),primary key(user_id,movie_id));

@@ -442,6 +442,59 @@ function logoText(name) {
   return ((w[0]?.[0] || "") + (w[1]?.[0] || "")).toUpperCase();
 }
 
+// "Tell me when tickets cost X or less" for movies that are already showing. Saved on the account; the server notifies once.
+function PriceAlert({ movieId }) {
+  const [saved, setSaved] = useState(null); // null = loading, 0 = none, else the price
+  const [busy, setBusy] = useState(false);
+  const PRICES = [120, 150, 200, 250];
+  useEffect(() => {
+    let live = true;
+    api.get("/price-alerts/" + movieId)
+      .then((r) => live && setSaved(Number(r.data && r.data.max_price) || 0))
+      .catch(() => live && setSaved(0));
+    return () => {
+      live = false;
+    };
+  }, [movieId]);
+  const pick = async (p) => {
+    setBusy(true);
+    try {
+      await api.put("/price-alerts/" + movieId, { max_price: p });
+      setSaved(p);
+    } catch {
+      /* leave as is; the buttons stay usable */
+    }
+    setBusy(false);
+  };
+  const clear = async () => {
+    setBusy(true);
+    try {
+      await api.delete("/price-alerts/" + movieId);
+      setSaved(0);
+    } catch {
+      /* keep the alert if removing failed */
+    }
+    setBusy(false);
+  };
+  if (saved === null) return null;
+  return (
+    <div className="pa-card">
+      <div className="pa-top">
+        <b>🔔 Price alert</b>
+        {saved ? <button type="button" className="pa-clear" disabled={busy} onClick={clear}>Remove</button> : null}
+      </div>
+      <p>{saved ? "We will notify you when tickets cost ₹" + saved + " or less." : "Get notified when tickets for this movie cost less than:"}</p>
+      <div className="pa-chips">
+        {PRICES.map((p) => (
+          <button type="button" key={p} disabled={busy} className={saved === p ? "on" : ""} onClick={() => pick(p)}>
+            ₹{p}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function Movie() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -845,6 +898,7 @@ export default function Movie() {
             </button>
           )}
         </p>
+        {!movie.upcoming && currentUser() && <PriceAlert movieId={movie.id} />}
         {(movie.upcoming || Number(movie.interested_base) > 0) && (
           <div className="interest-card">
             <span className="ic-thumb">
