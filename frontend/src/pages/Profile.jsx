@@ -160,6 +160,49 @@ function GoalRing({ bookings }) {
   );
 }
 
+// Duolingo style streak: how many weeks in a row (including this one) you have had at least one show.
+function WeekStreak({ bookings }) {
+  const weekKey = (d) => {
+    const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); // Monday of that week
+    return x.getFullYear() * 10000 + (x.getMonth() + 1) * 100 + x.getDate();
+  };
+  const today = new Date();
+  const weeks = new Set(
+    bookings
+      .map((b) => {
+        const [y, m, d] = String(b.show_date).slice(0, 10).split("-").map(Number);
+        return new Date(y, m - 1, d);
+      })
+      .filter((d) => d <= today)
+      .map(weekKey)
+  );
+  const cur = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  let streak = 0;
+  // An empty current week does not break the streak yet: you still have until Sunday.
+  if (!weeks.has(weekKey(cur))) cur.setDate(cur.getDate() - 7);
+  while (weeks.has(weekKey(cur))) {
+    streak++;
+    cur.setDate(cur.getDate() - 7);
+  }
+  const thisWeek = weeks.has(weekKey(today));
+  return (
+    <div className="pf-card sk-card">
+      <span className={"sk-flame" + (streak ? " on" : "")}>🔥</span>
+      <div>
+        <h3>{streak} {streak === 1 ? "week" : "weeks"} streak</h3>
+        <p>
+          {streak === 0
+            ? "Watch a show this week to start a streak."
+            : thisWeek
+              ? "You have watched a show this week. Keep it going."
+              : "Watch a show before Sunday to keep your streak."}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 // Spotify Wrapped style recap: your favourite cinema, day and time of day, worked out from your bookings.
 function MovieRecap({ bookings }) {
   if (bookings.length === 0) return null;
@@ -319,6 +362,8 @@ export default function Profile() {
       <MovieRecap bookings={confirmed} />
 
       <GoalRing bookings={confirmed} />
+
+      <WeekStreak bookings={confirmed} />
 
       <MovieLevel bookings={confirmed} />
 
