@@ -1964,3 +1964,10 @@ html[data-theme=dark] .tl li.done{color:#6fcf97}
 html[data-theme=dark] .gr-track{stroke:#2a2c32}
 html[data-theme=dark] .gr-num{fill:#f2f2f4}
 html[data-theme=dark] .gr-set button{background:#3a1f25;color:#ff8791}
+
+/* ===== Profile: weekly streak (Duolingo style) ===== */
+.sk-card{display:flex;align-items:center;gap:14px}
+.sk-flame{font-size:38px;line-height:1;filter:grayscale(1);opacity:.5}
+.sk-flame.on{filter:none;opacity:1}
+.sk-card h3{margin:0 0 3px;font-size:18px;font-weight:800}
+.sk-card p{margin:0;color:var(--gray);font-size:13.5px;font-weight:600;line-height:1.35}
