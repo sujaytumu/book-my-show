@@ -111,6 +111,55 @@ function MovieLevel({ bookings }) {
   );
 }
 
+// Apple Health style goal ring: shows watched this month against a goal the viewer sets (kept on this device).
+function GoalRing({ bookings }) {
+  const KEY = "bms_month_goal";
+  const [goal, setGoal] = useState(() => {
+    try {
+      const v = Number(localStorage.getItem(KEY));
+      return v >= 1 && v <= 30 ? v : 4;
+    } catch {
+      return 4;
+    }
+  });
+  const change = (d) => {
+    const g = Math.max(1, Math.min(30, goal + d));
+    setGoal(g);
+    try {
+      localStorage.setItem(KEY, String(g));
+    } catch {
+      /* private mode: goal just resets next time */
+    }
+  };
+  const now = new Date();
+  const prefix = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0");
+  const done = bookings.filter((b) => String(b.show_date).startsWith(prefix)).length;
+  const pct = Math.min(1, done / goal);
+  const R = 42;
+  const C = 2 * Math.PI * R;
+  const month = now.toLocaleString("en-IN", { month: "long" });
+  return (
+    <div className="pf-card gr-card">
+      <svg className="gr-ring" viewBox="0 0 100 100" role="img" aria-label={done + " of " + goal + " shows this month"}>
+        <circle cx="50" cy="50" r={R} className="gr-track" />
+        <circle cx="50" cy="50" r={R} className="gr-fill" strokeDasharray={C} strokeDashoffset={C * (1 - pct)} />
+        <text x="50" y="54" textAnchor="middle" className="gr-num">
+          {done}/{goal}
+        </text>
+      </svg>
+      <div className="gr-side">
+        <h3>{month} goal</h3>
+        <p>{done >= goal ? "Goal reached. Great month at the movies." : goal - done + (goal - done === 1 ? " more show" : " more shows") + " to hit your goal"}</p>
+        <div className="gr-set">
+          <button type="button" onClick={() => change(-1)} aria-label="Lower goal">−</button>
+          <span>{goal} shows a month</span>
+          <button type="button" onClick={() => change(1)} aria-label="Raise goal">+</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Spotify Wrapped style recap: your favourite cinema, day and time of day, worked out from your bookings.
 function MovieRecap({ bookings }) {
   if (bookings.length === 0) return null;
@@ -268,6 +317,8 @@ export default function Profile() {
       </div>
 
       <MovieRecap bookings={confirmed} />
+
+      <GoalRing bookings={confirmed} />
 
       <MovieLevel bookings={confirmed} />
 

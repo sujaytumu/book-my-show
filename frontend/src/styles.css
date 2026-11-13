@@ -1948,3 +1948,19 @@ html[data-theme=dark] .tl li::before,html[data-theme=dark] .tl i{background:#343
 html[data-theme=dark] .tl li.done::before,html[data-theme=dark] .tl li.done i{background:#2e9e5b}
 html[data-theme=dark] .tl li.now i{background:#17171b}
 html[data-theme=dark] .tl li.done{color:#6fcf97}
+
+/* ===== Profile: monthly goal ring (Apple Health style) ===== */
+.gr-card{display:flex;align-items:center;gap:18px}
+.gr-ring{width:112px;height:112px;flex:none;transform:rotate(-90deg)}
+.gr-track{fill:none;stroke:#ececf0;stroke-width:10}
+.gr-fill{fill:none;stroke:#d2232a;stroke-width:10;stroke-linecap:round;transition:stroke-dashoffset .8s cubic-bezier(.2,.8,.3,1)}
+.gr-num{transform:rotate(90deg);transform-origin:50px 50px;font-size:20px;font-weight:900;fill:var(--ink);letter-spacing:-.02em}
+.gr-side{min-width:0}
+.gr-side h3{margin:0 0 4px;font-size:18px;font-weight:800}
+.gr-side p{margin:0 0 12px;color:var(--gray);font-size:13.5px;font-weight:600;line-height:1.35}
+.gr-set{display:flex;align-items:center;gap:10px}
+.gr-set span{font-size:12.5px;font-weight:700}
+.gr-set button,.gr-set button:hover{width:32px;height:32px;padding:0;border-radius:50%;font-size:18px;line-height:1;background:#fdecee;color:var(--red);border:0;box-shadow:none}
+html[data-theme=dark] .gr-track{stroke:#2a2c32}
+html[data-theme=dark] .gr-num{fill:#f2f2f4}
+html[data-theme=dark] .gr-set button{background:#3a1f25;color:#ff8791}
