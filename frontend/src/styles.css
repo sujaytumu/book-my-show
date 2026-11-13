@@ -1971,3 +1971,16 @@ html[data-theme=dark] .gr-set button{background:#3a1f25;color:#ff8791}
 .sk-flame.on{filter:none;opacity:1}
 .sk-card h3{margin:0 0 3px;font-size:18px;font-weight:800}
 .sk-card p{margin:0;color:var(--gray);font-size:13.5px;font-weight:600;line-height:1.35}
+
+/* ===== Movie page: price alert card ===== */
+.pa-card{margin:14px 0;padding:14px 16px;border-radius:16px;background:#fff;border:1.5px solid #ececf0;box-shadow:0 2px 12px rgba(20,20,40,.06)}
+.pa-top{display:flex;align-items:center;justify-content:space-between}
+.pa-top b{font-size:15.5px;font-weight:800}
+.pa-clear,.pa-clear:hover{padding:4px 12px;border-radius:99px;font-size:12px;font-weight:700;background:#fdecee;color:var(--red);border:0}
+.pa-card p{margin:6px 0 10px;color:var(--gray);font-size:13.5px;font-weight:600}
+.pa-chips{display:flex;gap:8px}
+.pa-chips button,.pa-chips button:hover{flex:1;padding:9px 0;border-radius:12px;font-size:14px;font-weight:800;background:#f5f5f8;color:var(--ink);border:1.5px solid transparent}
+.pa-chips button.on{background:#fdecee;color:var(--red);border-color:var(--red)}
+html[data-theme=dark] .pa-card{background:#1d1f22;border-color:#33363c}
+html[data-theme=dark] .pa-chips button{background:#26282d;color:#f2f2f4}
+html[data-theme=dark] .pa-chips button.on,html[data-theme=dark] .pa-clear{background:#3a1f25;color:#ff8791}

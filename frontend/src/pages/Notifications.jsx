@@ -5,7 +5,7 @@ import { currentUser } from "../api";
 import { IcBack } from "../components/Icons";
 import { useNotifications } from "../notifications";
 
-const ICON = { confirmed: "🎟", reminder: "⏰", cancelled: "✕", seats: "💺", release: "🎬" };
+const ICON = { confirmed: "🎟", reminder: "⏰", cancelled: "✕", seats: "💺", release: "🎬", price: "💸" };
 
 export default function Notifications() {
   const navigate = useNavigate();
