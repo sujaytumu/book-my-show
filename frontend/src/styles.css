@@ -2024,3 +2024,12 @@ html[data-theme=dark] .sp-col i.on{background:linear-gradient(180deg,#f84464,#c2
 html[data-theme=dark] .mt-top small,html[data-theme=dark] .mt-next{color:#aab0bd}
 html[data-theme=dark] .mt-bar{background:#33363c}
 html[data-theme=dark] .mt-card[style*="1d1f22"]{border-left-color:#f2f2f4}
+
+/* ===== Polish: rate a watched movie (Bookings) ===== */
+.rt-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 0 2px;padding:8px 12px;border-radius:12px;background:#f6f6f9;font-size:12.5px;font-weight:600;color:#4b5060}
+.rt-stars{display:flex;gap:2px;flex:none}
+.rt-stars button{background:none;border:0;padding:2px 3px;font-size:22px;line-height:1;color:#cfd2db;cursor:pointer}
+.rt-stars button.on{color:#f5b301}
+html[data-theme=dark] .rt-row{background:#26282c;color:#aab0bd}
+html[data-theme=dark] .rt-stars button{color:#4a4e57}
+html[data-theme=dark] .rt-stars button.on{color:#f5b301}

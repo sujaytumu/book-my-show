@@ -230,6 +230,42 @@ function startsAt(b) {
   return new Date(y, m - 1, d, hh, mm);
 }
 
+// Rate a movie after you have watched it (kept privately on this device).
+const RATE_KEY = "bms_my_ratings";
+function loadRatings() {
+  try {
+    return JSON.parse(localStorage.getItem(RATE_KEY) || "{}");
+  } catch (e) {
+    return {};
+  }
+}
+
+function RateMovie({ b }) {
+  const key = String(b.movie_id || b.title);
+  const [stars, setStars] = useState(() => loadRatings()[key] || 0);
+  function rate(n) {
+    setStars(n);
+    try {
+      localStorage.setItem(RATE_KEY, JSON.stringify({ ...loadRatings(), [key]: n }));
+    } catch (e) {
+      /* storage unavailable */
+    }
+  }
+  const words = ["", "Poor", "Fair", "Good", "Great", "Loved it"];
+  return (
+    <div className="rt-row">
+      <span>{stars ? "You rated it " + words[stars] : "How was the movie?"}</span>
+      <div className="rt-stars" role="radiogroup" aria-label="Rate this movie">
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button key={n} type="button" role="radio" aria-checked={stars === n} aria-label={n + " star" + (n > 1 ? "s" : "")} className={n <= stars ? "on" : ""} onClick={() => rate(n)}>
+            ★
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function bucketOf(b) {
   if (b.status === "CANCELLED" || b.status === "EXPIRED") return "cancelled";
   return startsAt(b) < new Date() ? "past" : "upcoming";
@@ -403,6 +439,8 @@ export default function Bookings() {
 
             {b.status === "CONFIRMED" && bucket === "upcoming" && (stacked ? b.id === openKey : true) && <TripChip b={b} />}
             {b.status === "CONFIRMED" && (stacked ? b.id === openKey : true) && <BookingTimeline b={b} />}
+
+            {b.status === "CONFIRMED" && bucket === "past" && <RateMovie b={b} />}
 
             <div className="bk-divider" />
 
