@@ -2060,3 +2060,14 @@ html[data-theme=dark] .mr-row b i{color:#4a4e57}
 /* ===== Polish: saved tickets notice (Bookings) ===== */
 .bk-offline{margin:0 0 12px;padding:9px 12px;border-radius:12px;background:#fff6dc;border:1px solid #f3dd9a;color:#8a5d00;font-size:12.5px;font-weight:600}
 html[data-theme=dark] .bk-offline{background:#3a3118;border-color:#5a4a1c;color:#f5c542}
+
+/* ===== Polish: your taste chips (Profile) ===== */
+.tc-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.tc-chip{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:999px;background:#fff1f4;border:1px solid #f3c9d2;color:#c2185b;font-size:13px;font-weight:700;text-decoration:none}
+.tc-chip b{background:#c2185b;color:#fff;border-radius:999px;font-size:11px;min-width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;padding:0 5px}
+.tc-chip.lang{background:#eef2ff;border-color:#cdd6f6;color:#3b4a9a}
+.tc-chip.lang b{background:#3b4a9a}
+html[data-theme=dark] .tc-chip{background:#2a1d22;border-color:#4a2a33;color:#ff8fa8}
+html[data-theme=dark] .tc-chip b{background:#ff8fa8;color:#1d1f22}
+html[data-theme=dark] .tc-chip.lang{background:#1f2335;border-color:#343a5c;color:#a9b6ff}
+html[data-theme=dark] .tc-chip.lang b{background:#a9b6ff}
