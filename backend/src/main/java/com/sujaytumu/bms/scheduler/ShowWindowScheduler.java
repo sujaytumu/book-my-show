@@ -38,7 +38,11 @@ public class ShowWindowScheduler {
     public void onStartup() {
         Thread t = new Thread(() -> {
             try {
+                // Let the first visitors' requests go first: the free instance has very little CPU.
+                Thread.sleep(25_000);
                 runAll();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             } catch (RuntimeException e) {
                 org.slf4j.LoggerFactory.getLogger(ShowWindowScheduler.class).error("Startup show scheduling failed", e);
             }
@@ -54,13 +58,24 @@ public class ShowWindowScheduler {
     }
 
     private synchronized void runAll() {
-        releaseDueMovies();
-        applyOneTimeFixes();
-        allocateNewReleases();
-        removeClashingShows();
-        topUpWindow();
-        rebalanceByRecency();
-        applyReleaseVariants();
+        step("releaseDueMovies", this::releaseDueMovies);
+        step("applyOneTimeFixes", this::applyOneTimeFixes);
+        step("allocateNewReleases", this::allocateNewReleases);
+        step("removeClashingShows", this::removeClashingShows);
+        step("topUpWindow", this::topUpWindow);
+        step("rebalanceByRecency", this::rebalanceByRecency);
+        step("applyReleaseVariants", this::applyReleaseVariants);
+    }
+
+    /** Runs one job and logs how long it took (visible in the Render logs); one failing job no longer stops the others. */
+    private void step(String name, Runnable job) {
+        long t0 = System.currentTimeMillis();
+        try {
+            job.run();
+            org.slf4j.LoggerFactory.getLogger(ShowWindowScheduler.class).info("show-window {} took {} ms", name, System.currentTimeMillis() - t0);
+        } catch (RuntimeException e) {
+            org.slf4j.LoggerFactory.getLogger(ShowWindowScheduler.class).error("show-window {} failed", name, e);
+        }
     }
 
     /**
