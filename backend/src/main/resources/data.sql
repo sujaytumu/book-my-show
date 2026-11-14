@@ -869,3 +869,29 @@ update movies set show_languages = case lower(title)
     when 'scene' then 'Telugu, Tamil'
   end
 where show_languages is null and lower(title) in ('ramayana','ranabaali','the paradise','scene');
+
+-- Peddi (Telugu), Ram Charan. Details are what the poster states: director Buchi Babu Sana, music A. R. Rahman, producer
+-- Venkata Satish Kilaru, cinematography Rathnavelu ISC; worldwide release 4 June 2026. Runtime, certificate, genre not on the poster.
+insert into movies(title,description,poster_url,language,genre,duration_minutes,certificate,rating,release_date,upcoming,cast_crew)
+select 'Peddi',
+       'Mega Powerstar Ram Charan stars in Peddi, directed by Buchi Babu Sana with music by A. R. Rahman. Produced by Venkata Satish Kilaru, cinematography by Rathnavelu ISC. Released worldwide on 4 June 2026.',
+       '/posters/peddi.jpg','Telugu','Action, Drama',null,null,0,
+       date '2026-06-04', (date '2026-06-04' > (now() at time zone 'Asia/Kolkata')::date),
+       '[{"name":"Ram Charan","role":"Actor"},{"name":"Buchi Babu Sana","role":"Director"},{"name":"A. R. Rahman","role":"Music Director"},{"name":"Venkata Satish Kilaru","role":"Producer"},{"name":"Rathnavelu","role":"Cinematographer"}]'
+where not exists(select 1 from movies where lower(title) = 'peddi');
+
+-- OG - They Call Him OG (Telugu), Pawan Kalyan. Poster credits: written and directed by Sujeeth, music Thaman S, produced by
+-- DVV Danayya and Kalyan Dasari (DVV Entertainment). Released 25 September 2025. Title kept as "OG" (the sequel is listed as "OG 2").
+insert into movies(title,description,poster_url,language,genre,duration_minutes,certificate,rating,release_date,upcoming,cast_crew)
+select 'OG',
+       'They Call Him OG: Power Star Pawan Kalyan stars in OG, written and directed by Sujeeth with music by Thaman S. Produced by DVV Danayya and Kalyan Dasari under DVV Entertainment. Released 25 September 2025.',
+       '/posters/og.jpg','Telugu','Action, Crime',null,null,0,
+       date '2025-09-25', false,
+       '[{"name":"Pawan Kalyan","role":"Actor"},{"name":"Sujeeth","role":"Writer & Director"},{"name":"Thaman S","role":"Music Director"},{"name":"DVV Danayya","role":"Producer"},{"name":"Kalyan Dasari","role":"Producer"}]'
+where not exists(select 1 from movies where lower(title) = 'og');
+
+-- Irumudi leaves the listings. Done once, guarded by app_flags, so a later admin edit is never undone. Nothing is deleted: the
+-- movie, its bookings and its history stay in the database; it is just no longer active, and its unbooked future shows are
+-- handed to the running movies by the daily show balancing.
+with f as (insert into app_flags(flag) values('irumudi_removed_2026_11_15') on conflict do nothing returning 1)
+update movies set active=false where lower(title) = 'irumudi' and exists(select 1 from f);
