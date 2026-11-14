@@ -2056,3 +2056,7 @@ html[data-theme=dark] .mv-info .mv-tags span.mv-mine{color:#f5c542;background:#3
 .mr-row b i{font-style:normal;color:#d5d8e0}
 html[data-theme=dark] .mr-row{border-color:#33363c;color:#f2f2f4}
 html[data-theme=dark] .mr-row b i{color:#4a4e57}
+
+/* ===== Polish: saved tickets notice (Bookings) ===== */
+.bk-offline{margin:0 0 12px;padding:9px 12px;border-radius:12px;background:#fff6dc;border:1px solid #f3dd9a;color:#8a5d00;font-size:12.5px;font-weight:600}
+html[data-theme=dark] .bk-offline{background:#3a3118;border-color:#5a4a1c;color:#f5c542}

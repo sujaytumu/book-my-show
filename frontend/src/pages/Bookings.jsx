@@ -289,20 +289,49 @@ const TABS = [
 const mem = { uid: null, data: null };
 const whoAmI = () => { const u = currentUser(); return u ? String(u.id || u.email || "") : ""; };
 
+// Also saved on the device so tickets open instantly after the app restarts and still show when there is no network or the server is asleep.
+const diskKey = () => "bms_bookings_" + whoAmI();
+function readDisk() {
+  try {
+    const d = JSON.parse(localStorage.getItem(diskKey()) || "null");
+    return Array.isArray(d) ? d : null;
+  } catch (e) {
+    return null;
+  }
+}
+
 export default function Bookings() {
   const [ticket, setTicket] = useState(null);
-  const [bookings, setBookings] = useState(() => (mem.data && mem.uid === whoAmI() ? mem.data : []));
+  const [bookings, setBookings] = useState(() => (mem.data && mem.uid === whoAmI() ? mem.data : readDisk() || []));
   const [posters, setPosters] = useState({});
-  const [loaded, setLoaded] = useState(() => !!(mem.data && mem.uid === whoAmI()));
+  const [loaded, setLoaded] = useState(() => !!(mem.data && mem.uid === whoAmI()) || !!readDisk());
+  const [offline, setOffline] = useState(false);
   const [tab, setTab] = useState("upcoming");
 
   function load() {
-    api.get("/bookings/me").then((res) => {
-      mem.uid = whoAmI();
-      mem.data = res.data;
-      setBookings(res.data);
-      setLoaded(true);
-    });
+    api
+      .get("/bookings/me")
+      .then((res) => {
+        mem.uid = whoAmI();
+        mem.data = res.data;
+        setBookings(res.data);
+        setLoaded(true);
+        setOffline(false);
+        try {
+          localStorage.setItem(diskKey(), JSON.stringify(res.data));
+        } catch (e) {
+          /* storage full or unavailable */
+        }
+      })
+      .catch(() => {
+        // Keep showing the saved copy when the server cannot be reached.
+        const saved = readDisk();
+        if (saved) {
+          setBookings(saved);
+          setLoaded(true);
+          setOffline(true);
+        }
+      });
   }
 
   useEffect(load, []);
@@ -371,6 +400,7 @@ export default function Bookings() {
   return (
     <>
       <h1 className="bk-heading">My Bookings</h1>
+      {offline && <p className="bk-offline">Showing your saved tickets. Can't reach the server right now.</p>}
 
       <div className="bk-tabs">
         {TABS.map((t) => (
