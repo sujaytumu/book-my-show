@@ -2042,3 +2042,7 @@ html[data-theme=dark] .rt-stars button.on{color:#f5b301}
 .sp-surprise em{font-style:normal;font-size:13px;font-weight:700;color:var(--red)}
 html[data-theme=dark] .sp-surprise{background:linear-gradient(135deg,#2a1d22,#1d1f22);border-color:#4a2a33;color:#f2f2f4}
 html[data-theme=dark] .sp-surprise small{color:#aab0bd}
+
+/* ===== Polish: your rating chip (Movie) ===== */
+.mv-info .mv-tags span.mv-mine{color:#b27b00;background:#fff6dc;border-color:#f3dd9a}
+html[data-theme=dark] .mv-info .mv-tags span.mv-mine{color:#f5c542;background:#3a3118;border-color:#5a4a1c}
