@@ -1,3 +1,4 @@
+import NextShowBar from "./components/NextShowBar";
 import { installPosterFlight } from "./sharedPoster";
 import { Suspense, lazy, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Navigate, NavLink, Route, Routes, useLocation, useNavigate } from "react-router-dom";
@@ -402,6 +403,7 @@ export default function App() {
         </main>
       </div>
       {peek && <PeekLayer path={peek} />}
+      <NextShowBar />
       <TabBar />
       {signedIn && askLoc && pathname === "/" && <LocationPrompt onDone={() => setAskLoc(false)} />}
     </>
