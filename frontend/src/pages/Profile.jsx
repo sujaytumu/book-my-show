@@ -291,6 +291,43 @@ function MovieHeatmap({ bookings }) {
   );
 }
 
+// Movies you rated from My Bookings (ratings are kept on this device).
+function MyRatings({ bookings }) {
+  let ratings = {};
+  try {
+    ratings = JSON.parse(localStorage.getItem("bms_my_ratings") || "{}");
+  } catch (e) {
+    ratings = {};
+  }
+  const seen = new Set();
+  const rows = [];
+  bookings.forEach((b) => {
+    const key = String(b.movie_id || b.title);
+    if (ratings[key] && !seen.has(key)) {
+      seen.add(key);
+      rows.push({ key, id: b.movie_id, title: b.title, stars: ratings[key] });
+    }
+  });
+  if (rows.length === 0) return null;
+  rows.sort((a, b) => b.stars - a.stars);
+  return (
+    <div className="pf-card">
+      <h3>Your ratings</h3>
+      <div className="mr-list">
+        {rows.slice(0, 5).map((r) => (
+          <Link key={r.key} to={r.id ? "/movie/" + r.id : "/search?q=" + encodeURIComponent(r.title)} className="mr-row">
+            <span>{r.title}</span>
+            <b aria-label={r.stars + " out of 5"}>
+              {"★".repeat(r.stars)}
+              <i>{"★".repeat(5 - r.stars)}</i>
+            </b>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // Mint / Cred style spending view: what you spent on tickets in each of the last 6 months.
 function SpendChart({ bookings }) {
   if (bookings.length === 0) return null;
@@ -441,6 +478,8 @@ export default function Profile() {
       <SpendChart bookings={confirmed} />
 
       <MovieLevel bookings={confirmed} />
+
+      <MyRatings bookings={confirmed} />
 
       <MovieHeatmap bookings={confirmed} />
 
