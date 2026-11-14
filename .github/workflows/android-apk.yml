@@ -29,7 +29,17 @@ jobs:
         working-directory: .
         run: |
           mkdir -p frontend/public
-          if curl -fsS --max-time 120 https://book-my-show-api-qx31.onrender.com/api/movies -o "$RUNNER_TEMP/movies.json" && python3 -c "import json,sys; d=json.load(open(sys.argv[1])); sys.exit(0 if isinstance(d,list) and len(d)>0 else 1)" "$RUNNER_TEMP/movies.json"; then
+          ok=0
+          # A sleeping Render server needs a minute or two to wake up, so try several times.
+          for i in 1 2 3 4 5; do
+            if curl -fsS --max-time 100 https://book-my-show-api-qx31.onrender.com/api/movies -o "$RUNNER_TEMP/movies.json" && python3 -c "import json,sys; d=json.load(open(sys.argv[1])); sys.exit(0 if isinstance(d,list) and len(d)>0 else 1)" "$RUNNER_TEMP/movies.json"; then
+              ok=1
+              break
+            fi
+            echo "Attempt $i failed, retrying"
+            sleep 10
+          done
+          if [ $ok -eq 1 ]; then
             cp "$RUNNER_TEMP/movies.json" frontend/public/movies-snapshot.json
             echo "Snapshot saved"
           else
