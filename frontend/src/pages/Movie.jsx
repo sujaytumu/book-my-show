@@ -886,6 +886,15 @@ export default function Movie() {
               <>
                 {fm.length > 0 && <span>{plus(fm)}</span>}
                 {lg.length > 0 && <span>{plus(lg)}</span>}
+                {(() => {
+                  let mine = 0;
+                  try {
+                    mine = JSON.parse(localStorage.getItem("bms_my_ratings") || "{}")[String(movie.id)] || 0;
+                  } catch (e) {
+                    mine = 0;
+                  }
+                  return mine ? <span className="mv-mine">★ You rated {mine}/5</span> : null;
+                })()}
               </>
             );
           })()}
