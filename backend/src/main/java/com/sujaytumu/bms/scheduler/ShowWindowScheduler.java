@@ -58,6 +58,7 @@ public class ShowWindowScheduler {
     }
 
     private synchronized void runAll() {
+        step("purgePastSeats", this::purgePastSeats);
         step("releaseDueMovies", this::releaseDueMovies);
         step("applyOneTimeFixes", this::applyOneTimeFixes);
         step("allocateNewReleases", this::allocateNewReleases);
@@ -281,6 +282,26 @@ public class ShowWindowScheduler {
         if (!updates.isEmpty()) db.batchUpdate("update shows set language = ?, format = ? where id = ?", updates);
     }
 
+    /**
+     * Seat rows of shows that already ran are never read again (a booking keeps its own seat list), but they were never
+     * removed: every day added about 90,000 rows and the free database (1 GB limit) filled up, after which the server could
+     * not even start. This removes the still-AVAILABLE seats of every show dated before today, in batches. Seats that are
+     * BOOKED or LOCKED are kept so the admin consistency check keeps matching the bookings, and the show rows stay so old
+     * tickets still open.
+     */
+    public void purgePastSeats() {
+        for (int i = 0; i < 200; i++) {
+            int n = db.update("""
+                    delete from show_seats where id in (
+                        select ss.id from show_seats ss join shows sh on sh.id = ss.show_id
+                        where sh.show_date < (now() at time zone 'Asia/Kolkata')::date and ss.status = 'AVAILABLE'
+                        limit 50000
+                    )
+                    """);
+            if (n == 0) break;
+        }
+    }
+
     public void topUpWindow() {
         db.update("""
                 insert into shows(movie_id,screen_id,show_date,start_time,end_time,price,format,language)
@@ -335,7 +356,8 @@ public class ShowWindowScheduler {
                 insert into show_seats(show_id,seat_number,seat_type)
                 select sh.id, chr(65 + r) || n::text, case when r < 4 then 'PREMIUM' else 'REGULAR' end
                 from shows sh cross join generate_series(0,9) r cross join generate_series(1,15) n
-                where (select count(*) from show_seats ss where ss.show_id = sh.id) < 150
+                where sh.show_date >= (now() at time zone 'Asia/Kolkata')::date
+                  and (select count(*) from show_seats ss where ss.show_id = sh.id) < 150
                 on conflict (show_id,seat_number) do nothing
                 """);
     }
