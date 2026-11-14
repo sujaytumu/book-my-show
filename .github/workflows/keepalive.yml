@@ -1,12 +1,25 @@
 name: keepalive
-# Render's free tier sleeps after ~15 minutes idle (first open then takes a minute). A light ping keeps the API warm.
+# Render's free tier sleeps after ~15 minutes idle (first open then takes a minute or more).
+# GitHub's scheduled runs are often delayed by hours, so a single ping every 5 minutes is not reliable.
+# Instead one run stays alive for ~5h50m and pings every 4 minutes; the next scheduled run waits in the
+# queue (concurrency) and takes over as soon as this one ends, so the API stays awake around the clock.
 on:
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "*/30 * * * *"
   workflow_dispatch:
+concurrency:
+  group: keepalive
+  cancel-in-progress: false
 jobs:
   ping:
     runs-on: ubuntu-latest
+    timeout-minutes: 355
     steps:
-      - run: curl -fsS --max-time 60 https://book-my-show-api-qx31.onrender.com/api/health || true
-      - run: curl -fsS --max-time 60 -o /dev/null https://book-my-show-api-qx31.onrender.com/api/movies || true
+      - name: Ping every 4 minutes
+        run: |
+          end=$((SECONDS + 350*60))
+          while [ $SECONDS -lt $end ]; do
+            curl -sS --max-time 90 -o /dev/null -w "health %{http_code} %{time_total}s\n" https://book-my-show-api-qx31.onrender.com/api/health || true
+            curl -sS --max-time 90 -o /dev/null https://book-my-show-api-qx31.onrender.com/api/movies || true
+            sleep 240
+          done
