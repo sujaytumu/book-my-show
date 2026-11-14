@@ -34,4 +34,12 @@ export function currentUser() {
 export function logout() {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
+  // Saved ticket copies belong to the signed-in person; do not leave them behind on a shared phone.
+  try {
+    Object.keys(localStorage)
+      .filter((k) => k.startsWith("bms_bookings_"))
+      .forEach((k) => localStorage.removeItem(k));
+  } catch (e) {
+    /* storage unavailable */
+  }
 }
