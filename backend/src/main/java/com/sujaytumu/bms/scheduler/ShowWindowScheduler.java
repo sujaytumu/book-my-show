@@ -1,6 +1,7 @@
 package com.sujaytumu.bms.scheduler;
 
-import jakarta.annotation.PostConstruct;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -28,20 +29,31 @@ public class ShowWindowScheduler {
         this.db = db;
     }
 
-    @PostConstruct
+    /**
+     * Runs once the server is already up and answering requests, in the background. This used to run before the web
+     * server opened its port, so every wake-up from sleep waited for all of this (several heavy queries on a remote
+     * database) and the app looked dead for minutes.
+     */
+    @EventListener(ApplicationReadyEvent.class)
     public void onStartup() {
-        releaseDueMovies();
-        applyOneTimeFixes();
-        allocateNewReleases();
-        removeClashingShows();
-        topUpWindow();
-        rebalanceByRecency();
-        applyReleaseVariants();
+        Thread t = new Thread(() -> {
+            try {
+                runAll();
+            } catch (RuntimeException e) {
+                org.slf4j.LoggerFactory.getLogger(ShowWindowScheduler.class).error("Startup show scheduling failed", e);
+            }
+        }, "show-window-startup");
+        t.setDaemon(true);
+        t.start();
     }
 
     /** Runs daily at 00:05 server time: new releases first, then the rolling window. */
     @Scheduled(cron = "0 5 0 * * *")
     public void daily() {
+        runAll();
+    }
+
+    private synchronized void runAll() {
         releaseDueMovies();
         applyOneTimeFixes();
         allocateNewReleases();
