@@ -1,0 +1,17 @@
+name: server-check
+# Manual diagnostic: asks the Render API what it really answers (status code and Render's own headers) for ~10 minutes.
+on:
+  workflow_dispatch:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Probe the API
+        run: |
+          for i in $(seq 1 12); do
+            echo "=== probe $i at $(date -u +%H:%M:%S) ==="
+            curl -sS -i --max-time 55 https://book-my-show-api-qx31.onrender.com/api/health 2>&1 | head -25 || echo "curl exit $?"
+            echo
+            sleep 20
+          done
