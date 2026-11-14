@@ -895,3 +895,13 @@ where not exists(select 1 from movies where lower(title) = 'og');
 -- handed to the running movies by the daily show balancing.
 with f as (insert into app_flags(flag) values('irumudi_removed_2026_11_15') on conflict do nothing returning 1)
 update movies set active=false where lower(title) = 'irumudi' and exists(select 1 from f);
+
+-- ENE Repeat (Telugu), releasing 19 November 2026. Only what the poster shows is stated: title and release date. Cast, crew,
+-- runtime and certificate are not on it, so they are left blank for the admin "Auto-fill" or the daily job to complete.
+-- Listed as Coming Soon until the date; the release automation then moves it to Now Showing and gives it shows.
+insert into movies(title,description,poster_url,language,genre,duration_minutes,certificate,rating,release_date,upcoming)
+select 'ENE Repeat',
+       'ENE Repeat, a Telugu comedy, releasing in cinemas on 19 November 2026.',
+       '/posters/ene-repeat.jpg','Telugu','Comedy',null,null,0,
+       date '2026-11-19', (date '2026-11-19' > (now() at time zone 'Asia/Kolkata')::date)
+where not exists(select 1 from movies where lower(title) in ('ene repeat','ene'));
