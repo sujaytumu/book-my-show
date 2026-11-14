@@ -7,6 +7,8 @@ on:
   schedule:
     - cron: "*/30 * * * *"
   workflow_dispatch:
+permissions:
+  actions: write
 concurrency:
   group: keepalive
   cancel-in-progress: false
@@ -16,9 +18,17 @@ jobs:
     timeout-minutes: 355
     steps:
       - name: Ping every 4 minutes
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           end=$((SECONDS + 350*60))
+          handoff=$((SECONDS + 330*60))
+          queued=0
           while [ $SECONDS -lt $end ]; do
+            # 20 minutes before this run ends, queue the next one so there is never a gap
+            if [ $queued -eq 0 ] && [ $SECONDS -ge $handoff ]; then
+              gh workflow run keepalive.yml --ref main && queued=1 || true
+            fi
             curl -sS --max-time 90 -o /dev/null -w "health %{http_code} %{time_total}s\n" https://book-my-show-api-qx31.onrender.com/api/health || true
             curl -sS --max-time 90 -o /dev/null https://book-my-show-api-qx31.onrender.com/api/movies || true
             sleep 240
