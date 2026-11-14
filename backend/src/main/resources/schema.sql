@@ -11,7 +11,6 @@ alter table theatres add column if not exists theatre_type varchar(20) not null 
 create table if not exists screens(id bigserial primary key,name varchar(80) not null,total_seats int not null,theatre_id bigint references theatres(id));
 create table if not exists shows(id bigserial primary key,movie_id bigint references movies(id),screen_id bigint references screens(id),show_date date not null,start_time time not null,end_time time not null,price numeric(10,2) not null);
 create table if not exists show_seats(id bigserial primary key,show_id bigint references shows(id) on delete cascade,seat_number varchar(10) not null,seat_type varchar(30) not null,status varchar(20) not null default 'AVAILABLE',locked_by bigint,locked_until timestamptz,unique(show_id,seat_number));
-create index if not exists idx_show_seats_show_status on show_seats(show_id,status);
 create table if not exists bookings(id bigserial primary key,user_id bigint references users(id),show_id bigint references shows(id),reference varchar(30) unique not null,status varchar(20) not null,amount numeric(10,2) not null,razorpay_order_id varchar(100),razorpay_payment_id varchar(100),expires_at timestamptz,created_at timestamptz default now());
 alter table bookings add column if not exists ticket_subtotal numeric(10,2);
 alter table bookings add column if not exists convenience_fee numeric(10,2) default 0;
