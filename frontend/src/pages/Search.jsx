@@ -136,6 +136,23 @@ export default function Search() {
         </>
       ) : (
         <>
+          {movies.some((m) => !m.upcoming) && (
+            <button
+              type="button"
+              className="sp-surprise"
+              onClick={() => {
+                const pool = movies.filter((m) => !m.upcoming);
+                navigate("/movie/" + pool[Math.floor(Math.random() * pool.length)].id);
+              }}
+            >
+              <span>🎲</span>
+              <b>
+                Can't decide?
+                <small>Surprise me with a movie that's in cinemas now</small>
+              </b>
+              <em>Pick ›</em>
+            </button>
+          )}
           {recent.length > 0 && (
             <>
               <div className="sp-recent-head">
