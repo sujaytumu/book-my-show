@@ -1984,3 +1984,17 @@ html[data-theme=dark] .gr-set button{background:#3a1f25;color:#ff8791}
 html[data-theme=dark] .pa-card{background:#1d1f22;border-color:#33363c}
 html[data-theme=dark] .pa-chips button{background:#26282d;color:#f2f2f4}
 html[data-theme=dark] .pa-chips button.on,html[data-theme=dark] .pa-clear{background:#3a1f25;color:#ff8791}
+
+/* ===== Next show bar (floats above the tab bar, like the real app) ===== */
+.nsb{position:fixed;left:50%;transform:translateX(-50%);bottom:84px;width:min(520px,calc(100% - 32px));z-index:30;display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:18px;background:rgba(255,255,255,.94);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1px solid #e6e7ec;box-shadow:0 8px 24px rgba(20,20,40,.16);color:var(--ink);text-decoration:none}
+.nsb-ic{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#f84464,#c2185b);display:flex;align-items:center;justify-content:center;font-size:20px;flex:none}
+.nsb-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.nsb-txt small{font-size:12.5px;font-weight:600;color:#4b5060;display:flex;align-items:center;gap:6px}
+.nsb-txt small i{width:8px;height:8px;border-radius:50%;background:#2e9e5b;display:inline-block}
+.nsb-txt small b{color:var(--ink);font-weight:800}
+.nsb-txt>b{font-size:14.5px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nsb em{font-style:normal;font-size:13px;font-weight:700;color:var(--red);white-space:nowrap}
+html[data-theme=dark] .nsb{background:rgba(29,31,34,.94);border-color:#33363c;color:#f2f2f4}
+html[data-theme=dark] .nsb-txt small{color:#aab0bd}
+html[data-theme=dark] .nsb-txt small b{color:#fff}
+@media (max-width:480px){.nsb{bottom:78px}}
