@@ -145,7 +145,7 @@ insert into shows(movie_id,screen_id,show_date,start_time,end_time,price)
 select m.id,s.id,current_date+2,'19:00','21:11',190 from movies m cross join screens s join theatres t on t.id=s.theatre_id
 where m.title='Sathi Leelavathi' and t.name='BMS Cinemas' and not exists(select 1 from shows sh where sh.movie_id=m.id and sh.screen_id=s.id);
 
-insert into show_seats(show_id,seat_number,seat_type) select sh.id,chr(65+floor((g-1)/10)::int)||((g-1)%10+1)::text,case when g<=20 then 'PREMIUM' else 'REGULAR' end from shows sh cross join generate_series(1,60) g where not exists(select 1 from show_seats ss where ss.show_id=sh.id);
+insert into show_seats(show_id,seat_number,seat_type) select sh.id,chr(65+floor((g-1)/10)::int)||((g-1)%10+1)::text,case when g<=20 then 'PREMIUM' else 'REGULAR' end from shows sh cross join generate_series(1,60) g where sh.show_date >= (now() at time zone 'Asia/Kolkata')::date and not exists(select 1 from show_seats ss where ss.show_id=sh.id);
 
 -- ============================================================
 -- Real Hyderabad theatre network (30: 15 single screens + 15
@@ -416,7 +416,7 @@ where not exists(
     and sh.show_date=current_date+d.day_offset and sh.start_time=v.start_time::time
 );
 
-insert into show_seats(show_id,seat_number,seat_type) select sh.id,chr(65+floor((g-1)/10)::int)||((g-1)%10+1)::text,case when g<=20 then 'PREMIUM' else 'REGULAR' end from shows sh cross join generate_series(1,60) g where not exists(select 1 from show_seats ss where ss.show_id=sh.id);
+insert into show_seats(show_id,seat_number,seat_type) select sh.id,chr(65+floor((g-1)/10)::int)||((g-1)%10+1)::text,case when g<=20 then 'PREMIUM' else 'REGULAR' end from shows sh cross join generate_series(1,60) g where sh.show_date >= (now() at time zone 'Asia/Kolkata')::date and not exists(select 1 from show_seats ss where ss.show_id=sh.id);
 
 
 
@@ -468,7 +468,7 @@ where not exists(
 );
 
 -- Seats for the new shows (only creates seats for shows that have none yet)
-insert into show_seats(show_id,seat_number,seat_type) select sh.id,chr(65+floor((g-1)/10)::int)||((g-1)%10+1)::text,case when g<=20 then 'PREMIUM' else 'REGULAR' end from shows sh cross join generate_series(1,60) g where not exists(select 1 from show_seats ss where ss.show_id=sh.id);
+insert into show_seats(show_id,seat_number,seat_type) select sh.id,chr(65+floor((g-1)/10)::int)||((g-1)%10+1)::text,case when g<=20 then 'PREMIUM' else 'REGULAR' end from shows sh cross join generate_series(1,60) g where sh.show_date >= (now() at time zone 'Asia/Kolkata')::date and not exists(select 1 from show_seats ss where ss.show_id=sh.id);
 
 
 --new movies
@@ -527,7 +527,7 @@ where not exists(
     and sh.show_date=current_date+d.day_offset and sh.start_time=v.start_time::time
 );
 
-insert into show_seats(show_id,seat_number,seat_type) select sh.id,chr(65+floor((g-1)/10)::int)||((g-1)%10+1)::text,case when g<=20 then 'PREMIUM' else 'REGULAR' end from shows sh cross join generate_series(1,60) g where not exists(select 1 from show_seats ss where ss.show_id=sh.id);
+insert into show_seats(show_id,seat_number,seat_type) select sh.id,chr(65+floor((g-1)/10)::int)||((g-1)%10+1)::text,case when g<=20 then 'PREMIUM' else 'REGULAR' end from shows sh cross join generate_series(1,60) g where sh.show_date >= (now() at time zone 'Asia/Kolkata')::date and not exists(select 1 from show_seats ss where ss.show_id=sh.id);
 
 
 -- Demo ratings for Sigma and Tella Kagitam (they were seeded at 0). Only rows still at 0 are updated,
@@ -541,7 +541,7 @@ update movies set rating=7.9 where title='Tella Kagitam' and rating=0;
 insert into show_seats(show_id,seat_number,seat_type)
 select sh.id,chr(65+floor((g-1)/10)::int)||((g-1)%10+1)::text,'REGULAR'
 from shows sh cross join generate_series(61,100) g
-where (select count(*) from show_seats ss where ss.show_id=sh.id)=60
+where sh.show_date >= (now() at time zone 'Asia/Kolkata')::date and (select count(*) from show_seats ss where ss.show_id=sh.id)=60
 on conflict (show_id,seat_number) do nothing;
 
 -- ============================================================
@@ -592,7 +592,7 @@ alter table shows alter column format set default '2D';
 insert into show_seats(show_id,seat_number,seat_type)
 select sh.id, chr(65 + r) || n::text, case when r < 4 then 'PREMIUM' else 'REGULAR' end
 from shows sh cross join generate_series(0,9) r cross join generate_series(1,15) n
-where (select count(*) from show_seats ss where ss.show_id = sh.id) < 150
+where sh.show_date >= (now() at time zone 'Asia/Kolkata')::date and (select count(*) from show_seats ss where ss.show_id = sh.id) < 150
 on conflict (show_id,seat_number) do nothing;
 
 -- ============================================================
@@ -717,7 +717,7 @@ where sc.id = sh.screen_id and sh.format is null;
 insert into show_seats(show_id,seat_number,seat_type)
 select sh.id, chr(65 + r) || n::text, case when r < 4 then 'PREMIUM' else 'REGULAR' end
 from shows sh cross join generate_series(0,9) r cross join generate_series(1,15) n
-where (select count(*) from show_seats ss where ss.show_id = sh.id) < 150
+where sh.show_date >= (now() at time zone 'Asia/Kolkata')::date and (select count(*) from show_seats ss where ss.show_id = sh.id) < 150
 on conflict (show_id,seat_number) do nothing;
 
 -- Food & beverages offered on the seat page (added to the total, no convenience fee).
@@ -853,7 +853,7 @@ cross join lateral (
 insert into show_seats(show_id,seat_number,seat_type)
 select sh.id, chr(65 + r) || n::text, case when r < 4 then 'PREMIUM' else 'REGULAR' end
 from shows sh cross join generate_series(0,9) r cross join generate_series(1,15) n
-where (select count(*) from show_seats ss where ss.show_id = sh.id) < 150
+where sh.show_date >= (now() at time zone 'Asia/Kolkata')::date and (select count(*) from show_seats ss where ss.show_id = sh.id) < 150
 on conflict (show_id,seat_number) do nothing;
 
 -- Ramayana plays in many languages and formats (see ReleaseVariants / ShowWindowScheduler.applyReleaseVariants).
