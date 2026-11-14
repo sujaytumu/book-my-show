@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { thumb } from "../img";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { api, currentUser, logout } from "../api";
+import { swrGet } from "../cache";
 import { getTheme, setTheme } from "../theme";
 import { loadWatchlist, removeFromWatchlist, syncWatchlist } from "../watchlist";
 
@@ -291,6 +292,50 @@ function MovieHeatmap({ bookings }) {
   );
 }
 
+// Your taste: the genres and languages of the movies you booked (matched to the movie list by title).
+function TasteChips({ bookings }) {
+  const [movies, setMovies] = useState([]);
+  useEffect(() => {
+    swrGet("/movies", (d) => Array.isArray(d) && setMovies(d)).catch(() => {});
+  }, []);
+  if (bookings.length === 0 || movies.length === 0) return null;
+  const byTitle = {};
+  movies.forEach((m) => (byTitle[String(m.title).toLowerCase()] = m));
+  const genres = {};
+  const langs = {};
+  bookings.forEach((b) => {
+    const m = byTitle[String(b.title).toLowerCase()];
+    if (!m) return;
+    String(m.genre || "")
+      .split(/[,/]/)
+      .map((g) => g.trim())
+      .filter(Boolean)
+      .forEach((g) => (genres[g] = (genres[g] || 0) + 1));
+    if (m.language) langs[m.language] = (langs[m.language] || 0) + 1;
+  });
+  const top = (o, n) => Object.entries(o).sort((a, b) => b[1] - a[1]).slice(0, n);
+  const g = top(genres, 4);
+  const l = top(langs, 2);
+  if (g.length === 0) return null;
+  return (
+    <div className="pf-card">
+      <h3>Your taste</h3>
+      <div className="tc-chips">
+        {g.map(([name, n]) => (
+          <Link key={name} to={"/search?q=" + encodeURIComponent(name)} className="tc-chip">
+            {name} <b>{n}</b>
+          </Link>
+        ))}
+        {l.map(([name, n]) => (
+          <span key={name} className="tc-chip lang">
+            {name} <b>{n}</b>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // Movies you rated from My Bookings (ratings are kept on this device).
 function MyRatings({ bookings }) {
   let ratings = {};
@@ -478,6 +523,8 @@ export default function Profile() {
       <SpendChart bookings={confirmed} />
 
       <MovieLevel bookings={confirmed} />
+
+      <TasteChips bookings={confirmed} />
 
       <MyRatings bookings={confirmed} />
 
