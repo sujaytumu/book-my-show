@@ -1998,3 +1998,16 @@ html[data-theme=dark] .nsb{background:rgba(29,31,34,.94);border-color:#33363c;co
 html[data-theme=dark] .nsb-txt small{color:#aab0bd}
 html[data-theme=dark] .nsb-txt small b{color:#fff}
 @media (max-width:480px){.nsb{bottom:78px}}
+
+/* ===== Polish: spending chart (Profile) ===== */
+.sp-chart h3{margin:0 0 4px}
+.sp-sub{margin:0 0 14px;font-size:12.5px;font-weight:600;color:#6b7080}
+.sp-bars{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;align-items:end;height:130px}
+.sp-col{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;height:100%}
+.sp-col i{width:100%;max-width:34px;border-radius:8px 8px 4px 4px;background:#e9eaef;display:block}
+.sp-col i.on{background:linear-gradient(180deg,#f84464,#c2185b)}
+.sp-col small{font-size:11.5px;font-weight:700;color:#6b7080}
+.sp-val{font-size:10.5px;font-weight:700;color:var(--ink);min-height:13px;white-space:nowrap}
+html[data-theme=dark] .sp-sub,html[data-theme=dark] .sp-col small{color:#aab0bd}
+html[data-theme=dark] .sp-col i{background:#33363c}
+html[data-theme=dark] .sp-col i.on{background:linear-gradient(180deg,#f84464,#c2185b)}

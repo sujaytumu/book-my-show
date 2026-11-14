@@ -291,6 +291,43 @@ function MovieHeatmap({ bookings }) {
   );
 }
 
+// Mint / Cred style spending view: what you spent on tickets in each of the last 6 months.
+function SpendChart({ bookings }) {
+  if (bookings.length === 0) return null;
+  const now = new Date();
+  const months = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+    months.push({ key, label: d.toLocaleDateString("en-IN", { month: "short" }), total: 0 });
+  }
+  bookings.forEach((b) => {
+    const m = months.find((x) => String(b.show_date).startsWith(x.key));
+    if (m) m.total += Number(b.amount) || 0;
+  });
+  const max = Math.max(1, ...months.map((m) => m.total));
+  const all = bookings.reduce((sum, b) => sum + (Number(b.amount) || 0), 0);
+  const avg = Math.round(all / bookings.length);
+  const thisMonth = months[months.length - 1].total;
+  return (
+    <div className="pf-card sp-chart">
+      <h3>Spending on tickets</h3>
+      <p className="sp-sub">
+        ₹{thisMonth.toFixed(0)} this month · ₹{avg} average per booking
+      </p>
+      <div className="sp-bars">
+        {months.map((m) => (
+          <div className="sp-col" key={m.key}>
+            <span className="sp-val">{m.total ? "₹" + Math.round(m.total) : ""}</span>
+            <i style={{ height: Math.max(4, Math.round((m.total / max) * 84)) + "px" }} className={m.total ? "on" : ""} />
+            <small>{m.label}</small>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function Profile() {
   const navigate = useNavigate();
   const user = currentUser();
@@ -364,6 +401,8 @@ export default function Profile() {
       <GoalRing bookings={confirmed} />
 
       <WeekStreak bookings={confirmed} />
+
+      <SpendChart bookings={confirmed} />
 
       <MovieLevel bookings={confirmed} />
 
