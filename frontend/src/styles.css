@@ -2011,3 +2011,16 @@ html[data-theme=dark] .nsb-txt small b{color:#fff}
 html[data-theme=dark] .sp-sub,html[data-theme=dark] .sp-col small{color:#aab0bd}
 html[data-theme=dark] .sp-col i{background:#33363c}
 html[data-theme=dark] .sp-col i.on{background:linear-gradient(180deg,#f84464,#c2185b)}
+
+/* ===== Polish: member tier (Profile) ===== */
+.mt-card{border-left:5px solid var(--tier)}
+.mt-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.mt-top small{font-size:12px;font-weight:600;color:#6b7080}
+.mt-chip{background:var(--tier);color:#fff;font-size:13px;font-weight:800;padding:4px 14px;border-radius:999px}
+.mt-spent{display:block;font-size:18px;font-weight:800;margin-bottom:10px}
+.mt-bar{height:8px;border-radius:99px;background:#e9eaef;overflow:hidden}
+.mt-bar i{display:block;height:100%;border-radius:99px;background:var(--tier)}
+.mt-next{margin:8px 0 0;font-size:12.5px;font-weight:600;color:#6b7080}
+html[data-theme=dark] .mt-top small,html[data-theme=dark] .mt-next{color:#aab0bd}
+html[data-theme=dark] .mt-bar{background:#33363c}
+html[data-theme=dark] .mt-card[style*="1d1f22"]{border-left-color:#f2f2f4}
