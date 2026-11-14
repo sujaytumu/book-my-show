@@ -2046,3 +2046,13 @@ html[data-theme=dark] .sp-surprise small{color:#aab0bd}
 /* ===== Polish: your rating chip (Movie) ===== */
 .mv-info .mv-tags span.mv-mine{color:#b27b00;background:#fff6dc;border-color:#f3dd9a}
 html[data-theme=dark] .mv-info .mv-tags span.mv-mine{color:#f5c542;background:#3a3118;border-color:#5a4a1c}
+
+/* ===== Polish: your ratings (Profile) ===== */
+.mr-list{display:flex;flex-direction:column}
+.mr-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-top:1px solid #eceef2;color:var(--ink);text-decoration:none;font-size:14px;font-weight:700}
+.mr-row:first-child{border-top:0}
+.mr-row span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mr-row b{flex:none;color:#f5b301;letter-spacing:1px;font-size:15px}
+.mr-row b i{font-style:normal;color:#d5d8e0}
+html[data-theme=dark] .mr-row{border-color:#33363c;color:#f2f2f4}
+html[data-theme=dark] .mr-row b i{color:#4a4e57}
