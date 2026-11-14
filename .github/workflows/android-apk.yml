@@ -25,6 +25,16 @@ jobs:
           distribution: temurin
           java-version: '21'
       - run: npm ci
+      - name: Bundle a snapshot of the movie list (so the first open is instant even if the server is asleep)
+        working-directory: .
+        run: |
+          mkdir -p frontend/public
+          if curl -fsS --max-time 120 https://book-my-show-api-qx31.onrender.com/api/movies -o "$RUNNER_TEMP/movies.json" && python3 -c "import json,sys; d=json.load(open(sys.argv[1])); sys.exit(0 if isinstance(d,list) and len(d)>0 else 1)" "$RUNNER_TEMP/movies.json"; then
+            cp "$RUNNER_TEMP/movies.json" frontend/public/movies-snapshot.json
+            echo "Snapshot saved"
+          else
+            echo "::warning::Could not fetch the movie list; building without a snapshot"
+          fi
       - name: Build web app
         env:
           VITE_API_URL: ${{ vars.VITE_API_URL || 'https://book-my-show-api-qx31.onrender.com/api' }}
