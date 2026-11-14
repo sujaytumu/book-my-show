@@ -328,6 +328,40 @@ function SpendChart({ bookings }) {
   );
 }
 
+// Airline / card style membership tier from lifetime ticket spend (status only; no discounts are attached).
+const TIERS = [
+  { name: "Silver", at: 0, color: "#9aa3b2" },
+  { name: "Gold", at: 2000, color: "#d9a21b" },
+  { name: "Platinum", at: 5000, color: "#5b6b8c" },
+  { name: "Black", at: 10000, color: "#1d1f22" },
+];
+
+function MemberTier({ bookings }) {
+  const spent = bookings.reduce((sum, b) => sum + (Number(b.amount) || 0), 0);
+  let idx = 0;
+  TIERS.forEach((t, i) => {
+    if (spent >= t.at) idx = i;
+  });
+  const cur = TIERS[idx];
+  const next = TIERS[idx + 1];
+  const pct = next ? Math.min(100, Math.round(((spent - cur.at) / (next.at - cur.at)) * 100)) : 100;
+  return (
+    <div className="pf-card mt-card" style={{ "--tier": cur.color }}>
+      <div className="mt-top">
+        <span className="mt-chip">{cur.name}</span>
+        <small>Member tier</small>
+      </div>
+      <b className="mt-spent">₹{Math.round(spent)} spent on tickets</b>
+      <div className="mt-bar">
+        <i style={{ width: pct + "%" }} />
+      </div>
+      <p className="mt-next">
+        {next ? "Spend ₹" + Math.ceil(next.at - spent) + " more to reach " + next.name : "You are at the top tier"}
+      </p>
+    </div>
+  );
+}
+
 export default function Profile() {
   const navigate = useNavigate();
   const user = currentUser();
@@ -395,6 +429,8 @@ export default function Profile() {
           <small>Total spent</small>
         </div>
       </div>
+
+      <MemberTier bookings={confirmed} />
 
       <MovieRecap bookings={confirmed} />
 
