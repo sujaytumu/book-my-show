@@ -40,6 +40,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { getCity } from "../location";
+import ThemeToggle from "./ThemeToggle";
 import { IcUser } from "./Icons";
 import { useNotifications } from "../notifications";
 import { currentUser, logout } from "../api";
@@ -50,6 +51,10 @@ function initials(name) {
   if (parts.length === 0) return "?";
   if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
   return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+}
+
+export function navHidden(pathname) {
+  return pathname === "/login" || pathname === "/register" || pathname === "/forgot" || pathname === "/search" || pathname === "/city" || pathname === "/notifications" || pathname === "/offers" || pathname === "/help" || pathname === "/wallet" || pathname === "/coming-soon" || pathname === "/now-showing" || pathname.startsWith("/movie/") || pathname.startsWith("/show/");
 }
 
 export default function Nav({ path }) {
@@ -90,9 +95,10 @@ export default function Nav({ path }) {
     navigate("/", { replace: true });
   }
 
-  if (pathname === "/login" || pathname === "/register" || pathname === "/forgot" || pathname === "/search" || pathname === "/city" || pathname === "/notifications" || pathname === "/offers" || pathname === "/help" || pathname === "/wallet" || pathname === "/coming-soon" || pathname === "/now-showing" || pathname.startsWith("/movie/") || pathname.startsWith("/show/")) return null;
+  if (navHidden(pathname)) return null;
   const right = (
       <div className="nav-right">
+        <ThemeToggle inline />
         {user ? (
           <div className="nav-user" ref={menuRef}>
             <button
