@@ -2125,3 +2125,23 @@ html[data-theme=dark] .theme-fab{background:#2a2a33;border-color:#43434d}
 html[data-theme=dark] .theme-btn{background:#2a2a33;border-color:#43434d}
 .home-head .nav-right{gap:0}
 .theme-fab{top:calc(10px + env(safe-area-inset-top,0px));bottom:auto;right:10px;width:34px;height:34px;font-size:16px;opacity:.85}
+
+/* ---- Movie details page: back to the real BookMyShow look (inset rounded banner, light meta text, grey square tags,
+   plain story text, "(3.7K+ Votes) >" rating). These come last so they win over the earlier restyle; nothing above is removed. ---- */
+.mv-bar{padding-right:46px} /* leaves room for the floating light/dark button so it never covers Share */
+.mv-hero{margin:0;border-radius:16px;box-shadow:none}
+.mv-info .rating-pill,.mv-info .rating-pill:hover{display:flex;align-items:center;gap:8px;margin:14px 0 10px}
+.mv-info .rating-pill .rp-votes{font-size:15px;font-weight:600;color:var(--ink)}
+.mv-info .rating-pill .rp-chev{color:var(--ink);margin-left:-2px}
+.mv-meta{font-size:15px;font-weight:400;color:#6b6b73;margin:0 0 14px}
+.mv-info .mv-tags{gap:10px;margin:0 0 14px}
+.mv-info .mv-tags span{border-radius:6px;padding:8px 13px;font-size:13px;font-weight:700;background:#efeff1;border:0;color:#222;text-transform:uppercase}
+.mv-desc{font-size:15px;line-height:1.55;color:#6b6b73}
+.mv-extras{margin:0 0 6px}
+.mv-extras>*{margin-top:0}
+.trending-bar{margin:0 0 18px}
+.mv-offers h2,.cast-block h2{font-size:20px;font-weight:700}
+html[data-theme=dark] .mv-info .mv-tags span{background:#26262b;color:#e2e2e6;border:0}
+html[data-theme=dark] .mv-meta,html[data-theme=dark] .mv-desc{color:#a2a2ab}
+.mv-desc{display:block;-webkit-line-clamp:unset;overflow:visible;margin:0 0 18px}
+.mv-desc .mv-more{margin-left:0;font-size:15px}
