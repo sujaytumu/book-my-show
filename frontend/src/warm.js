@@ -31,15 +31,21 @@ export function startWarmup() {
 }
 
 // Download the other screens in the background once the first one is on screen, so tapping a movie is instant.
+// Runs fn once the page and its first images have finished loading (then when the browser is idle), so these background
+// downloads never compete with the posters the person is waiting to see.
+export function afterPageLoad(fn, timeout = 4000) {
+  const idle = () => (window.requestIdleCallback ? window.requestIdleCallback(fn, { timeout }) : setTimeout(fn, 1200));
+  if (document.readyState === "complete") idle();
+  else window.addEventListener("load", () => setTimeout(idle, 300), { once: true });
+}
+
 export function prefetchScreens() {
-  const go = () => {
-    import("./pages/Movie");
+  afterPageLoad(() => {
+    import("./pages/Movie"); // the screen almost every tap leads to goes first
     import("./pages/Show");
     import("./pages/Search");
     import("./pages/Bookings");
-  };
-  if (window.requestIdleCallback) window.requestIdleCallback(go, { timeout: 4000 });
-  else setTimeout(go, 1500);
+  });
 }
 
 // If a request is still waiting after 5 seconds the server is most likely waking from idle: say so, so it does not look stuck.
