@@ -1,15 +1,25 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { goBack } from "../nav";
 import { Link, useNavigate } from "react-router-dom";
 import { currentUser } from "../api";
 import { IcBack } from "../components/Icons";
 import { useNotifications } from "../notifications";
 
+const FILTERS = [
+  ["all", "All", null],
+  ["bookings", "Bookings", ["confirmed", "cancelled", "seats"]],
+  ["reminders", "Reminders", ["reminder"]],
+  ["alerts", "Alerts", ["price", "release"]],
+];
+
 const ICON = { confirmed: "🎟", reminder: "⏰", cancelled: "✕", seats: "💺", release: "🎬", price: "💸" };
 
 export default function Notifications() {
   const navigate = useNavigate();
   const { list, markSeen, clearAll } = useNotifications();
+  const [filter, setFilter] = useState("all");
+  const kinds = FILTERS.find((f) => f[0] === filter)[2];
+  const shown = kinds ? list.filter((n) => kinds.includes(n.kind)) : list;
   useEffect(() => {
     if (list.length) markSeen();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -40,7 +50,25 @@ export default function Notifications() {
           <span>Booking confirmations and show reminders will show up here.</span>
         </div>
       ) : (
-        list.map((n) => (
+        <>
+          <div className="nt-filters" role="tablist">
+            {FILTERS.map(([key, label, k]) => {
+              const count = k ? list.filter((n) => k.includes(n.kind)).length : list.length;
+              return (
+                <button key={key} type="button" role="tab" aria-selected={filter === key} className={filter === key ? "on" : ""} onClick={() => setFilter(key)}>
+                  {label}
+                  {count > 0 && <b>{count}</b>}
+                </button>
+              );
+            })}
+          </div>
+          {shown.length === 0 && (
+            <div className="nt-empty">
+              <b>Nothing in this list</b>
+              <span>Try another filter.</span>
+            </div>
+          )}
+          {shown.map((n) => (
           <div className={"nt-item " + n.kind} key={n.id} onClick={() => n.link && navigate(n.link)} style={n.link ? { cursor: "pointer" } : undefined}>
             <i>{ICON[n.kind] || "🔔"}</i>
             <div>
@@ -48,7 +76,8 @@ export default function Notifications() {
               <p>{n.text}</p>
             </div>
           </div>
-        ))
+          ))}
+        </>
       )}
     </div>
   );
