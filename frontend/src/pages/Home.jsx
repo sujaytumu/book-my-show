@@ -74,18 +74,16 @@ function Poster({ movie, eager }) {
         <PosterImg url={movie.poster_url} title={movie.title} eager={eager} />
         {movie.upcoming && <span className="pc-rate soon">{releaseChip(movie.release_date)}</span>}
         {!movie.upcoming && flagFor(movie) && <i className="pc-flag">{flagFor(movie)}</i>}
+        {!movie.upcoming && Number(movie.rating) > 0 && (
+          <span className="pc-rate">
+            <i>★</i> {Number(movie.rating).toFixed(1)}/10
+            {Number(movie.votes) > 0 && <em>{votesLabel(movie.votes).replace("+ votes", "+ Votes").replace(" votes", " Votes")}</em>}
+          </span>
+        )}
       </div>
       {movie.upcoming && Number(movie.interested_base) > 0 && (
         <span className="pc-likes">
           <IcLike /> {likesLabel(movie.interested_base)}
-        </span>
-      )}
-      {!movie.upcoming && (
-        <span className="pc-meta">
-          <span>
-            <i>★</i> {Number(movie.rating || 0).toFixed(1)}
-          </span>
-          {Number(movie.votes) > 0 && <em>{votesLabel(movie.votes)}</em>}
         </span>
       )}
       <b>{movie.title}</b>
@@ -93,6 +91,17 @@ function Poster({ movie, eager }) {
     </Link>
   );
 }
+
+// Category row like the real app: outlined icons (ink + red accent) with a label, scrolls sideways.
+const CATS = [
+  ["/now-showing", "Movies", <><circle cx="16" cy="16" r="11" /><circle className="ac" cx="16" cy="10.5" r="2.2" /><circle className="ac" cx="10.5" cy="16" r="2.2" /><circle className="ac" cx="21.5" cy="16" r="2.2" /><circle className="ac" cx="16" cy="21.5" r="2.2" /></>],
+  ["/coming-soon", "Coming Soon", <><rect x="4" y="7" width="24" height="18" rx="2.5" /><path className="ac" d="M14 12v8l7-4z" /><path d="M4 11h24" /></>],
+  ["/offers", "Offers", <><path d="M5 16.5V6h10.5L27 17.5 16.5 28z" /><circle className="ac" cx="11" cy="11" r="1.8" /></>],
+  ["/wallet", "Wallet", <><rect x="4" y="8" width="24" height="18" rx="3" /><path d="M4 12h24" /><rect className="ac" x="19" y="16" width="9" height="5" rx="2.5" /></>],
+  ["/bookings", "Tickets", <><path d="M4 10a2 2 0 012-2h20a2 2 0 012 2v3a3 3 0 000 6v3a2 2 0 01-2 2H6a2 2 0 01-2-2v-3a3 3 0 000-6z" /><path className="ac" d="M20 9v14" strokeDasharray="2 2.4" /></>],
+  ["/plan", "Plan day", <><rect x="4" y="7" width="24" height="20" rx="3" /><path d="M4 13h24M10 4v5M22 4v5" /><circle className="ac" cx="16" cy="20" r="2.2" /></>],
+  ["/help", "Help", <><path d="M5 7a3 3 0 013-3h16a3 3 0 013 3v12a3 3 0 01-3 3H14l-6 5v-5a3 3 0 01-3-3z" /><path className="ac" d="M11 13h.01M16 13h.01M21 13h.01" strokeWidth="2.6" /></>],
+];
 
 export default function Home({ mode = "now-showing" }) {
   const isSoon = mode === "coming-soon";
@@ -328,22 +337,13 @@ export default function Home({ mode = "now-showing" }) {
           )}
 
           <div className="quick-row">
-            {[["/now-showing", "🎬", "Movies"], ["/offers", "🏷️", "Offers"], ["/wallet", "👛", "Wallet"], ["/bookings", "🎟️", "Tickets"], ["/plan", "🗓️", "Plan day"], ["/help", "💬", "Help"]].map(([to, ic, label]) => (
+            {CATS.map(([to, label, icon]) => (
               <Link to={to} key={to}>
-                <span>{ic}</span>
+                <svg viewBox="0 0 32 32" aria-hidden="true">{icon}</svg>
                 <small>{label}</small>
               </Link>
             ))}
           </div>
-
-          <Link to="/offers" className="offer-banner">
-            <div>
-              <small>LIMITED OFFER</small>
-              <b>Flat 10% off up to ₹100</b>
-              <span>Use code BMS10 at payment</span>
-            </div>
-            <em>Grab ›</em>
-          </Link>
 
           {last && (
             <div className="resume-card">
