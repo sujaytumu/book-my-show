@@ -4,6 +4,7 @@ import { Suspense, lazy, useEffect, useLayoutEffect, useRef, useState } from "re
 import { Navigate, NavLink, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { api } from "./api";
 import Nav from "./components/Nav";
+import ThemeToggle from "./components/ThemeToggle";
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
 const Movie = lazy(() => import("./pages/Movie"));
@@ -394,6 +395,7 @@ export default function App() {
       <UpdateBanner />
       <NativeBack />
       <PullRefresh />
+      <ThemeToggle />
       <div className="pager-cur">
         <Nav />
         <main key={pathname} className="page-in">
