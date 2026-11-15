@@ -2218,3 +2218,14 @@ html[data-theme=dark] .movie-page .mv-desc:not(.open) .mv-more{background:linear
 .poster-card .pc-rating em{font-style:normal;font-size:12px;font-weight:600;color:#6b7080;white-space:nowrap}
 .poster-card .pc-rating+b{margin-top:3px}
 html[data-theme=dark] .poster-card .pc-rating em{color:#aab0bd}
+
+/* ===== Polish: notification filters ===== */
+.nt-filters{display:flex;gap:6px;overflow-x:auto;padding:4px 14px 12px;scrollbar-width:none}
+.nt-filters::-webkit-scrollbar{display:none}
+.nt-filters button{flex:none;display:inline-flex;align-items:center;gap:5px;padding:7px 12px;border-radius:999px;border:1px solid #dcdfe6;background:#fff;color:var(--ink);font-size:13px;font-weight:700}
+.nt-filters button b{background:#eceef2;color:#4b5060;border-radius:999px;min-width:18px;height:18px;font-size:11px;display:inline-flex;align-items:center;justify-content:center;padding:0 5px}
+.nt-filters button.on{background:#f84464;border-color:#f84464;color:#fff}
+.nt-filters button.on b{background:rgba(255,255,255,.28);color:#fff}
+html[data-theme=dark] .nt-filters button{background:#1d1f22;border-color:#33363c;color:#f2f2f4}
+html[data-theme=dark] .nt-filters button b{background:#33363c;color:#d0d4dc}
+html[data-theme=dark] .nt-filters button.on{background:#f84464;border-color:#f84464;color:#fff}
