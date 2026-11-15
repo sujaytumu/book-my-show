@@ -244,7 +244,8 @@ function RatingPill({ movieId, fallback, total }) {
     <a className="rating-pill" href="#ratings">
       <span className="rp-star">★</span>
       <b>{score.toFixed(1)}/10</b>
-      {votes > 0 && <span className="rp-votes">{fmtCount(votes)}{votes >= 1000 ? "+" : ""} {votes === 1 ? "Rating" : "Ratings"}</span>}
+      {votes > 0 && <span className="rp-votes">({fmtCount(votes)}{votes >= 1000 ? "+" : ""} {votes === 1 ? "Vote" : "Votes"})</span>}
+      <svg className="rp-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
     </a>
   );
 }
@@ -775,6 +776,28 @@ export default function Movie() {
     return day.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
   }
 
+  // Price alert and "I'm interested": coming-soon movies keep them up top; for movies in cinemas they sit after the offers,
+  // as in the real app (rating, tags, story, trending, offers, then the extras).
+  const extrasBlock = (
+    <>
+      {!movie.upcoming && currentUser() && <PriceAlert movieId={movie.id} />}
+        {(movie.upcoming || Number(movie.interested_base) > 0) && (
+          <div className="interest-card">
+            <span className="ic-thumb">
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="#1ea83c"><path d="M2 21h4V9H2v12zm20-11c0-1.1-.9-2-2-2h-6.3l1-4.6.03-.3c0-.4-.2-.8-.4-1.1L13.2 1 6.6 7.6C6.2 8 6 8.5 6 9v10c0 1.1.9 2 2 2h9c.8 0 1.5-.5 1.8-1.2l3-7c.1-.2.2-.5.2-.8v-2z" /></svg>
+            </span>
+            <div className="ic-text">
+              <b>{interested ? <><strong>You</strong> and </> : null}{fmtCount(Number(movie.interested_base) || 0)}+ are interested</b>
+              <small>{interested ? "Movie added to your Wishlist in your Profile" : movie.upcoming ? "Tap to get notified when bookings open" : "Tap to add this movie to your Wishlist"}</small>
+            </div>
+            <button type="button" onClick={() => setInterested(toggleWatchlist(movie))}>
+              {interested ? "Undo" : "I'm interested"}
+            </button>
+          </div>
+        )}
+    </>
+  );
+
   const booking = !movie.upcoming && searchParams.get("book") === "1";
   const formatOptions = [...new Set(shows.map((x) => x.format || "2D"))].sort();
   const handleBook = () => {
@@ -872,7 +895,7 @@ export default function Movie() {
         {!movie.upcoming && <RatingPill movieId={id} fallback={movie.rating} total={movie.votes} />}
         <p className="mv-meta">
           {[
-            movie.duration_minutes ? Math.floor(movie.duration_minutes / 60) + "h " + (movie.duration_minutes % 60) + "m" : null,
+            // runtime is shown on the booking page header ("Movie runtime"); the real app's details line has genre, certificate, date
             String(movie.genre || "").replace(/[/]/g, ", "),
             movie.certificate,
             movie.release_date ? relDate(movie.release_date) : null,
@@ -911,28 +934,14 @@ export default function Movie() {
           })()}
         </div>
         <p className={"mv-desc" + (readMore ? " open" : "")}>
-          {movie.description}
+          {!readMore && String(movie.description || "").length > 110 ? String(movie.description).slice(0, 66).replace(/\s+\S*$/, "") + " " : movie.description}
           {!readMore && String(movie.description || "").length > 110 && (
             <button type="button" className="mv-more" onClick={() => setReadMore(true)}>
               ...Read more
             </button>
           )}
         </p>
-        {!movie.upcoming && currentUser() && <PriceAlert movieId={movie.id} />}
-        {(movie.upcoming || Number(movie.interested_base) > 0) && (
-          <div className="interest-card">
-            <span className="ic-thumb">
-              <svg width="30" height="30" viewBox="0 0 24 24" fill="#1ea83c"><path d="M2 21h4V9H2v12zm20-11c0-1.1-.9-2-2-2h-6.3l1-4.6.03-.3c0-.4-.2-.8-.4-1.1L13.2 1 6.6 7.6C6.2 8 6 8.5 6 9v10c0 1.1.9 2 2 2h9c.8 0 1.5-.5 1.8-1.2l3-7c.1-.2.2-.5.2-.8v-2z" /></svg>
-            </span>
-            <div className="ic-text">
-              <b>{interested ? <><strong>You</strong> and </> : null}{fmtCount(Number(movie.interested_base) || 0)}+ are interested</b>
-              <small>{interested ? "Movie added to your Wishlist in your Profile" : movie.upcoming ? "Tap to get notified when bookings open" : "Tap to add this movie to your Wishlist"}</small>
-            </div>
-            <button type="button" onClick={() => setInterested(toggleWatchlist(movie))}>
-              {interested ? "Undo" : "I'm interested"}
-            </button>
-          </div>
-        )}
+        {movie.upcoming && extrasBlock}
       </div>
 
       {!movie.upcoming && (
@@ -945,9 +954,9 @@ export default function Movie() {
             Trending
           </span>
           <span className="tb-text">
-            {Number(movie.tickets_last_hour) > 0 ? (
+            {Math.max(Number(movie.tickets_last_day) || 0, Number(movie.tickets_last_hour) || 0) > 0 ? (
               <>
-                <b>{fmtCount(Number(movie.tickets_last_hour))}</b> tickets booked in last 1 hour
+                <b>{fmtCount(Math.max(Number(movie.tickets_last_day) || 0, Number(movie.tickets_last_hour) || 0))}</b> tickets booked in last 24 hours
               </>
             ) : (
               <>Bookings are open. Grab your seats!</>
@@ -972,6 +981,8 @@ export default function Movie() {
           </div>
         </div>
       )}
+
+      {!movie.upcoming && <div className="mv-extras">{extrasBlock}</div>}
 
       {[["Cast", parseCast(movie.cast_crew).filter((p) => !isCrew(p))], ["Crew", parseCast(movie.cast_crew).filter(isCrew)]].map(
         ([label, list]) =>
