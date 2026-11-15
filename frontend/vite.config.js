@@ -8,6 +8,8 @@ const BUILD_ID = String(Date.now());
 export default defineConfig({
   define: { __BUILD_ID__: JSON.stringify(BUILD_ID) },
   build: {
+    // Older Android System WebViews (common on budget phones) cannot run the newest syntax: build for them too.
+    target: ["es2019", "chrome80", "safari13"],
     rollupOptions: {
       output: {
         manualChunks: { vendor: ["react", "react-dom", "react-router-dom"], http: ["axios"] },
