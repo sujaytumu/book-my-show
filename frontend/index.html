@@ -1,4 +1,22 @@
-<!doctype html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Book My Show</title><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#d2232a"><script>try{
+<!doctype html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Book My Show</title><style>html,body{margin:0;background:#f4f4f6}html[data-theme=dark],html[data-theme=dark] body{background:#121216}#bms-boot{font:600 15px/1.5 system-ui,sans-serif;text-align:center;padding:96px 28px;color:#555}html[data-theme=dark] #bms-boot{color:#ccc}#bms-boot small{display:block;margin:10px 0 18px;font-weight:400;font-size:12px;word-break:break-word;opacity:.8}#bms-boot button{background:#f84464;color:#fff;border:0;border-radius:12px;padding:12px 26px;font:700 15px system-ui,sans-serif}</style>
+<script>
+/* Safety net: never leave a blank/black screen. Paints the right background straight away and, if the app has not
+   started after 12 seconds, shows what went wrong together with a Reload button. */
+(function(){
+  try{if(localStorage.getItem("bms_theme")==="dark")document.documentElement.setAttribute("data-theme","dark")}catch(e){}
+  var err="";
+  function note(m){if(!err&&m)err=String(m).slice(0,160)}
+  window.addEventListener("error",function(e){note((e.message||"Error")+(e.filename?" @ "+String(e.filename).split("/").pop()+":"+(e.lineno||""):""))});
+  window.addEventListener("unhandledrejection",function(e){note("Promise: "+(e.reason&&e.reason.message||e.reason))});
+  setTimeout(function(){
+    var r=document.getElementById("root");
+    if(r&&!r.firstChild){
+      r.innerHTML='<div id="bms-boot">Book My Show is taking too long to start.<small>'+(err?err.replace(/</g,"&lt;"):"Check your internet connection.")+'</small><button onclick="location.reload()">Reload</button></div>';
+    }
+  },12000);
+})();
+</script>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#d2232a"><script>try{
 // Poster pre-download: start fetching posters before the app code has even loaded. First from the saved copy of the
 // movie list (repeat visits: posters begin downloading instantly), then again from the fresh list. Same w342 size
 // the app asks for, so the browser reuses these downloads.
