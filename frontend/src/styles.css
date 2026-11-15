@@ -2071,3 +2071,19 @@ html[data-theme=dark] .tc-chip{background:#2a1d22;border-color:#4a2a33;color:#ff
 html[data-theme=dark] .tc-chip b{background:#ff8fa8;color:#1d1f22}
 html[data-theme=dark] .tc-chip.lang{background:#1f2335;border-color:#343a5c;color:#a9b6ff}
 html[data-theme=dark] .tc-chip.lang b{background:#a9b6ff}
+
+/* ---- Home: original BookMyShow look (category row, rating strip on posters) ---- */
+.home-page .quick-row{display:flex;gap:6px;overflow-x:auto;margin:0 -18px 14px;padding:4px 18px 2px;scrollbar-width:none}
+.home-page .quick-row::-webkit-scrollbar{display:none}
+.home-page .quick-row a{flex:0 0 auto;min-width:74px;display:flex;flex-direction:column;align-items:center;gap:7px;color:inherit}
+.home-page .quick-row svg{width:42px;height:42px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;color:#2b2f4a}
+.home-page .quick-row svg .ac{stroke:var(--red);fill:none}
+.home-page .quick-row small{font-size:12.1px;font-weight:500;white-space:nowrap;color:inherit}
+html[data-theme=dark] .home-page .quick-row svg{color:#e7e8f0}
+.poster-card .pc-rate{display:flex;align-items:center;gap:5px;font-size:10.6px;font-weight:700;padding:5px 8px;background:rgba(20,20,30,.88)}
+.poster-card .pc-rate i{color:#ef4444;font-style:normal}
+.poster-card .pc-rate em{font-style:normal;font-weight:600;opacity:.85;margin-left:auto;font-size:9.4px}
+.poster-card .pc-rate.soon{color:#fbbf24}
+.pc-img{border-radius:12px}
+.poster-row .poster-card{flex:0 0 128px}
+.poster-card b{margin-top:7px;font-size:13px;font-weight:700}
