@@ -83,7 +83,7 @@ import { useEffect, useRef, useState } from "react";
 import { confetti, takeCelebrate } from "../confetti";
 import { Link } from "react-router-dom";
 import { api, currentUser } from "../api";
-import { isNativeApp, shareTicketNative } from "../ticket";
+import { isNativeApp, shareTicketNative, ticketFileName } from "../ticket";
 import { SplitBill, TripChip } from "../components/TicketExtras";
 
 // .ics file so the show lands in the phone's calendar (times are India time).
@@ -372,15 +372,15 @@ export default function Bookings() {
 
   // A plain <a href> can't carry the Authorization header, so fetch the PDF
   // as a blob via axios (which does attach it) and trigger the download manually.
-  async function downloadTicket(id, reference) {
+  async function downloadTicket(id, reference, title) {
     try {
       const res = await api.get("/bookings/" + id + "/ticket", { responseType: "blob" });
       const pdf = new Blob([res.data], { type: "application/pdf" });
-      if (isNativeApp()) return await shareTicketNative(pdf, reference + ".pdf");
+      if (isNativeApp()) return await shareTicketNative(pdf, ticketFileName(title));
       const url = window.URL.createObjectURL(pdf);
       const link = document.createElement("a");
       link.href = url;
-      link.download = reference + ".pdf";
+      link.download = ticketFileName(title);
       link.click();
       window.URL.revokeObjectURL(url);
     } catch (err) {
@@ -490,7 +490,7 @@ export default function Bookings() {
                   </button>
                 )}
                 {(b.status === "CONFIRMED" || b.status === "CANCELLED") && (
-                  <button className="bk-btn primary" onClick={() => downloadTicket(b.id, b.reference)}>
+                  <button className="bk-btn primary" onClick={() => downloadTicket(b.id, b.reference, b.title)}>
                     Download ticket
                   </button>
                 )}

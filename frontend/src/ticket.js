@@ -21,3 +21,14 @@ export async function shareTicketNative(blob, filename) {
   const file = await Filesystem.writeFile({ path: filename, data, directory: Directory.Cache });
   await Share.share({ title: "Movie ticket", url: file.uri, dialogTitle: "Open or save ticket" });
 }
+
+// "Peddi" -> "peddi_ticket.pdf", "Kantara: Chapter 1" -> "kantara_chapter_1_ticket.pdf"
+export function ticketFileName(title) {
+  const name = String(title || "")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  return (name || "movie") + "_ticket.pdf";
+}
