@@ -2207,3 +2207,7 @@ html[data-theme=dark] .movie-page .mv-desc:not(.open) .mv-more{background:linear
 .movie-page .mv-info .rating-pill .rp-star{font-size:19px}
 .movie-page .mv-offer{border-radius:20px}
 .movie-page .mv-offer>span{border-radius:17px}
+
+/* ===== Polish: seats -> food -> pay steps (Show) ===== */
+.food-step-card{margin-bottom:12px}
+.food-step-card .hint{margin:0 0 6px}
