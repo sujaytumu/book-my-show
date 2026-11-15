@@ -291,7 +291,7 @@ import { sheetDrag } from "../components/sheetDrag";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
 import { api, currentUser } from "../api";
-import { isNativeApp, shareTicketNative } from "../ticket";
+import { isNativeApp, shareTicketNative, ticketFileName } from "../ticket";
 import { hasNativeCheckout, openNativeCheckout } from "../nativeCheckout";
 
 const MAX_SEATS = 10;
@@ -905,7 +905,7 @@ export default function Show() {
     if (isNativeApp()) {
       try {
         const res = await api.get("/bookings/" + bookingId + "/ticket", { responseType: "blob" });
-        await shareTicketNative(new Blob([res.data], { type: "application/pdf" }), "ticket-" + bookingId + ".pdf");
+        await shareTicketNative(new Blob([res.data], { type: "application/pdf" }), ticketFileName(show && show.movie_title));
       } catch (err) {}
       return;
     }
