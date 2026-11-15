@@ -74,13 +74,15 @@ function Poster({ movie, eager }) {
         <PosterImg url={movie.poster_url} title={movie.title} eager={eager} />
         {movie.upcoming && <span className="pc-rate soon">{releaseChip(movie.release_date)}</span>}
         {!movie.upcoming && flagFor(movie) && <i className="pc-flag">{flagFor(movie)}</i>}
-        {!movie.upcoming && Number(movie.rating) > 0 && (
-          <span className="pc-rate">
-            <i>★</i> {Number(movie.rating).toFixed(1)}/10
-            {Number(movie.votes) > 0 && <em>{votesLabel(movie.votes).replace("+ votes", "+ Votes").replace(" votes", " Votes")}</em>}
-          </span>
-        )}
       </div>
+      {!movie.upcoming && Number(movie.rating) > 0 && (
+        <span className="pc-rating">
+          <span>
+            <i>★</i> {Number(movie.rating).toFixed(1).replace(/\.0$/, "")}
+          </span>
+          {Number(movie.votes) > 0 && <em>{votesLabel(movie.votes)}</em>}
+        </span>
+      )}
       {movie.upcoming && Number(movie.interested_base) > 0 && (
         <span className="pc-likes">
           <IcLike /> {likesLabel(movie.interested_base)}
@@ -295,6 +297,15 @@ export default function Home({ mode = "now-showing" }) {
         </>
       ) : (
         <>
+          <div className="quick-row">
+            {CATS.map(([to, label, icon]) => (
+              <Link to={to} key={to}>
+                <svg viewBox="0 0 32 32" aria-hidden="true">{icon}</svg>
+                <small>{label}</small>
+              </Link>
+            ))}
+          </div>
+
           {featured.length > 0 && (
             <>
               <div
@@ -336,14 +347,6 @@ export default function Home({ mode = "now-showing" }) {
             </>
           )}
 
-          <div className="quick-row">
-            {CATS.map(([to, label, icon]) => (
-              <Link to={to} key={to}>
-                <svg viewBox="0 0 32 32" aria-hidden="true">{icon}</svg>
-                <small>{label}</small>
-              </Link>
-            ))}
-          </div>
 
           {last && (
             <div className="resume-card">
