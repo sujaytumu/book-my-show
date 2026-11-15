@@ -10,7 +10,8 @@
       "*.onrender.com",
       "*.razorpay.com",
       "*.razorpay.in"
-    ]
+    ],
+    "errorPath": "offline.html"
   },
   "android": {
     "allowMixedContent": false

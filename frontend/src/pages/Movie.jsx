@@ -801,7 +801,13 @@ export default function Movie() {
   const booking = !movie.upcoming && searchParams.get("book") === "1";
   const formatOptions = [...new Set(shows.map((x) => x.format || "2D"))].sort();
   const handleBook = () => {
-    if (formatOptions.length > 0) setSheet("lf");
+    const langs = new Set(shows.map((x) => x.language || movie.language));
+    if (formatOptions.length === 1 && langs.size <= 1) {
+      // Only one language and format (e.g. Telugu 2D): go straight to the showtimes.
+      setFormats(formatOptions);
+      setLangFilter([]);
+      openBooking();
+    } else if (formatOptions.length > 0) setSheet("lf");
     else openBooking();
   };
   const openBooking = () => {
