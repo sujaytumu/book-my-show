@@ -463,6 +463,7 @@ export default function Show() {
   const [offers, setOffers] = useState([]); // active offers from the server
   const [foodMenu, setFoodMenu] = useState([]); // snacks from the server
   const [foodQty, setFoodQty] = useState({}); // { itemId: qty }
+  const [step, setStep] = useState("seats"); // seats -> food (+ your details) -> pay
   const [walletBal, setWalletBal] = useState(null); // wallet balance, loaded when the review sheet opens
   const [useWallet, setUseWallet] = useState(false);
   const [payNote, setPayNote] = useState("");
@@ -1108,6 +1109,17 @@ export default function Show() {
     0
   );
 
+  const onFood = step === "food" && selected.length > 0 && !hold;
+  const foodTotal = foodMenu.reduce((sum, f) => sum + (foodQty[f.id] || 0) * Number(f.price), 0);
+  useEffect(() => {
+    // If every seat is released while on the food step, return to the seat page.
+    if (step === "food" && selected.length === 0) setStep("seats");
+  }, [step, selected.length]);
+  function goStep(next) {
+    setStep(next);
+    window.scrollTo({ top: 0 });
+  }
+
   return (
 
     <>
@@ -1115,7 +1127,7 @@ export default function Show() {
       {show && (
         <div className="bms-head">
           <div className="bms-head-top">
-            <button type="button" className="bms-back" onClick={() => goBack(navigate)} aria-label="Back">
+            <button type="button" className="bms-back" onClick={() => (onFood ? goStep("seats") : goBack(navigate))} aria-label="Back">
               ‹
             </button>
             <div className="bms-head-text">
@@ -1128,7 +1140,7 @@ export default function Show() {
           </div>
           <div className="bms-head-row">
             <span className="bms-date">{fmtShowDate(show.show_date)}</span>
-            {!hold && (
+            {!hold && !onFood && (
               <button
                 type="button"
                 className="bms-qty"
@@ -1146,7 +1158,7 @@ export default function Show() {
               </button>
             )}
           </div>
-          {!hold && siblings.length > 1 && (
+          {!hold && !onFood && siblings.length > 1 && (
             <div className="bms-times">
               {siblings.map((x) => (
                 <button
@@ -1172,6 +1184,7 @@ export default function Show() {
 
         <>
 
+          <div hidden={onFood}>
           {qtyOpen && (
             <div className="qty-overlay sheet-mode" onClick={() => setQtyOpen(false)}>
               <div className="qty-modal" onClick={(e) => e.stopPropagation()} {...sheetDrag(() => setQtyOpen(false))}>
@@ -1347,12 +1360,44 @@ export default function Show() {
               Sold
             </span>
           </div>
+          </div>
 
-          {selected.length > 0 && (
+          {onFood && foodMenu.length > 0 && (
+            <div className="card contact-details food-step-card">
+              <h2>Grab a bite</h2>
+              <p className="hint">Optional. Pick snacks now and collect them at the cinema with your ticket.</p>
+              <div className="food-list">
+                    {foodMenu.map((f) => {
+                      const q = foodQty[f.id] || 0;
+                      return (
+                        <div className="food-row" key={f.id}>
+                          <span className={"food-dot " + (f.veg ? "veg" : "nonveg")} />
+                          <div>
+                            <b>{f.name}</b>
+                            <small>{f.description}</small>
+                            <em>₹{Number(f.price).toFixed(0)}</em>
+                          </div>
+                          {q === 0 ? (
+                            <button type="button" className="food-add" onClick={() => setFoodQty({ ...foodQty, [f.id]: 1 })}>ADD</button>
+                          ) : (
+                            <span className="food-step">
+                              <button type="button" onClick={() => setFoodQty({ ...foodQty, [f.id]: q - 1 })}>−</button>
+                              {q}
+                              <button type="button" onClick={() => setFoodQty({ ...foodQty, [f.id]: Math.min(q + 1, 10) })}>+</button>
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+              </div>
+            </div>
+          )}
+
+          {onFood && (
 
             <div className="card contact-details">
 
-              <h2>Booking details</h2>
+              <h2>Your details</h2>
 
               <p className="hint">Your ticket (PDF) is emailed here automatically once payment is confirmed.</p>
 
@@ -1381,36 +1426,6 @@ export default function Show() {
                 onChange={(e) => setContactPhone(e.target.value)}
 
               />
-
-              {foodMenu.length > 0 && (
-                <>
-                  <h3 className="offers-title">Grab a bite</h3>
-                  <div className="food-list">
-                    {foodMenu.map((f) => {
-                      const q = foodQty[f.id] || 0;
-                      return (
-                        <div className="food-row" key={f.id}>
-                          <span className={"food-dot " + (f.veg ? "veg" : "nonveg")} />
-                          <div>
-                            <b>{f.name}</b>
-                            <small>{f.description}</small>
-                            <em>₹{Number(f.price).toFixed(0)}</em>
-                          </div>
-                          {q === 0 ? (
-                            <button type="button" className="food-add" onClick={() => setFoodQty({ ...foodQty, [f.id]: 1 })}>ADD</button>
-                          ) : (
-                            <span className="food-step">
-                              <button type="button" onClick={() => setFoodQty({ ...foodQty, [f.id]: q - 1 })}>−</button>
-                              {q}
-                              <button type="button" onClick={() => setFoodQty({ ...foodQty, [f.id]: Math.min(q + 1, 10) })}>+</button>
-                            </span>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </>
-              )}
 
               <h3 className="offers-title">Offers</h3>
               <input
@@ -1456,13 +1471,23 @@ export default function Show() {
 
           <div className="bar">
 
-            <b>{selected.length ? selected.join(", ") + " · ₹" + selectedTotal : qty ? "Select " + qty + (qty === 1 ? " seat" : " seats") : "Choose tickets"}</b>
+            <b>
+              {selected.length
+                ? selected.join(", ") + " · ₹" + (selectedTotal + (onFood ? foodTotal : 0))
+                : qty
+                  ? "Select " + qty + (qty === 1 ? " seat" : " seats")
+                  : "Choose tickets"}
+            </b>
 
-            <button disabled={!qty || selected.length !== qty || pending} onClick={reviewBooking}>
-
-              {pending ? "Please wait..." : "Review Booking"}
-
-            </button>
+            {onFood ? (
+              <button disabled={pending} onClick={reviewBooking}>
+                {pending ? "Please wait..." : "Review & Pay"}
+              </button>
+            ) : (
+              <button disabled={!qty || selected.length !== qty} onClick={() => goStep("food")}>
+                Continue
+              </button>
+            )}
 
           </div>
 
