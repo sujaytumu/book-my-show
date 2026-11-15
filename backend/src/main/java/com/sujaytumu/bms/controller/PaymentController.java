@@ -122,7 +122,7 @@ public class PaymentController {
                     "<p>Your ticket is attached as a PDF.</p>";
             emailService.sendTicket(recipient, (String) detail.get("user_name"),
                     "Your Book My Show ticket - " + detail.get("reference"), html, pdf,
-                    detail.get("reference") + ".pdf");
+                    TicketService.fileName(detail.get("title")));
         } catch (Exception e) {
             System.err.println("Could not email ticket for booking " + bookingId + ": " + e.getMessage());
         }

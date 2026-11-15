@@ -38,6 +38,16 @@ public class TicketService {
     private static final Color LIGHT_GRAY = new Color(235, 235, 235);
     private static final Color GREEN = new Color(30, 140, 70);
 
+    /** "Peddi" -> "peddi_movie_ticket.pdf", "Kantara: Chapter 1" -> "kantara_chapter_1_movie_ticket.pdf". Same rule as the app. */
+    public static String fileName(Object title) {
+        String name = java.text.Normalizer.normalize(String.valueOf(title == null ? "" : title), java.text.Normalizer.Form.NFKD)
+                .replaceAll("\\p{M}+", "")
+                .toLowerCase(java.util.Locale.ROOT)
+                .replaceAll("[^a-z0-9]+", "_")
+                .replaceAll("^_+|_+$", "");
+        return name.isEmpty() ? "movie_ticket.pdf" : name + "_movie_ticket.pdf";
+    }
+
     public byte[] generateTicketPdf(Map<String, Object> booking) throws IOException {
         try (PDDocument doc = new PDDocument(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             PDPage page = new PDPage(PDRectangle.A4);
