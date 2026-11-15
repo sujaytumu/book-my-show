@@ -2087,3 +2087,26 @@ html[data-theme=dark] .home-page .quick-row svg{color:#e7e8f0}
 .pc-img{border-radius:12px}
 .poster-row .poster-card{flex:0 0 128px}
 .poster-card b{margin-top:7px;font-size:13px;font-weight:700}
+
+/* ---- Home: wide promo-style banner + bigger resume card, like the original app ---- */
+.home-page .hero-row{gap:10px;margin-bottom:4px}
+.home-page .hero-card{flex:0 0 92%;height:auto;aspect-ratio:16/8.5;border-radius:12px;box-shadow:none}
+.home-page .hero-card .hc-bg{display:none}
+.home-page .hero-card .hc-poster{position:absolute;inset:0;left:0;top:0;width:100%;height:100%;aspect-ratio:auto;object-fit:cover;object-position:50% 22%;border-radius:0;box-shadow:none}
+.home-page .hero-card::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 35%,rgba(0,0,0,.82) 100%);pointer-events:none}
+.home-page .hero-card div{z-index:1;left:14px;right:14px;top:auto;bottom:12px;justify-content:flex-end;gap:2px}
+.home-page .hero-card b{font-size:19px}
+.home-page .hero-card span{font-size:11.5px}
+.home-page .hero-card .hc-rate{font-size:12.5px}
+.home-page .hero-card .hc-tag{font-size:9.5px;padding:2px 6px}
+.home-page .hero-card em{background:#e0415a;color:#fff;border-radius:8px;padding:6px 16px;font-size:12px;margin-top:6px}
+.home-page .hero-dots{margin:8px 0 12px}
+.home-page .resume-card{padding:14px;border-radius:16px;margin:4px 0 10px}
+.home-page .rc-head{font-size:16px}
+.home-page .rc-head button{width:24px;height:24px;font-size:15px}
+.home-page .rc-body{gap:12px;padding:12px 0}
+.home-page .rc-body img{width:60px;height:90px;border-radius:8px}
+.home-page .rc-body b{font-size:15px;margin-bottom:4px}
+.home-page .rc-body small{font-size:12px;line-height:1.5}
+.home-page .rc-btn{padding:12px;font-size:14px;border-radius:10px}
+html[data-theme=dark] .home-page .resume-card{background:#1d2030}
