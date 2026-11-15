@@ -22,7 +22,7 @@ export async function shareTicketNative(blob, filename) {
   await Share.share({ title: "Movie ticket", url: file.uri, dialogTitle: "Open or save ticket" });
 }
 
-// "Peddi" -> "peddi_ticket.pdf", "Kantara: Chapter 1" -> "kantara_chapter_1_ticket.pdf"
+// "Peddi" -> "peddi_movie_ticket.pdf", "Kantara: Chapter 1" -> "kantara_chapter_1_movie_ticket.pdf"
 export function ticketFileName(title) {
   const name = String(title || "")
     .normalize("NFKD")
@@ -30,5 +30,5 @@ export function ticketFileName(title) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "");
-  return (name || "movie") + "_ticket.pdf";
+  return name ? name + "_movie_ticket.pdf" : "movie_ticket.pdf";
 }

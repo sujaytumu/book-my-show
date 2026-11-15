@@ -96,7 +96,7 @@ public class BookingController {
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)
                 .header(HttpHeaders.CONTENT_DISPOSITION,
-                        ContentDisposition.attachment().filename(detail.get("reference") + ".pdf").build().toString())
+                        ContentDisposition.attachment().filename(TicketService.fileName(detail.get("title"))).build().toString())
                 .body(pdf);
     }
 
