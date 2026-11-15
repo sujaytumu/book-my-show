@@ -2211,3 +2211,10 @@ html[data-theme=dark] .movie-page .mv-desc:not(.open) .mv-more{background:linear
 /* ===== Polish: seats -> food -> pay steps (Show) ===== */
 .food-step-card{margin-bottom:12px}
 .food-step-card .hint{margin:0 0 6px}
+
+/* ===== Polish: poster rating row under the poster (like the real app) ===== */
+.poster-card .pc-rating{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:9px;font-size:13.5px;font-weight:700;color:var(--ink)}
+.poster-card .pc-rating i{font-style:normal;color:#f84464;margin-right:3px}
+.poster-card .pc-rating em{font-style:normal;font-size:12px;font-weight:600;color:#6b7080;white-space:nowrap}
+.poster-card .pc-rating+b{margin-top:3px}
+html[data-theme=dark] .poster-card .pc-rating em{color:#aab0bd}
