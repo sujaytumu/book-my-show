@@ -29,6 +29,7 @@ import PullRefresh from "./components/PullRefresh";
 import { IcTarget, IcHome, IcSearch, IcTicket, IcUser } from "./components/Icons";
 import { seedHomeBelow, tabStack } from "./nav";
 import { alreadyAsked, detectCity, markAsked, setCity } from "./location";
+import { afterPageLoad } from "./warm";
 
 const TAB_PAGES = ["/", "/search", "/bookings", "/profile"];
 
@@ -128,9 +129,9 @@ function useTabPager(peek, setPeek) {
   // Warm the other tabs' code so a neighbour never has to show a loading skeleton while you drag.
   useEffect(() => {
     if (!TAB_PAGES.includes(pathname)) return;
-    const warm = () => { import("./pages/Search"); import("./pages/Bookings"); import("./pages/Profile"); };
-    const id = window.requestIdleCallback ? window.requestIdleCallback(warm, { timeout: 2500 }) : setTimeout(warm, 1200);
-    return () => (window.cancelIdleCallback && window.requestIdleCallback ? window.cancelIdleCallback(id) : clearTimeout(id));
+    let cancelled = false;
+    afterPageLoad(() => { if (!cancelled) { import("./pages/Search"); import("./pages/Bookings"); import("./pages/Profile"); } }, 2500);
+    return () => { cancelled = true; };
   }, [pathname]);
 
   useEffect(() => installPosterFlight(), []);
