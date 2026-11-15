@@ -901,7 +901,7 @@ export default function Movie() {
             movie.release_date ? relDate(movie.release_date) : null,
           ]
             .filter(Boolean)
-            .join("  •  ")}
+            .join(" \u2002•\u2002 ")}
         </p>
         <div className="mv-tags">
           {(() => {
@@ -934,7 +934,7 @@ export default function Movie() {
           })()}
         </div>
         <p className={"mv-desc" + (readMore ? " open" : "")}>
-          {!readMore && String(movie.description || "").length > 110 ? String(movie.description).slice(0, 66).replace(/\s+\S*$/, "") + " " : movie.description}
+          {movie.description}
           {!readMore && String(movie.description || "").length > 110 && (
             <button type="button" className="mv-more" onClick={() => setReadMore(true)}>
               ...Read more
@@ -956,7 +956,7 @@ export default function Movie() {
           <span className="tb-text">
             {Math.max(Number(movie.tickets_last_day) || 0, Number(movie.tickets_last_hour) || 0) > 0 ? (
               <>
-                <b>{fmtCount(Math.max(Number(movie.tickets_last_day) || 0, Number(movie.tickets_last_hour) || 0))}</b> tickets booked in last 24 hours
+                <b>{(() => { const n = Math.max(Number(movie.tickets_last_day) || 0, Number(movie.tickets_last_hour) || 0); return n >= 10000 ? (n / 1000).toFixed(2).replace(/\.?0+$/, "") + "K" : fmtCount(n); })()}</b> tickets booked in last 24 hours
               </>
             ) : (
               <>Bookings are open. Grab your seats!</>
@@ -974,7 +974,7 @@ export default function Movie() {
                 <i>%</i>
                 <span>
                   <b>{o.description}</b>
-                  <small>Use code {o.code} · Tap to view details</small>
+                  <small title={"Use code " + o.code}>Tap to view details</small>
                 </span>
               </Link>
             ))}

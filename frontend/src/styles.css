@@ -2145,3 +2145,65 @@ html[data-theme=dark] .mv-info .mv-tags span{background:#26262b;color:#e2e2e6;bo
 html[data-theme=dark] .mv-meta,html[data-theme=dark] .mv-desc{color:#a2a2ab}
 .mv-desc{display:block;-webkit-line-clamp:unset;overflow:visible;margin:0 0 18px}
 .mv-desc .mv-more{margin-left:0;font-size:15px}
+
+/* ===== Movie details page, measured against the real BookMyShow screenshot (1080px wide phone, ~2.75x) =====
+   Every size below was solved from the real app's text widths: CSS px = real device px / 2.75. Colours are sampled from it.
+   Prefixed with .movie-page so they win over the earlier restyles without removing them. */
+body:has(.movie-page){background:#fff}
+html[data-theme=dark] body:has(.movie-page){background:var(--bg)}
+.movie-page{padding-left:3.5px;padding-right:3.5px;letter-spacing:0}
+.movie-page .mv-bar{gap:12px;margin:-6px 0 18px;padding-right:0}
+.movie-page .mv-bar button{padding:6px 5px}
+.movie-page .mv-bar button:first-child{margin-left:-3px}
+body:has(.movie-page) .theme-fab{top:auto;bottom:calc(72px + env(safe-area-inset-bottom,0px));right:12px} /* light/dark button moves down, clear of Share */
+.movie-page .mv-bar svg{width:22px;height:22px}
+.movie-page .mv-bar h1{font-size:17.3px;font-weight:400;letter-spacing:0;color:#333}
+.movie-page .mv-hero{border-radius:16px}
+.movie-page .mv-strip{padding:5px 0;font-size:12.9px;font-weight:500;line-height:16px;letter-spacing:0}
+.movie-page .mv-trailer{top:43.5%;height:26px;padding:0 21px;gap:6px;font-size:13px;font-weight:500;letter-spacing:0;text-transform:none}
+.movie-page .mv-trailer svg{width:13px;height:13px}
+.movie-page .mv-info .rating-pill,.movie-page .mv-info .rating-pill:hover{gap:7px;margin:0 0 11.5px;font-size:12px}
+.movie-page .mv-info .rating-pill .rp-star{font-size:16.5px;line-height:1}
+.movie-page .mv-info .rating-pill b{font-size:19.4px;font-weight:700;letter-spacing:0;color:#191919;line-height:1.1}
+.movie-page .mv-info .rating-pill .rp-votes{font-size:11.8px;font-weight:600;letter-spacing:0;color:#191919;margin-left:-2px}
+.movie-page .mv-info .rating-pill .rp-chev{width:12px;height:12px;margin-left:-1px}
+.movie-page .mv-meta{font-size:12.6px;font-weight:400;line-height:17px;letter-spacing:0;color:#666;margin:0 0 8px}
+.movie-page .mv-info .mv-tags{gap:4.7px;margin:0 0 8.6px}
+.movie-page .mv-info .mv-tags span{padding:4px 9px;border-radius:5px;background:#eee;color:#000;font-size:10.6px;font-weight:500;line-height:11.3px;letter-spacing:0}
+.movie-page .mv-desc{font-size:12px;font-weight:400;line-height:17.4px;letter-spacing:0;color:#666;margin:0 0 5px}
+.movie-page .mv-desc .mv-more{font-size:12px;font-weight:400;color:#dc344b;letter-spacing:0}
+.movie-page .trending-bar{height:35px;margin:0 0 22px;border:1.5px solid #a8bcee;border-radius:10px;box-sizing:border-box;align-items:stretch}
+.movie-page .tb-tag{gap:7px;padding:0 14px 0 12px;min-width:104px;box-sizing:border-box;font-size:12.9px;font-weight:500;letter-spacing:0;background:linear-gradient(90deg,#6892fe,#4b7dff)}
+.movie-page .tb-tag svg{width:15px;height:15px}
+.movie-page .tb-text{padding:0 10px;font-size:12.9px;font-weight:500;letter-spacing:0;color:#262b4d;white-space:nowrap}
+.movie-page .tb-text b{color:#00891c;font-weight:700;font-size:12.9px;margin-right:4px}
+.movie-page .mv-offers h2,.movie-page .cast-block h2{font-size:15px;font-weight:700;letter-spacing:0;color:#000;margin:0 0 12.8px}
+.movie-page .mv-offers{margin:0 0 36px}
+.movie-page .mv-offer-row{gap:13px}
+.movie-page .mv-offer{flex:0 0 272px;min-width:272px;height:52.4px;box-sizing:border-box;display:flex;align-items:stretch;gap:0;padding:2.5px 2.5px 2.5px 0;border:0;border-radius:15px;background:#2d2c2a;scroll-snap-align:start}
+.movie-page .mv-offer i{flex:0 0 54px;width:54px;display:flex;align-items:center;justify-content:center;background:none;border-radius:0;color:#e8b64c;font-size:24px;font-weight:700;font-style:normal}
+.movie-page .mv-offer>span{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:2px;padding:0 10px;background:#fff;border-radius:12px}
+.movie-page .mv-offer b{font-size:13.1px;font-weight:500;color:#333;line-height:1.2;letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.movie-page .mv-offer small{font-size:12.1px;font-weight:400;color:#656565;line-height:1.2;letter-spacing:0}
+.movie-page .mv-offer:nth-child(even){background:#fff1cc}
+.movie-page .mv-offer:nth-child(even) i{color:#d33a4a}
+.movie-page .sticky-book{padding-left:17.5px;padding-right:17.5px}
+.movie-page .sticky-book button{height:43.6px;padding:0 20px;border-radius:12px;background:#dc344b;font-size:17.3px;font-weight:500;letter-spacing:0;text-transform:none}
+.movie-page .cast-block{margin-top:0}
+html[data-theme=dark] .movie-page .mv-bar h1,html[data-theme=dark] .movie-page .mv-info .rating-pill b,html[data-theme=dark] .movie-page .mv-info .rating-pill .rp-votes,html[data-theme=dark] .movie-page .mv-offers h2,html[data-theme=dark] .movie-page .cast-block h2{color:#ececf0}
+html[data-theme=dark] .movie-page .mv-meta,html[data-theme=dark] .movie-page .mv-desc{color:#a2a2ab}
+html[data-theme=dark] .movie-page .mv-info .mv-tags span{background:#26262b;color:#ececf0}
+html[data-theme=dark] .movie-page .tb-text{color:#d5d9ee}
+html[data-theme=dark] .movie-page .trending-bar{background:#1d1f24;border-color:#2e3951}
+
+/* second pass: thin light header icons, "...Read more" at the end of the 2nd line, lighter Trending label, bigger star/offer radius */
+.movie-page .mv-bar button svg{stroke-width:1.5;color:#555}
+html[data-theme=dark] .movie-page .mv-bar button svg{color:#cfcfd6}
+.movie-page .mv-desc:not(.open){display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;position:relative}
+.movie-page .mv-desc:not(.open) .mv-more{position:absolute;right:0;bottom:0;margin:0;padding:0 0 0 22px;line-height:17.4px;background:linear-gradient(90deg,rgba(255,255,255,0),#fff 24px)}
+html[data-theme=dark] .movie-page .mv-desc:not(.open) .mv-more{background:linear-gradient(90deg,rgba(0,0,0,0),var(--bg) 24px)}
+.movie-page .tb-tag{font-weight:400}
+.movie-page .tb-tag svg{width:18px;height:18px}
+.movie-page .mv-info .rating-pill .rp-star{font-size:19px}
+.movie-page .mv-offer{border-radius:20px}
+.movie-page .mv-offer>span{border-radius:17px}
