@@ -905,3 +905,13 @@ select 'ENE Repeat',
        '/posters/ene-repeat.jpg','Telugu','Comedy',null,null,0,
        date '2026-11-19', (date '2026-11-19' > (now() at time zone 'Asia/Kolkata')::date)
 where not exists(select 1 from movies where lower(title) in ('ene repeat','ene'));
+
+-- ENE Repeat: cast and crew, once (guarded by app_flags so a later admin edit is never undone). Source: Hollywood Reporter India's
+-- trailer report (cast, director Tharun Bhascker, composer Vivek Sagar, cinematographer AJ Aaron); production by S Originals and
+-- Suresh Productions as announced. Runtime and certificate are not announced, so they stay blank.
+with f as (insert into app_flags(flag) values('ene_repeat_cast_2026_11_15') on conflict do nothing returning 1)
+update movies set
+    genre = 'Comedy, Drama',
+    description = 'The gang from Ee Nagaraniki Emaindi is back for another adventure in ENE Repeat, the sequel written and directed by Tharun Bhascker, starring Vishwak Sen, Abhinav Gomatam, Venkatesh Kakumanu and Srinath Maganti. Music by Vivek Sagar. Releasing 19 November 2026.',
+    cast_crew = '[{"name":"Vishwak Sen","role":"Actor","character":"Vivek"},{"name":"Abhinav Gomatam","role":"Actor","character":"Kaushik"},{"name":"Venkatesh Kakumanu","role":"Actor","character":"Uppu"},{"name":"Srinath Maganti","role":"Actor","character":"Karthik"},{"name":"Anisha Ambrose","role":"Actor"},{"name":"Shivatmika Rajasekhar","role":"Actor"},{"name":"Priyadarshini Ram","role":"Actor"},{"name":"Tharun Bhascker","role":"Director"},{"name":"Vivek Sagar","role":"Music Director"},{"name":"AJ Aaron","role":"Cinematographer"},{"name":"S Originals","role":"Producer"},{"name":"Suresh Productions","role":"Producer"}]'
+where lower(title) = 'ene repeat' and cast_crew is null and exists(select 1 from f);

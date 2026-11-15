@@ -396,6 +396,17 @@ function addDaysIso(iso, n) {
   d.setUTCDate(d.getUTCDate() + n);
   return d.toISOString().slice(0, 10);
 }
+// Which date the showtimes open on: today if it has shows, otherwise tomorrow, otherwise the earliest date that has any.
+// Never "whatever show came first in the list" - that landed on random days. The viewer only changes it by tapping a date.
+function defaultShowDate(rows) {
+  const dates = [...new Set((rows || []).map((x) => x.show_date))].sort();
+  if (!dates.length) return null;
+  const today = istToday();
+  if (dates.includes(today)) return today;
+  const tomorrow = addDaysIso(today, 1);
+  if (dates.includes(tomorrow)) return tomorrow;
+  return dates.find((d) => d > today) || dates[0];
+}
 // "2026-10-11" -> a Date that always reads as that calendar day (formatted with timeZone: "UTC")
 function isoDay(iso) {
   return new Date(iso + "T00:00:00Z");
@@ -562,7 +573,7 @@ export default function Movie() {
           if (Array.isArray(s0) && s0.length) {
             setShows(s0);
             setShowsLoaded(true);
-            setSelectedDate((cur) => cur || s0[0].show_date);
+            setSelectedDate((cur) => cur || defaultShowDate(s0));
           }
         }
       }
@@ -592,7 +603,7 @@ export default function Movie() {
           setShowsLoaded(true);
           // Keep the date the viewer already picked while the fresh list arrives.
           if (showsRes.data.length)
-            setSelectedDate((cur) => (cur && showsRes.data.some((x) => x.show_date === cur) ? cur : showsRes.data[0].show_date));
+            setSelectedDate((cur) => (cur && showsRes.data.some((x) => x.show_date === cur) ? cur : defaultShowDate(showsRes.data)));
         });
       }
     });
