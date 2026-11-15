@@ -61,11 +61,12 @@ public class ShowWindowScheduler {
         step("purgePastSeats", this::purgePastSeats);
         step("releaseDueMovies", this::releaseDueMovies);
         step("applyOneTimeFixes", this::applyOneTimeFixes);
-        step("allocateNewReleases", this::allocateNewReleases);
+        step("retireCult", this::retireCult);
         step("removeClashingShows", this::removeClashingShows);
         step("topUpWindow", this::topUpWindow);
-        step("rebalanceByRecency", this::rebalanceByRecency);
+        step("assignScreensByRatio", this::assignScreensByRatio);
         step("applyReleaseVariants", this::applyReleaseVariants);
+        step("forceTwoD", this::forceTwoD);
     }
 
     /** Runs one job and logs how long it took (visible in the Render logs); one failing job no longer stops the others. */
@@ -157,65 +158,58 @@ public class ShowWindowScheduler {
                 """, ranabaali, ranabaali, ranabaali);
     }
 
-    /**
-     * One-off, run exactly once (guarded by app_flags): Aadarsha Kutumbam and Cult both release on 30 October 2026 but
-     * the calendar for the next 10 days was already filled, and the daily job never rewrites existing shows. So each of
-     * the two films takes a quarter of the unbooked future Telugu shows of the next 10 days (half in total), spread over
-     * every cinema and every time of day; all other current movies keep the other half. A show that has a pending or
-     * confirmed booking is never touched, and nothing is deleted: only the movie on an unbooked show changes.
-     */
-    public void allocateNewReleases() {
-        java.util.List<Long> ak = db.queryForList(
-                "select id from movies where lower(title) = 'aadarsha kutumbam' and active = true and upcoming = false order by id limit 1", Long.class);
-        java.util.List<Long> cult = db.queryForList(
-                "select id from movies where lower(title) = 'cult' and active = true and upcoming = false order by id limit 1", Long.class);
-        if (ak.isEmpty() || cult.isEmpty()) return; // both must be released and listed first
-        int fresh = db.update("insert into app_flags(flag) values('new_releases_aadarsha_cult_2026_10_30') on conflict do nothing");
+    /** One-off (guarded by app_flags): Cult leaves the listings. It had no bookings, so nothing else is touched. */
+    public void retireCult() {
+        int fresh = db.update("insert into app_flags(flag) values('cult_removed_2026_11_15') on conflict do nothing");
         if (fresh == 0) return;
-        db.update("""
-                with slots as (
-                    select sh.id show_id,
-                           row_number() over (partition by sc.theatre_id, sh.show_date order by sh.start_time, sh.screen_id) rn
-                    from shows sh
-                    join screens sc on sc.id = sh.screen_id
-                    join theatres t on t.id = sc.theatre_id and t.active = true
-                    where sh.show_date <= (now() at time zone 'Asia/Kolkata')::date + 9
-                      and (sh.show_date + sh.start_time) > (now() at time zone 'Asia/Kolkata')
-                      and (select language from movies where id = sh.movie_id) = 'Telugu'
-                      and not exists (select 1 from bookings b where b.show_id = sh.id and b.status in ('PENDING','CONFIRMED'))
-                ), assign as (
-                    select show_id, case rn % 4 when 1 then 1 when 3 then 2 else 0 end who from slots
-                )
-                update shows sh set movie_id = case a.who when 1 then ? else ? end, language = 'Telugu'
-                from assign a where a.show_id = sh.id and a.who > 0
-                """, ak.get(0), cult.get(0));
+        db.update("update movies set active = false where lower(title) = 'cult'");
     }
 
     /**
-     * Shares the next 10 days of Telugu shows between the running movies by how new they are, so recent releases get
-     * more screens and older ones fewer, in order of priority. A movie's weight on a day is 100 / (5 + days since its
-     * release) (never below 2): a release day is about 20, a week old about 8, a month old about 3. Inside every cinema
-     * and day the free slots are spread over the movies in that proportion, mixed across the day's times.
-     * The slot order counts every show of that cinema and day, so the result is stable from run to run.
-     * Only unbooked shows are touched: any show with a pending or confirmed booking, or a held seat, keeps its movie,
-     * as does a show starting within 3 hours. Nothing is deleted.
+     * Gives every screen one film at a time, shared out between the running movies by how new they are. For every day
+     * of the next 10 days:
+     *  - A single-screen cinema plays ONE film in all its shows.
+     *  - A multiplex screen plays one film in all its shows too; a screen that lists many shows (12 or more on one hall
+     *    in the data) is split into "lanes" of about 4 shows, each lane one film, so the same film always comes back
+     *    about every 3 hours. A film that is in a multiplex therefore has its timings spread over the whole day, and a
+     *    film that is not in that multiplex has none.
+     *  - The number of screens a movie gets follows its weight 100 / (5 + days since release) (never below 2): the
+     *    newest release has the most screens, older ones fewer, in order. Screens are taken in a fixed pseudo-random order
+     *    so the share is exact and every area of the city gets every film.
+     * Only unbooked shows are touched: a show with a pending or confirmed booking, a held or booked seat, or starting
+     * within 3 hours keeps its film, and the rest of that screen follows it. Nothing is deleted.
      */
-    public void rebalanceByRecency() {
+    public void assignScreensByRatio() {
         db.update("""
                 with ist as (select (now() at time zone 'Asia/Kolkata') t),
-                slots as (
-                    select sh.id show_id, sh.show_date d, sc.theatre_id th,
-                           row_number() over (partition by sc.theatre_id, sh.show_date order by sh.start_time, sh.screen_id, sh.id) rn,
+                base as (
+                    select sh.id show_id, sh.show_date d, sh.screen_id, sh.start_time, sh.movie_id, t.theatre_type tt,
+                           m.language mlang, m.active mactive,
                            ((sh.show_date + sh.start_time) > (select t from ist) + interval '3 hours'
                             and not exists (select 1 from bookings b where b.show_id = sh.id and b.status in ('PENDING','CONFIRMED'))
                             and not exists (select 1 from show_seats ss where ss.show_id = sh.id and ss.status <> 'AVAILABLE')) free
                     from shows sh
                     join screens sc on sc.id = sh.screen_id
                     join theatres t on t.id = sc.theatre_id and t.active = true
+                    join movies m on m.id = sh.movie_id
                     where sh.show_date between (select t from ist)::date and (select t from ist)::date + 9
-                      and (select language from movies where id = sh.movie_id) = 'Telugu'
+                ), numbered as (
+                    select b.*, count(*) over (partition by screen_id, d) n,
+                           row_number() over (partition by screen_id, d order by start_time, show_id) rn
+                    from base b
+                ), laned as (
+                    select n.*, case when tt = 'MULTIPLEX' then (rn - 1) % greatest(1, round(n / 4.0)::int) else 0 end lane
+                    from numbered n
+                ), units as (
+                    select d, screen_id, lane,
+                           (array_agg(movie_id order by start_time desc) filter (where not free and mactive and mlang = 'Telugu'))[1] forced
+                    from laned group by d, screen_id, lane
+                ), ranked_units as (
+                    select u.*, count(*) over (partition by d) tot_units,
+                           row_number() over (partition by d order by (screen_id * 3 + lane) * 0.6180339887 - floor((screen_id * 3 + lane) * 0.6180339887), screen_id, lane) ur
+                    from units u
                 ), days as (
-                    select distinct d from slots
+                    select distinct d from units
                 ), cm as (
                     select dd.d, m.id,
                            greatest(2.0, 100.0 / (5 + greatest(0, dd.d - coalesce(m.release_date, dd.d - 60)))) wt,
@@ -230,19 +224,32 @@ public class ShowWindowScheduler {
                            sum(wt) over (partition by d order by wt desc, release_date desc nulls last, id
                                          rows between unbounded preceding and current row) cum_end
                     from cm
-                ), spread as (
-                    select show_id, d, free,
-                           (rn * 0.6180339887 + th * 0.7548776662 + (d - date '2000-01-01') * 0.5698402909)
-                         - floor(rn * 0.6180339887 + th * 0.7548776662 + (d - date '2000-01-01') * 0.5698402909) p
-                    from slots
                 ), pick as (
-                    select s.show_id, r.id movie_id
-                    from spread s
-                    join ranked r on r.d = s.d and s.p * r.tot >= r.cum_end - r.wt and s.p * r.tot < r.cum_end
-                    where s.free
+                    select u.d, u.screen_id, u.lane, coalesce(u.forced, r.id) movie_id
+                    from ranked_units u
+                    left join ranked r on r.d = u.d
+                         and ((u.ur - 0.5) / u.tot_units) * r.tot >= r.cum_end - r.wt
+                         and ((u.ur - 0.5) / u.tot_units) * r.tot < r.cum_end
                 )
-                update shows sh set movie_id = p.movie_id, language = 'Telugu'
-                from pick p where p.show_id = sh.id and sh.movie_id <> p.movie_id
+                update shows sh set movie_id = p.movie_id, language = (select language from movies where id = p.movie_id)
+                from laned l join pick p on p.d = l.d and p.screen_id = l.screen_id and p.lane = l.lane
+                where sh.id = l.show_id and l.free and l.mlang = 'Telugu'
+                  and p.movie_id is not null and sh.movie_id <> p.movie_id
+                """);
+    }
+
+    /**
+     * Every film except Ramayana plays in plain 2D only (3D, IMAX, Dolby, 4DX and PXL are for the films flagged
+     * multi_format, which is Ramayana). Unbooked shows only, so a ticket that was already bought keeps its format.
+     */
+    public void forceTwoD() {
+        db.update("""
+                update shows sh set format = '2D'
+                from movies m
+                where m.id = sh.movie_id and m.multi_format = false and sh.format is distinct from '2D'
+                  and sh.show_date >= (now() at time zone 'Asia/Kolkata')::date
+                  and not exists (select 1 from bookings b where b.show_id = sh.id and b.status in ('PENDING','CONFIRMED'))
+                  and not exists (select 1 from show_seats ss where ss.show_id = sh.id and ss.status <> 'AVAILABLE')
                 """);
     }
 
@@ -254,7 +261,7 @@ public class ShowWindowScheduler {
     public void applyReleaseVariants() {
         var rows = db.queryForList("""
                 select sh.id, sh.start_time, sh.language, sh.format, t.name theatre, t.theatre_type, c.name city,
-                       m.language movie_language, m.show_languages
+                       m.language movie_language, m.show_languages, m.multi_format
                 from shows sh
                 join movies m on m.id = sh.movie_id
                 join screens sc on sc.id = sh.screen_id
@@ -275,8 +282,9 @@ public class ShowWindowScheduler {
             var label = com.sujaytumu.bms.service.ReleaseVariants.label(id, (String) r.get("city"), (String) r.get("theatre"),
                     (String) r.get("theatre_type"), ((java.sql.Time) r.get("start_time")).toLocalTime(),
                     allowed, (String) r.get("movie_language"));
-            if (!label.language().equals(r.get("language")) || !label.format().equals(r.get("format"))) {
-                updates.add(new Object[] {label.language(), label.format(), id});
+            String fmt = Boolean.TRUE.equals(r.get("multi_format")) ? label.format() : "2D";
+            if (!label.language().equals(r.get("language")) || !fmt.equals(r.get("format"))) {
+                updates.add(new Object[] {label.language(), fmt, id});
             }
         }
         if (!updates.isEmpty()) db.batchUpdate("update shows set language = ?, format = ? where id = ?", updates);
