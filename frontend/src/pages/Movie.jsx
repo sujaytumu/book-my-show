@@ -7,6 +7,10 @@ import { goBack } from "../nav";
 
 // export default function Movie() {
 //   const { id } = useParams();
+  // Opening a movie always starts at the top (trailer banner first), even when the list you came from was scrolled down.
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+  }, [id]);
 //   const navigate = useNavigate();
 //   const [movie, setMovie] = useState();
 //   const [shows, setShows] = useState([]);
@@ -163,7 +167,7 @@ import { goBack } from "../nav";
 // }
 
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { landPoster } from "../sharedPoster";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { api, currentUser } from "../api";
