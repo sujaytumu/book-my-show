@@ -915,3 +915,50 @@ update movies set
     description = 'The gang from Ee Nagaraniki Emaindi is back for another adventure in ENE Repeat, the sequel written and directed by Tharun Bhascker, starring Vishwak Sen, Abhinav Gomatam, Venkatesh Kakumanu and Srinath Maganti. Music by Vivek Sagar. Releasing 19 November 2026.',
     cast_crew = '[{"name":"Vishwak Sen","role":"Actor","character":"Vivek"},{"name":"Abhinav Gomatam","role":"Actor","character":"Kaushik"},{"name":"Venkatesh Kakumanu","role":"Actor","character":"Uppu"},{"name":"Srinath Maganti","role":"Actor","character":"Karthik"},{"name":"Anisha Ambrose","role":"Actor"},{"name":"Shivatmika Rajasekhar","role":"Actor"},{"name":"Priyadarshini Ram","role":"Actor"},{"name":"Tharun Bhascker","role":"Director"},{"name":"Vivek Sagar","role":"Music Director"},{"name":"AJ Aaron","role":"Cinematographer"},{"name":"S Originals","role":"Producer"},{"name":"Suresh Productions","role":"Producer"}]'
 where lower(title) = 'ene repeat' and cast_crew is null and exists(select 1 from f);
+
+-- Four new releases, with posters supplied by the owner. Facts are from the posters and published release news; anything not
+-- stated anywhere (runtime, certificate) is left blank for the admin "Auto-fill" or the daily job. Each insert is guarded by
+-- "not exists", so re-running this file never creates duplicates and later admin edits stay.
+
+-- Itllu Arjuna (Telugu). Release 13 Nov 2026, 2h 23m, UA16+, Action/Drama/Romantic as listed on the movie page.
+insert into movies(title,description,poster_url,language,genre,duration_minutes,certificate,rating,release_date,upcoming,cast_crew)
+select 'Itllu Arjuna',
+       'Itllu Arjuna is a Telugu action romantic drama about Arjun, a mute man whose one-sided love for Keerthi drives the story. Written and directed by Mahesh Uppala with music by Thaman S. Released 13 November 2026.',
+       '/posters/itllu-arjuna.jpg','Telugu','Action, Drama, Romantic',143,'UA16+',0,
+       date '2026-11-13', (date '2026-11-13' > (now() at time zone 'Asia/Kolkata')::date),
+       '[{"name":"Mahesh Uppala","role":"Writer & Director"},{"name":"Thaman S","role":"Music Director"},{"name":"Venky Kudumula","role":"Producer"}]'
+where not exists(select 1 from movies where lower(title) in ('itllu arjuna','itlu arjuna'));
+
+-- DNK, short for Donga Naa Koduku (Telugu family comedy). Release 13 Nov 2026; debut director Sreenu Kambala; Mythri Movie Makers.
+insert into movies(title,description,poster_url,language,genre,duration_minutes,certificate,rating,release_date,upcoming,cast_crew)
+select 'DNK',
+       'DNK (Donga Naa Koduku) is a Telugu family comedy starring Mouli Tanuj Prasanth, directed by Sreenu Kambala and produced by Naveen Yerneni and Y Ravi Shankar for Mythri Movie Makers. Released 13 November 2026.',
+       '/posters/dnk.jpg','Telugu','Comedy, Family',null,null,0,
+       date '2026-11-13', (date '2026-11-13' > (now() at time zone 'Asia/Kolkata')::date),
+       '[{"name":"Mouli Tanuj Prasanth","role":"Actor"},{"name":"Ali","role":"Actor"},{"name":"Rajitha","role":"Actor"},{"name":"Sushmitha Shetty","role":"Actress"},{"name":"Sreenu Kambala","role":"Director"},{"name":"Naveen Yerneni","role":"Producer"},{"name":"Y Ravi Shankar","role":"Producer"}]'
+where not exists(select 1 from movies where lower(title) in ('dnk','donga naa koduku'));
+
+-- Aakasamlo Oka Tara (Telugu romantic drama, also in Malayalam, Tamil, Kannada and Hindi). Release 20 Nov 2026.
+insert into movies(title,description,poster_url,language,genre,duration_minutes,certificate,rating,release_date,upcoming,cast_crew,show_languages)
+select 'Aakasamlo Oka Tara',
+       'Aakasamlo Oka Tara is a romantic drama starring Dulquer Salmaan and Satvika Veeravalli, directed by Pavan Sadineni with music by G. V. Prakash Kumar. Releasing 20 November 2026 in Telugu, Malayalam, Tamil, Kannada and Hindi.',
+       '/posters/aakasamlo-oka-tara.jpg','Telugu','Romantic, Drama',null,null,0,
+       date '2026-11-20', (date '2026-11-20' > (now() at time zone 'Asia/Kolkata')::date),
+       '[{"name":"Dulquer Salmaan","role":"Actor"},{"name":"Satvika Veeravalli","role":"Actress"},{"name":"Pavan Sadineni","role":"Director"},{"name":"G. V. Prakash Kumar","role":"Music Director"},{"name":"Sandeep Gunnam","role":"Producer"},{"name":"Ramya Gunnam","role":"Producer"}]',
+       'Telugu, Malayalam, Tamil, Kannada, Hindi'
+where not exists(select 1 from movies where lower(title) in ('aakasamlo oka tara','aakasam lo oka tara'));
+
+-- O.M: Operation Mole (Tamil action drama), Dhanush and Mammootty with Sai Pallavi and Sreeleela. Release 20 Nov 2026.
+insert into movies(title,description,poster_url,language,genre,duration_minutes,certificate,rating,release_date,upcoming,cast_crew)
+select 'O.M: Operation Mole',
+       'O.M: Operation Mole is an action drama starring Dhanush and Mammootty, with Sai Pallavi and Sreeleela, directed by Rajkumar Periasamy with music by Sai Abhyankkar. Releasing 20 November 2026.',
+       '/posters/om.jpg','Tamil','Action, Drama',null,null,0,
+       date '2026-11-20', (date '2026-11-20' > (now() at time zone 'Asia/Kolkata')::date),
+       '[{"name":"Dhanush","role":"Actor"},{"name":"Mammootty","role":"Actor"},{"name":"Sai Pallavi","role":"Actress"},{"name":"Sreeleela","role":"Actress"},{"name":"Rajkumar Periasamy","role":"Director"},{"name":"Sai Abhyankkar","role":"Music Director"}]'
+where not exists(select 1 from movies where lower(title) in ('o.m: operation mole','o.m','om','operation mole'));
+
+-- The Paradise and Cult leave the listings (Irumudi already left on 15 Nov). Done once, guarded by app_flags, so a later admin
+-- edit is never undone. Nothing is deleted: the movies, their bookings and history stay in the database; they are only made
+-- inactive, and their unbooked future shows are handed to the running movies by the daily show balancing.
+with f as (insert into app_flags(flag) values('paradise_cult_removed_2026_11_18') on conflict do nothing returning 1)
+update movies set active=false where lower(title) in ('the paradise','cult') and exists(select 1 from f);
