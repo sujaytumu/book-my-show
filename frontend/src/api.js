@@ -15,7 +15,15 @@ api.interceptors.request.use((config) => {
 // in" while every authenticated request silently fails. Clear the stale
 // session and send the user to log in again with a clear reason.
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // While Render starts or redeploys the server it can answer with its own HTML "waking up" page instead of JSON. Treat that
+    // as a failed request, so screens show their normal loading/retry state instead of crashing on a string.
+    const d = response.data;
+    if (typeof d === "string" && /^\s*<(!doctype|html)/i.test(d)) {
+      return Promise.reject(new Error("Server is starting up"));
+    }
+    return response;
+  },
   (error) => {
     if (error.response?.status === 401 && localStorage.getItem("token")) {
       logout();
