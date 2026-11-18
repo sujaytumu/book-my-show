@@ -7,10 +7,6 @@ import { goBack } from "../nav";
 
 // export default function Movie() {
 //   const { id } = useParams();
-  // Opening a movie always starts at the top (trailer banner first), even when the list you came from was scrolled down.
-  useLayoutEffect(() => {
-    window.scrollTo(0, 0);
-  }, [id]);
 //   const navigate = useNavigate();
 //   const [movie, setMovie] = useState();
 //   const [shows, setShows] = useState([]);
@@ -288,6 +284,20 @@ function StickyBook({ onClick }) {
 }
 
 // Horizontal row of other movies (poster, title, rating) like BMS "You might also like".
+// A Coming Soon movie that is inside the advance-booking window (it already has screens from its release date) is shown
+// like a movie in cinemas, with its showtimes and the Book tickets button. The server flags it as advance_booking.
+const adv = (m) => (m && m.advance_booking ? { ...m, upcoming: false, advance: true } : m);
+function advanceLabel(d) {
+  const [y, mo, da] = String(d || "").slice(0, 10).split("-").map(Number);
+  if (!y) return "Releasing soon";
+  const t = new Date();
+  const days = Math.round((new Date(y, mo - 1, da) - new Date(t.getFullYear(), t.getMonth(), t.getDate())) / 86400000);
+  if (days <= 0) return "Releases today";
+  if (days === 1) return "Releases tomorrow";
+  if (days <= 7) return "Releasing in " + days + " days";
+  return "Releases " + da + " " + ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][mo - 1];
+}
+
 function MoreMovies({ currentId, upcoming }) {
   const [movies, setMovies] = useState([]);
   useEffect(() => {
@@ -513,6 +523,10 @@ function PriceAlert({ movieId }) {
 
 export default function Movie() {
   const { id } = useParams();
+  // Opening a movie always starts at the top (trailer banner first), even when the list you came from was scrolled down.
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+  }, [id]);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [movie, setMovie] = useState();
@@ -570,7 +584,7 @@ export default function Movie() {
   useEffect(() => {
     // Show the last saved copy of this movie and its showtimes straight away; the fresh copy replaces it below.
     try {
-      const m0 = JSON.parse(localStorage.getItem("bms_swr_/movies/" + id) || "null");
+      const m0 = adv(JSON.parse(localStorage.getItem("bms_swr_/movies/" + id) || "null"));
       if (m0 && String(m0.id) === String(id)) {
         setMovie(m0);
         if (!m0.upcoming) {
@@ -587,19 +601,20 @@ export default function Movie() {
       try {
         localStorage.setItem("bms_swr_/movies/" + id, JSON.stringify(res.data));
       } catch {}
-      setMovie(res.data);
+      const d0 = adv(res.data);
+      setMovie(d0);
       try {
         const d = res.data;
         const rec = JSON.parse(localStorage.getItem("bms_recent_movies") || "[]").filter((x) => x.id !== d.id);
         rec.unshift({ id: d.id, title: d.title, poster_url: d.poster_url, rating: d.rating, votes: d.votes, upcoming: d.upcoming, release_date: d.release_date, language: d.language, genre: d.genre });
         localStorage.setItem("bms_recent_movies", JSON.stringify(rec.slice(0, 10)));
       } catch {}
-      if (!res.data.upcoming) {
+      if (!d0.upcoming) {
         try {
           localStorage.setItem("bms_last_movie", JSON.stringify({ id: res.data.id, title: res.data.title, poster_url: res.data.poster_url, rating: res.data.rating, genre: res.data.genre }));
         } catch {}
       }
-      if (!res.data.upcoming) {
+      if (!d0.upcoming) {
         api.get("/shows", { params: { movieId: id, city: getCity() } }).then((showsRes) => {
           try {
             localStorage.setItem("bms_swr_/shows/" + id + "/" + getCity(), JSON.stringify(showsRes.data));
@@ -784,7 +799,7 @@ export default function Movie() {
   // as in the real app (rating, tags, story, trending, offers, then the extras).
   const extrasBlock = (
     <>
-      {!movie.upcoming && currentUser() && <PriceAlert movieId={movie.id} />}
+      {!movie.upcoming && !movie.advance && currentUser() && <PriceAlert movieId={movie.id} />}
         {(movie.upcoming || Number(movie.interested_base) > 0) && (
           <div className="interest-card">
             <span className="ic-thumb">
@@ -885,7 +900,7 @@ export default function Movie() {
           Trailer
         </a>
         )}
-        <span className="mv-strip">{movie.upcoming ? "Coming soon" : "In cinemas"}</span>
+        <span className="mv-strip">{movie.upcoming ? "Coming soon" : movie.advance ? advanceLabel(movie.release_date) : "In cinemas"}</span>
       </div>
       {trailerOpen && movie.trailer_key && (
         <div className="trailer-overlay" onClick={() => setTrailerOpen(false)}>
@@ -902,7 +917,7 @@ export default function Movie() {
       )}
 
       <div className="mv-info">
-        {!movie.upcoming && <RatingPill movieId={id} fallback={movie.rating} total={movie.votes} />}
+        {!movie.upcoming && !movie.advance && <RatingPill movieId={id} fallback={movie.rating} total={movie.votes} />}
         <p className="mv-meta">
           {[
             // runtime is shown on the booking page header ("Movie runtime"); the real app's details line has genre, certificate, date
@@ -954,7 +969,7 @@ export default function Movie() {
         {movie.upcoming && extrasBlock}
       </div>
 
-      {!movie.upcoming && (
+      {!movie.upcoming && !movie.advance && (
         <div className="trending-bar">
           <span className="tb-tag">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
@@ -1017,10 +1032,6 @@ export default function Movie() {
 
       {movie.upcoming ? (
         <>
-          <div className="card coming-soon-panel">
-            <h2>Coming Soon</h2>
-            <p>Booking opens closer to release. Check back soon for showtimes.</p>
-          </div>
           <MoreMovies currentId={id} upcoming={true} />
         </>
       ) : (
@@ -1225,7 +1236,7 @@ export default function Movie() {
 
         </>)}
         {!booking && (<>
-        <div id="ratings"><Reviews movieId={id} /></div>
+        {!movie.advance && <div id="ratings"><Reviews movieId={id} /></div>}
         <MoreMovies currentId={id} upcoming={false} />
         <StickyBook onClick={handleBook} />
         </>)}
