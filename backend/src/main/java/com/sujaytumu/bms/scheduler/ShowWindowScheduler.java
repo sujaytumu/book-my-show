@@ -25,6 +25,13 @@ public class ShowWindowScheduler {
 
     private final JdbcTemplate db;
 
+    /**
+     * Advance booking: a Coming Soon movie gets screens (from its release date on, taken from the existing movies in the
+     * usual weighted balance) only once its release is this many days away or closer. Further out it has no screens, so the
+     * app shows no showtimes and no Book tickets button for it.
+     */
+    public static final int ADVANCE_BOOKING_DAYS = 3;
+
     public ShowWindowScheduler(JdbcTemplate db) {
         this.db = db;
     }
@@ -217,7 +224,7 @@ public class ShowWindowScheduler {
                     from days dd
                     join movies m on m.active = true and m.language = 'Telugu'
                          and (m.release_date is null or m.release_date <= dd.d)
-                         and (m.upcoming = false or m.release_date is not null)
+                         and (m.upcoming = false or (m.release_date is not null and m.release_date <= (now() at time zone 'Asia/Kolkata')::date + @ADV@))
                 ), ranked as (
                     select d, id, wt,
                            sum(wt) over (partition by d) tot,
@@ -235,7 +242,7 @@ public class ShowWindowScheduler {
                 from laned l join pick p on p.d = l.d and p.screen_id = l.screen_id and p.lane = l.lane
                 where sh.id = l.show_id and l.free and l.mlang = 'Telugu'
                   and p.movie_id is not null and sh.movie_id <> p.movie_id
-                """);
+                """.replace("@ADV@", String.valueOf(ADVANCE_BOOKING_DAYS)));
     }
 
     /**
@@ -328,7 +335,7 @@ public class ShowWindowScheduler {
                     from days dd
                     join movies m on m.active = true and m.language = 'Telugu'
                          and (m.release_date is null or m.release_date <= dd.d)
-                         and (m.upcoming = false or m.release_date is not null)
+                         and (m.upcoming = false or (m.release_date is not null and m.release_date <= (now() at time zone 'Asia/Kolkata')::date + @ADV@))
                 ), newest as (
                     select d, id from cand where rk = 1 and release_date is not null and d - release_date <= 10
                 ), todo as (
@@ -357,7 +364,7 @@ public class ShowWindowScheduler {
                        (select language from movies where id = p.movie_id)
                 from pick p
                 where p.movie_id is not null
-                """, WINDOW_DAYS - 1);
+                """.replace("@ADV@", String.valueOf(ADVANCE_BOOKING_DAYS)), WINDOW_DAYS - 1);
 
         // New shows need their seats too (10 rows A-J x 15 seats).
         db.update("""

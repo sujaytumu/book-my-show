@@ -10,6 +10,13 @@ import java.util.Map;
 @RestController
 public class CatalogController {
 
+    /** A Coming Soon movie whose release is within the advance-booking window and that already has screens from its release date. */
+    private static final String ADVANCE_SQL = "(m.upcoming and m.active and m.release_date is not null " +
+            "and m.release_date <= (now() at time zone 'Asia/Kolkata')::date + " + com.sujaytumu.bms.scheduler.ShowWindowScheduler.ADVANCE_BOOKING_DAYS + " " +
+            "and exists(select 1 from shows sx where sx.movie_id = m.id and sx.show_date >= m.release_date " +
+            "and sx.show_date >= (now() at time zone 'Asia/Kolkata')::date))";
+
+
     private final JdbcTemplate db;
 
     public CatalogController(JdbcTemplate db) {
@@ -38,7 +45,7 @@ public class CatalogController {
             List<Map<String, Object>> hit = moviesCache;
             if (hit != null && System.currentTimeMillis() - moviesCachedAt < 20_000) return hit;
         }
-        String base = "select m.*,coalesce(m.votes_base,0) + coalesce(rv.c,0) votes from movies m " +
+        String base = "select m.*,coalesce(m.votes_base,0) + coalesce(rv.c,0) votes, " + ADVANCE_SQL + " advance_booking from movies m " +
                 "left join (select movie_id,count(*) c from reviews group by movie_id) rv on rv.movie_id=m.id where m.active=true ";
         List<Map<String, Object>> rows = (q == null || q.isBlank())
                 ? db.queryForList(base + "order by m.title")
@@ -85,6 +92,8 @@ public class CatalogController {
         long votesTotal = (vb instanceof Number ? ((Number) vb).longValue() : 0)
                 + db.queryForObject("select count(*) from reviews where movie_id=?", Long.class, id);
         movie.put("votes", votesTotal);
+        movie.put("advance_booking", Boolean.TRUE.equals(db.queryForObject(
+                "select " + ADVANCE_SQL + " from movies m where m.id=?", Boolean.class, id)));
         long baseDay = 100 + Math.floorMod(id * 17, 41L);
         movie.put("tickets_last_hour", (lastHour == null ? 0 : lastHour) + baseHour);
         movie.put("tickets_last_day", (sold == null ? 0 : sold) + baseDay);
