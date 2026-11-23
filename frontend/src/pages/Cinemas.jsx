@@ -38,7 +38,7 @@ export default function Cinemas() {
         <span />
       </div>
       <input className="cin-search" placeholder="Search for a cinema" value={q} onChange={(e) => setQ(e.target.value)} />
-      {loading && <p className="empty-note">Loading cinemas…</p>}
+      {loading && [0, 1, 2].map((i) => <div className="sk" key={i} style={{ height: 92, margin: "0 0 12px", borderRadius: 14 }} />)}
       {!loading && shown.length === 0 && <p className="empty-note">No cinemas found in {city}.</p>}
       {shown.map((t) => (
         <div className="cin-card" key={t.id}>

@@ -774,7 +774,16 @@ export default function Movie() {
     return favOnly ? groups.filter((g) => favs.includes(g.theatre_name)) : groups;
   }, [shows, selectedDate, myLocation, sortBy, priceBands, favs, favOnly, formats, langFilter, movie, booked]);
 
-  if (!movie) return <p>Loading...</p>;
+  if (!movie)
+    return (
+      <div className="movie-page" aria-busy="true" aria-label="Loading movie">
+        <div className="sk sk-hero" />
+        <div className="sk" style={{ height: 26, width: "58%", margin: "0 0 12px" }} />
+        <div className="sk" style={{ height: 14, width: "40%", margin: "0 0 22px" }} />
+        <div className="sk" style={{ height: 14, width: "92%", margin: "0 0 8px" }} />
+        <div className="sk" style={{ height: 14, width: "84%" }} />
+      </div>
+    );
 
   const todayIso = istToday();
   const tomorrowIso = addDaysIso(todayIso, 1);
