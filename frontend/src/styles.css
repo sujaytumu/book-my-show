@@ -33,15 +33,6 @@ textarea{font-size:10.6px}
 .chip:hover{border-color:var(--red)}
 .chip.active{background:var(--red);border-color:var(--red);color:#fff}
 
-.section-header{display:flex;justify-content:space-between;align-items:baseline;margin:36px 0 16px;flex-wrap:wrap;gap:6px;scroll-margin-top:76px}
-.section-title{font-size:14.7px;font-weight:800;margin:0}
-.section-count{color:var(--gray);font-size:9.1px}
-
-.cta-banner{display:flex;justify-content:space-between;align-items:center;background:linear-gradient(100deg,var(--red),var(--red-dark));color:#fff;padding:16px 22px;border-radius:var(--radius);margin:24px 0;font-weight:800;cursor:pointer;transition:transform .15s}
-.cta-banner:hover{transform:translateY(-1px)}
-.cta-banner span{font-size:9.1px;font-weight:600;opacity:.85;display:block;margin-top:2px}
-.cta-banner b{font-size:11.2px}
-
 .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
 @media(min-width:700px){.grid{grid-template-columns:repeat(3,1fr);gap:20px}}
 @media(min-width:900px){.grid{grid-template-columns:repeat(4,1fr)}}
@@ -54,7 +45,6 @@ textarea{font-size:10.6px}
 .movie h3{margin:10px 12px 2px;font-size:9.9px;font-weight:800;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .movie p{color:var(--gray);margin:0 12px;font-size:8.5px}
 .movie b{display:block;margin:6px 12px 12px;font-size:8.5px;color:var(--red)}
-.coming-soon-tag{color:var(--red)!important}
 
 .auth{max-width:420px;margin:60px auto}
 .auth h2{text-align:center;margin-bottom:4px}
@@ -134,7 +124,6 @@ footer{text-align:center;padding:40px;color:var(--gray-light);font-size:9.1px}
   main{padding:16px 14px 50px}
 }
 
-
 /* ---------- My Bookings (BookMyShow-style order cards) ---------- */
 .bk-heading{margin:4px 0 6px}
 .bk-tabs{display:flex;gap:26px;border-bottom:1.5px solid var(--border);margin:14px 0 22px;overflow-x:auto}
@@ -189,7 +178,6 @@ footer{text-align:center;padding:40px;color:var(--gray-light);font-size:9.1px}
   .bk-actions .bk-btn{flex:1}
 }
 
-
 /* ---------- Profile avatar (nav) + Profile page ---------- */
 .nav-avatar,.nav-avatar:hover{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--red),var(--red-dark));color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:9.9px;font-weight:800;letter-spacing:.3px;box-shadow:0 0 0 2px #fff,0 0 0 4px var(--red-light)}
 .nav-avatar:hover{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--red)}
@@ -232,23 +220,15 @@ footer{text-align:center;padding:40px;color:var(--gray-light);font-size:9.1px}
   .pf-stats{grid-template-columns:repeat(2,1fr)}
 }
 
-
-
 /* ---------- Movie page: sort / filters / showtime colours ---------- */
 .mv-toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
 .mv-tool,.mv-tool:hover{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;font-size:9.1px;font-weight:700;text-transform:none;letter-spacing:0;border-radius:8px;background:var(--white);border:1.5px solid var(--border);color:var(--ink)}
 .mv-tool:hover{border-color:var(--red);color:var(--red)}
 .mv-tool b{font-weight:800}
-.mv-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--red);color:#fff;font-size:7.9px;font-weight:800}
+
 .mv-inline{display:inline;padding:0;font-size:9.9px}
 
-.slot-legend{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center;font-size:8.5px;color:var(--gray);margin-bottom:14px}
-.slot-legend span{display:inline-flex;align-items:center;gap:6px}
 .slot-legend .lg,.seat-legend .lg{display:inline-block;width:12px;height:12px;border-radius:3px;border:1.5px solid}
-.slot-legend .lg.ok{border-color:#15803d;background:#e6f6ec}
-.slot-legend .lg.fast{border-color:#d97706;background:#fff4e0}
-.slot-legend .lg.full{border-color:#c7c7cc;background:#eee}
-.slot-legend .lg-note{font-style:italic}
 
 .time-slot.ok{color:#15803d;border-color:#15803d}
 .time-slot.ok:hover{background:#15803d;color:#fff}
@@ -354,24 +334,13 @@ footer{text-align:center;padding:40px;color:var(--gray-light);font-size:9.1px}
 .rv-delete,.rv-delete:hover{width:100%;margin-top:10px;padding:10px;background:none;border:none;font-size:9.1px;font-weight:800;text-transform:none;letter-spacing:0;color:var(--gray)}
 .rv-delete:hover{color:var(--red)}
 
-
-/* ---------- Share button ---------- */
-.share-btn,.share-btn:hover{display:inline-flex;align-items:center;gap:8px;margin-top:6px;padding:8px 16px;font-size:9.1px;font-weight:800;text-transform:none;letter-spacing:0;border-radius:6px;background:var(--white);border:1.5px solid var(--border);color:var(--ink)}
-.share-btn:hover{border-color:var(--red);color:var(--red)}
 .share-msg{margin-left:12px;font-size:9.1px;font-weight:800;color:#15803d}
 
-
-/* ---------- Watchlist ---------- */
-.interest-btn{margin-right:10px}
-.interest-btn.on,.interest-btn.on:hover{background:var(--red);border-color:var(--red);color:#fff}
 .wl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:14px;margin-top:6px}
 .wl-item{position:relative;display:block;text-align:center;font-size:9.1px;font-weight:700;color:var(--ink)}
 .wl-item img{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:8px;display:block;margin-bottom:6px}
 .wl-remove,.wl-remove:hover{position:absolute;top:6px;right:6px;width:24px;height:24px;padding:0;border-radius:50%;background:rgba(0,0,0,.65);border:none;color:#fff;font-size:11.2px;line-height:1;text-transform:none;letter-spacing:0}
 
-/* ---------- Seat picker: ticket count + zoom ---------- */
-.seat-toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;max-width:560px;margin:0 auto 10px}
-.qty-chip{background:var(--white);color:var(--ink);border:1.5px solid var(--red);border-radius:20px;padding:6px 14px;font-size:9.1px;font-weight:800}
 .seat-zoom{overflow:auto;max-width:100%;padding-bottom:6px;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y}
 .seat-zoom+.screen{margin-top:26px}
 .seat-map{--w:34px;--h:30px;--g:6px;--fs:9.6px;--z:1;max-width:none;width:max-content;min-width:0;margin:10px auto 0}
@@ -414,9 +383,7 @@ footer{text-align:center;padding:40px;color:var(--gray-light);font-size:9.1px}
 
 /* ---------- Seat page: small ticket-count icon at top right, green selection (like BMS) ---------- */
 .show-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
-.show-header-text{min-width:0}
-.qty-chip,.qty-chip:hover{display:inline-flex;align-items:center;gap:5px;flex:none;padding:6px 10px;border-radius:16px;background:var(--white);color:#1ea83c;border:1.5px solid #1ea83c;font-size:9.9px;font-weight:800;letter-spacing:0;text-transform:none;line-height:1}
-.qty-chip:hover{background:#eaf8ee}
+
 .seat-map button{color:#1ea83c;border-color:#1ea83c}
 .seat-map button.available:hover{background:#eaf8ee;color:#1ea83c}
 .seat-map button.selected,.seat-map button.selected:hover{background:#1ea83c;color:#fff;border-color:#1ea83c}
@@ -426,9 +393,6 @@ footer{text-align:center;padding:40px;color:var(--gray-light);font-size:9.1px}
 .qty-grid button:hover{border-color:#1ea83c;color:#1ea83c;background:var(--white)}
 .qty-grid .tick{box-sizing:border-box;background:var(--white);color:#1ea83c;border:1.5px solid #1ea83c;line-height:15px;font-weight:800}
 
-/* ---------- Movie page: demand badge + cast & crew ---------- */
-.mv-hot{display:inline-flex;align-items:center;gap:6px;margin:0 0 4px;padding:6px 12px;border-radius:16px;background:var(--red-light);color:var(--red);font-size:9.1px;font-weight:700}
-.mv-hot b{font-weight:800;font-size:9.9px}
 .cast-block h2{margin:14px 0 8px}
 .cast-row{display:flex;gap:14px;overflow-x:auto;padding-bottom:8px;-ms-overflow-style:none;scrollbar-width:none}
 .cast-row::-webkit-scrollbar{display:none}
@@ -444,7 +408,6 @@ footer{text-align:center;padding:40px;color:var(--gray-light);font-size:9.1px}
 .rating-pill .rp-votes{color:#c9c9d0;font-size:8.5px;padding-left:6px;border-left:1px solid #555}
 .mv-tags{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}
 .mv-tags span{padding:4px 9px;border-radius:6px;background:#eeeef1;color:#333;font-size:8.5px;font-weight:700}
-img.cast-photo{object-fit:cover;object-position:top;background:#eee}
 
 /* ---------- Payment countdown, more-movies row ---------- */
 .hold-timer{margin:0 0 10px;padding:8px 12px;border-radius:8px;background:#fff4e0;color:#8a5a00;font-size:9.9px}
@@ -458,15 +421,9 @@ img.cast-photo{object-fit:cover;object-position:top;background:#eee}
 .more-card b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:6px;font-size:9.1px;line-height:1.25}
 .more-card small{color:var(--gray);font-size:8.5px}
 
-/* ---------- Language filter counts, empty note, fixed Book tickets bar ---------- */
-.lang-row .chip small{margin-left:6px;opacity:.65;font-size:7.9px;font-weight:800}
-.lang-row .chip.active small{opacity:.9}
 .empty-note{text-align:center;color:var(--gray);margin:28px 0}
 .sticky-book{position:fixed;left:0;right:0;bottom:0;z-index:40;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:var(--white);box-shadow:0 -4px 16px rgba(0,0,0,.1)}
 .sticky-book button{display:block;width:100%;max-width:520px;margin:0 auto;padding:13px 20px}
-
-.trailer-btn,.trailer-btn:hover{text-decoration:none;margin-right:8px;color:var(--ink)}
-.trailer-btn:hover{color:var(--red)}
 
 /* ---------- Trending banner (tickets booked in the last hour) ---------- */
 .trending-bar{display:flex;align-items:stretch;margin:0 0 12px;border:1.5px solid #c9d6f5;border-radius:10px;overflow:hidden;background:var(--white)}
@@ -529,8 +486,6 @@ img.cast-photo{object-fit:cover;object-position:top;background:#eee}
 .sheet-mode .qty-go{background:#1ea83c;border-color:#1ea83c;border-radius:10px;height:46px}
 .bms-head{margin:-24px -18px 10px}
 @media (max-width:640px){.bms-head{margin:-16px -14px 10px}}
-.mv-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
-.mv-actions .share-btn,.mv-actions .share-btn:hover{margin:0;width:100%;justify-content:center;white-space:nowrap;padding:9px 6px;gap:6px;box-sizing:border-box}
 
 /* ---------- BMS-style home / search / city ---------- */
 .home-head{display:flex;justify-content:space-between;align-items:flex-start;padding:22px 18px 6px;background:var(--bg);max-width:1100px;margin:0 auto}
@@ -540,11 +495,7 @@ img.cast-photo{object-fit:cover;object-position:top;background:#eee}
 .home-head .nav-right{display:flex;align-items:center}
 .home-head .nav-avatar{width:46px;height:46px}
 .home-page{padding-bottom:70px}
-.home-tabs{display:flex;gap:6px;overflow-x:auto;padding:10px 0 14px;scrollbar-width:none}
-.home-tabs::-webkit-scrollbar{display:none}
-.home-tabs a{flex:1 0 76px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11.4px;color:#333;padding:6px 4px;border-bottom:3px solid transparent}
-.home-tabs a svg{color:#444}
-.home-tabs a.on{border-bottom-color:#e0415a;font-weight:700}
+
 .hero-row{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;margin:4px -18px 20px;padding:0 18px;scrollbar-width:none}
 .hero-row::-webkit-scrollbar{display:none}
 .hero-card{position:relative;flex:0 0 86%;scroll-snap-align:center;border-radius:14px;overflow:hidden;aspect-ratio:16/9;background:#111}
@@ -619,10 +570,7 @@ img.cast-photo{object-fit:cover;object-position:top;background:#eee}
 .loc-sheet p{color:var(--gray);margin:0 0 18px;font-size:12.3px}
 .loc-allow{width:100%;background:#e0415a;border:0;border-radius:10px;color:#fff;height:48px;font-size:14.1px;font-weight:700;text-transform:none;letter-spacing:0}
 .loc-manual{width:100%;background:none;border:0;color:#e0415a;font-size:13.2px;padding:14px 0 0;text-transform:none;letter-spacing:0;font-weight:600}
-.mv-back{display:flex;align-items:center;justify-content:center;border:0;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.15);width:38px;height:38px;border-radius:50%;font-size:24.6px;line-height:1;margin:0 0 10px;padding:0;color:var(--ink);cursor:pointer}
 
-.home-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:0;overflow:visible}
-.home-tabs a{flex:none;font-size:11px;white-space:nowrap;min-width:0}
 .no-cinemas{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;background:#fff;border-radius:14px;padding:34px 20px;margin-top:12px;box-shadow:var(--shadow)}
 .no-cinemas b{font-size:14.1px}
 .no-cinemas span{color:var(--gray);font-size:11.4px}
@@ -710,7 +658,7 @@ img.cast-photo{object-fit:cover;object-position:top;background:#eee}
 .movie-page .mv-toolbar{justify-content:flex-start;margin:0 -18px;background:#fff;padding:14px 18px;gap:10px;box-shadow:0 2px 6px rgba(0,0,0,.05);overflow-x:auto}
 .movie-page .mv-tool,.movie-page .mv-tool:hover{border-radius:26px;border:1.5px solid #cfcfd4;color:#e0415a;font-size:14.1px;font-weight:500;padding:9px 18px;background:#fff;flex:none}
 .mv-tool .chev{font-style:normal;margin-left:2px;transform:translateY(-3px)}
-.movie-page .slot-legend{margin-top:14px}
+
 .theatre-block-header{display:flex;align-items:flex-start;gap:14px}
 .th-logo{flex:none;width:44px;height:44px;border-radius:10px;border:1px solid #e3e3e8;background:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17.6px;color:#e0415a}
 .th-main{flex:1;min-width:0}
@@ -743,9 +691,7 @@ img.cast-photo{object-fit:cover;object-position:top;background:#eee}
 .movie-page .mv-toolbar{padding:10px 16px}
 .movie-page .mv-tool,.movie-page .mv-tool:hover{font-size:12.1px;padding:6px 14px;gap:6px}
 .movie-page .mv-tool svg{width:15px;height:15px}
-.mv-badge{font-size:8.8px;min-width:15px;height:15px;line-height:15px}
-.movie-page .slot-legend{font-size:9.4px;margin:12px 0 10px;gap:4px 14px}
-.movie-page .slot-legend .lg{width:10px;height:10px}
+
 .theatre-block{padding:14px;margin-bottom:12px}
 .theatre-block-header{align-items:center;gap:10px;flex-wrap:nowrap}
 .th-logo{width:38px;height:38px;font-size:17.6px;border-radius:9px}
@@ -914,9 +860,7 @@ img.cast-photo{object-fit:cover;object-position:top;background:#eee}
 .cast-avatar{width:92px;height:92px;border-radius:12px;font-size:17.6px;margin-bottom:8px;object-fit:cover}
 img.cast-avatar{display:block}
 .cast-item b{font-size:10.6px}.cast-item small{font-size:9.7px}
-/* ---------- Home posters: rating + votes under the poster ---------- */
-.pc-meta{display:flex;justify-content:space-between;align-items:center;margin:8px 0 2px;font-size:11.4px;gap:6px}
-.pc-meta i{color:#e0415a;font-style:normal}.pc-meta em{font-style:normal;color:#6b7280;font-size:9.9px}
+
 .pc-flag{position:absolute;top:0;right:0;background:#e0415a;color:#fff;font-style:normal;font-size:8.2px;font-weight:800;padding:3px 8px;border-radius:0 0 0 8px}
 .pc-flag:empty{display:none}
 .pc-img{position:relative}
@@ -934,10 +878,6 @@ img.cast-avatar{display:block}
 .update-banner{position:fixed;left:12px;right:12px;top:10px;z-index:200;display:flex;align-items:center;justify-content:space-between;gap:12px;background:#222;color:#fff;border-radius:12px;padding:10px 14px;font-size:11.4px;box-shadow:0 6px 20px rgba(0,0,0,.3)}
 .update-banner button{flex:none;width:auto;margin:0;background:#e0415a;color:#fff;border:0;border-radius:8px;padding:7px 16px;font-weight:800;font-size:11.4px;cursor:pointer;text-transform:none;letter-spacing:0}
 
-/* ---------- Home (movies) - compact, BMS-like proportions ---------- */
-.home-tabs{padding:6px 0 10px}
-.home-tabs a{gap:4px;font-size:10.6px;padding:4px 2px;border-bottom-width:2px}
-.home-tabs a svg{width:26px;height:26px}
 .hero-row{margin-bottom:16px}
 .hero-card{flex:0 0 84%;aspect-ratio:16/7.5;border-radius:12px}
 .hero-card div{left:14px;bottom:10px;right:14px;gap:1px}
@@ -959,7 +899,7 @@ img.cast-avatar{display:block}
 .poster-row .poster-card{flex:0 0 118px}
 .poster-card b{font-size:12.3px;font-weight:600;margin-top:2px;display:block}
 .poster-card small{font-size:9.9px;color:#6b7280}
-.pc-meta{font-size:11px;margin:7px 0 3px}
+
 .pc-img img{border-radius:10px}
 
 /* ---------- One-tap saved login ---------- */
@@ -1037,10 +977,7 @@ main{padding-bottom:104px}
 
 /* ---------- Sticky book bar (proper placement) ---------- */
 .sticky-book{background:#fff;box-shadow:0 -6px 18px rgba(0,0,0,.12);padding:10px 14px calc(10px + env(safe-area-inset-bottom));pointer-events:auto}
-.sb-inner{display:flex;align-items:center;gap:12px;max-width:520px;margin:0 auto}
-.sb-info{flex:1;min-width:0}
-.sb-info b{display:block;font-size:15.4px}
-.sb-info small{color:var(--gray);font-size:12.7px}
+
 .sticky-book button{display:block;width:auto;flex:none;margin:0;padding:12px 26px;box-shadow:0 4px 12px rgba(220,53,88,.3)}
 .movie-page,.mv-page{padding-bottom:90px}
 
@@ -1049,11 +986,7 @@ main{padding-bottom:104px}
 .quick-row a{display:flex;flex-direction:column;align-items:center;gap:6px;color:#333}
 .quick-row span{width:50px;height:50px;border-radius:16px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.08);display:flex;align-items:center;justify-content:center;font-size:25.3px}
 .quick-row small{font-size:12.7px;font-weight:700}
-.offer-banner{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 16px;padding:14px 16px;border-radius:16px;color:#fff;background:linear-gradient(120deg,#e0415a,#ff7a45)}
-.offer-banner small{font-size:11px;font-weight:800;letter-spacing:1px;opacity:.9}
-.offer-banner b{display:block;font-size:18.7px;margin:2px 0}
-.offer-banner span{font-size:13.2px;opacity:.95}
-.offer-banner em{font-style:normal;background:#fff;color:#e0415a;font-weight:800;font-size:13.8px;padding:7px 14px;border-radius:20px;flex:none}
+
 .trend-row{display:flex;gap:6px;overflow-x:auto;margin:0 -14px;padding:0 14px 8px;scrollbar-width:none}
 .trend-row::-webkit-scrollbar{display:none}
 .trend-card{position:relative;flex:0 0 150px;height:170px;display:flex;align-items:flex-end}
@@ -1068,7 +1001,7 @@ main{padding-bottom:104px}
 .cast-item b{font-size:13.8px;font-weight:600}
 .cast-item small{font-size:12.7px}
 .mv-offer{color:inherit}
-.browse-cin{position:fixed;left:16px;bottom:96px;z-index:35;display:flex;align-items:center;gap:10px;background:#dc3558;color:#fff;border-radius:30px;padding:13px 22px;font-size:16.5px;font-weight:600;box-shadow:0 6px 18px rgba(220,53,88,.4)}
+
 .ml-promo{position:absolute;top:8px;right:0;font-style:normal;background:#dc3558;color:#fff;font-size:10.5px;font-weight:800;letter-spacing:.4px;padding:3px 9px;border-radius:6px 0 0 6px}
 .ml-card{position:relative}
 .ml-likes{display:block;color:#222;font-weight:700;font-size:13.2px;margin-top:2px}
@@ -1191,15 +1124,6 @@ img{-webkit-touch-callout:none;-webkit-user-drag:none}
 .an-health.bad{border-left:4px solid #dc3558}
 .an-health p{margin:4px 0 0;font-size:13.8px;color:#555}
 
-/* ---------- Polish pass: search ranking, bookings food line, auth ---------- */
-.sp-rank{display:flex;flex-direction:column;gap:6px}
-.sp-rank-item{display:flex;align-items:center;gap:12px;background:#fff;border-radius:14px;padding:8px 12px 8px 6px;box-shadow:0 1px 6px rgba(0,0,0,.06)}
-.sp-rank-item em{font-style:normal;font-weight:900;font-size:28.6px;width:30px;text-align:center;color:#e8c4cb;-webkit-text-stroke:1px #dc3558;color:transparent}
-.sp-rank-item img{width:44px;height:64px;object-fit:cover;border-radius:8px;flex:none;background:#eee}
-.sp-rank-item span{flex:1;min-width:0}
-.sp-rank-item b{display:block;font-size:15.4px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sp-rank-item small{color:var(--gray);font-size:13.2px}
-.sp-rank-item i{font-style:normal;font-weight:800;font-size:14.3px;color:#dc3558;background:#fde8ec;border-radius:12px;padding:4px 10px}
 .bk-food{font-size:13.8px;color:#555;margin:10px 0 16px;padding:6px 10px;background:#fff7e8;border-radius:8px;display:inline-block}
 .auth-wrap{padding-top:28px;background:radial-gradient(120% 60% at 50% 0%,#fde8ec 0%,transparent 70%)}
 .auth-perks{list-style:none;display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin:12px 0 18px;padding:0}
@@ -1226,12 +1150,6 @@ img{-webkit-touch-callout:none;-webkit-user-drag:none}
 .hero-card em{font-size:10.6px}
 .quick-row{gap:14px}
 .quick-row small{font-size:10.1px}
-.sp-rank{gap:12px}
-.sp-rank-item b{font-size:12.3px}
-.sp-rank-item small{font-size:10.6px}
-.sp-rank-item i{font-size:11.4px}
-.sp-rank-item img{width:40px;height:58px}
-.section-title{font-size:13.2px}
 
 /* Search page: match real BMS sizes */
 .sp-h{font-size:19.8px;font-weight:700;margin:34px 0 18px}
@@ -1414,9 +1332,7 @@ html[data-theme=dark] .pf-role{background:rgba(29,29,35,.18)}
 html[data-theme=dark] .pf-pill.ok{background:#19271f}
 html[data-theme=dark] .pf-pill.bad{background:#271212}
 html[data-theme=dark] .pf-pill.wait{background:#2e2411}
-html[data-theme=dark] .slot-legend .lg.ok{background:#19271f}
-html[data-theme=dark] .slot-legend .lg.fast{background:#2e2411}
-html[data-theme=dark] .slot-legend .lg.full{border-color:#47474a;background:#202020}
+
 html[data-theme=dark] .time-slot.full,html[data-theme=dark] .time-slot.full:hover{border-color:#414141;background:#1d1d1d}
 html[data-theme=dark] .sort-option:hover{background:#1a1a1c}
 html[data-theme=dark] .sort-option .radio{border:2px solid #4e4e51}
@@ -1426,10 +1342,10 @@ html[data-theme=dark] .seat-legend .lg.available{background:#171717}
 html[data-theme=dark] .seat-legend .lg.booked{border-color:#414141;background:#2a2a2a}
 html[data-theme=dark] .visited-tag{background:#191b26}
 html[data-theme=dark] .qty-grid button{border:1.5px solid #47474a}
-html[data-theme=dark] .qty-chip:hover{background:#18261c}
+
 html[data-theme=dark] .seat-map button.available:hover{background:#18261c}
 html[data-theme=dark] .mv-tags span{background:#1e1e21;color:#d4d4d4}
-html[data-theme=dark] img.cast-photo{background:#202020}
+
 html[data-theme=dark] /* ---------- Payment countdown,html[data-theme=dark] more-movies row ---------- */
 .hold-timer{background:#2e2411}
 html[data-theme=dark] .hold-timer.low{background:#271212}
@@ -1453,8 +1369,7 @@ html[data-theme=dark] .seat-legend .lg.best{background:#322c13}
 html[data-theme=dark] .sheet-mode .grab{background:#262628}
 html[data-theme=dark] .qty-classes{border-top:1px solid #3b3b40}
 html[data-theme=dark] .home-person{border:1.5px solid #4e4e4e;color:#bfbfbf}
-html[data-theme=dark] .home-tabs a{color:#d4d4d4}
-html[data-theme=dark] .home-tabs a svg{color:#c9c9c9}
+
 html[data-theme=dark] .pc-img{background:#2a2a2a}
 html[data-theme=dark] .tabbar{background:rgba(29,29,35,.96);border:1.5px solid #404043}
 html[data-theme=dark] .tabbar a{color:#d4d4d4}
@@ -1472,7 +1387,7 @@ html[data-theme=dark] .cp-empty-cell{background:#171717;border-right:1px solid #
 html[data-theme=dark] .loc-sheet{background:#171717}
 html[data-theme=dark] .loc-sheet .grab{background:#262628}
 html[data-theme=dark] .loc-ic{background:#271216}
-html[data-theme=dark] .mv-back{background:#171717}
+
 html[data-theme=dark] .no-cinemas{background:#171717}
 html[data-theme=dark] .ml-top button,html[data-theme=dark] .ml-top>a{color:#dedede}
 html[data-theme=dark] .ml-chips button{background:#171717;border:1.5px solid #444447}
@@ -1552,7 +1467,7 @@ html[data-theme=dark] /* ---------- Sticky book bar (proper placement) ---------
 .sticky-book{background:#171717}
 html[data-theme=dark] .quick-row a{color:#d4d4d4}
 html[data-theme=dark] .quick-row span{background:#171717}
-html[data-theme=dark] .offer-banner em{background:#171717}
+
 html[data-theme=dark] .ml-likes{color:#dedede}
 html[data-theme=dark] .cin-search{border:1px solid #414141;background:#171717}
 html[data-theme=dark] .cin-card{background:#171717}
@@ -1571,9 +1486,7 @@ html[data-theme=dark] .offer-banner::after,html[data-theme=dark] .sticky-book bu
 html[data-theme=dark] /* Book tickets bar: exactly like the real app - full-width red button on the page background,html[data-theme=dark] snug to the bottom edge */
 .sticky-book{background:#1a1a1e}
 html[data-theme=dark] .an-health p{color:#bfbfbf}
-html[data-theme=dark] .sp-rank-item{background:#171717}
-html[data-theme=dark] .sp-rank-item img{background:#202020}
-html[data-theme=dark] .sp-rank-item i{background:#291317}
+
 html[data-theme=dark] .bk-food{color:#bfbfbf;background:#2a2110}
 html[data-theme=dark] .auth-wrap{background:radial-gradient(120% 60% at 50% 0%,#291317 0%,transparent 70%)}
 html[data-theme=dark] .auth-perks li{background:#171717;border:1px solid #4c3237;color:#c9c9c9}
@@ -1746,8 +1659,7 @@ html[data-theme=dark] .pc-img{background:linear-gradient(110deg,#222226 30%,#2e2
 .poster-row .poster-card{flex:0 0 calc((100vw - 52px) / 2)}
 .poster-grid{gap:28px 20px}
 .pc-img{border-radius:10px}
-.pc-meta{margin:10px 0 2px;font-size:13.5px;font-weight:600}
-.pc-meta em{font-size:12px;color:#5a67b5;font-weight:500}
+
 .poster-card b{margin-top:2px;font-size:16px;font-weight:500;line-height:1.25;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .poster-card small{font-size:12px;margin-top:2px;display:block}
 @media(min-width:700px){.poster-row .poster-card{flex-basis:170px}.ml-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
@@ -1872,7 +1784,6 @@ html[data-theme=dark] .trip-chip.soon{background:#3a2314;color:#ffab76}
 html[data-theme=dark] .trip-chip em{color:#cfd3dc}
 html[data-theme=dark] .pf-role{background:rgba(255,255,255,.16);color:#fff}
 html[data-theme=dark] .hero-card em,html[data-theme=dark] .offer-banner em{background:#fff;color:#d2232a}
-.home-tabs{grid-template-columns:repeat(2,1fr)}
 
 /* ===== Polish: Home rows sized like the real app (about 2.5 posters visible), premium finish ===== */
 .quick-row{grid-template-columns:repeat(6,1fr);gap:2px}
@@ -1882,8 +1793,7 @@ html[data-theme=dark] .hero-card em,html[data-theme=dark] .offer-banner em{backg
 .poster-row .poster-card{flex:0 0 clamp(128px,36.5vw,172px)}
 .poster-grid{gap:24px 14px}
 .pc-img{border-radius:12px;box-shadow:0 6px 18px rgba(20,20,40,.16)}
-.pc-meta{margin:9px 0 2px;font-size:12.5px;font-weight:700}
-.pc-meta em{font-size:11.5px}
+
 .poster-card b{margin-top:2px;font-size:14.5px;font-weight:600;line-height:1.25;letter-spacing:-.01em}
 .poster-card small{font-size:11.5px}
 .pc-likes{margin:9px 0 2px;font-size:12.5px}
