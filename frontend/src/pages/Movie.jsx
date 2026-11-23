@@ -879,7 +879,7 @@ export default function Movie() {
       {shareMsg && <p className="share-msg mv-share-msg">{shareMsg}</p>}
 
       <div className="mv-hero" ref={heroRef}>
-        <img src={movie.poster_url} alt={movie.title} ref={(el) => el && landPoster(movie.id, el)} />
+        <img decoding="async" src={movie.poster_url} alt={movie.title} ref={(el) => el && landPoster(movie.id, el)} />
         {movie.trailer_key ? (
           <button type="button" className="mv-trailer" onClick={() => setTrailerOpen(true)}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
