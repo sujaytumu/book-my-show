@@ -284,7 +284,7 @@ import { watchShowSeats } from "../liveSeats";
 
 
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { memo, useCallback, useMemo, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { markCelebrate } from "../confetti";
 import { sheetDrag } from "../components/sheetDrag";
@@ -404,6 +404,41 @@ async function confirmPayment(bookingId, response) {
   return "pending";
 }
 
+// The seat map is memoised so the once-a-second hold countdown does not re-render hundreds of seat buttons.
+const SeatGrid = memo(function SeatGrid({ sections, classPrices, rowMap, selected, flash, bestSet, showHeat, heat, onPick }) {
+  return (
+    <>
+            {sections.map((section) => (
+              <div className="seat-class" key={section.label}>
+                <div className="seat-class-title">{section.label}{classPrices[section.label] != null ? " · ₹" + classPrices[section.label] : ""}</div>
+                {section.rows.map((letter) => (
+                  <div className="seat-row" key={letter}>
+                    <span className="seat-row-label">{letter}</span>
+                    <div className="seat-row-seats">
+                      {rowMap[letter].map((seat, idx) => (
+                        <button
+                          className={
+                            (selected.includes(seat.seat_number) ? "selected" + (flash ? " pulse" : "") : seat.status.toLowerCase() + (bestSet.has(seat.seat_number) && !showHeat ? " best" : "")) +
+                            ((idx + 1) % 5 === 0 && idx < rowMap[letter].length - 1 ? " aisle" : "")
+                          }
+                          title={seat.seat_number}
+                          data-seat={seat.seat_number}
+                          style={showHeat && heat && heat[seat.seat_number] != null ? { "--q": heat[seat.seat_number] } : undefined}
+                          onClick={() => onPick(seat)}
+                          key={seat.id}
+                        >
+                          {selected.includes(seat.seat_number) ? "✓" : seat.seat_number.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ))}
+    </>
+  );
+});
+
 export default function Show() {
 
   const { id } = useParams();
@@ -480,6 +515,8 @@ export default function Show() {
       setExtending(false);
     }
   }
+  const selectRef = useRef(null);
+  const onPickSeat = useCallback((seat) => selectRef.current(seat), []);
   const [secsLeft, setSecsLeft] = useState(null); // countdown while the seats are held for payment
 
 
@@ -823,6 +860,7 @@ export default function Show() {
 
   // Tap a seat -> select `qty` seats together in that row (starting at the tapped seat,
   // sliding left if there is no room on the right). Tap a selected seat again to clear.
+  selectRef.current = selectSeat;
   function selectSeat(seat) {
     if (seat.status !== "AVAILABLE") return;
     if (!qty) {
@@ -1063,6 +1101,7 @@ export default function Show() {
 
 
   // Group the flat seat list into rows (A, B, C...) and then into seat classes.
+  const { rowMap, rowLetters, sections } = useMemo(() => {
   const rowMap = {};
   seats.forEach((seat) => {
     const letter = seat.seat_number.charAt(0);
@@ -1082,14 +1121,16 @@ export default function Show() {
     }
     section.rows.push(letter);
   });
+  return { rowMap, rowLetters, sections };
+  }, [seats]);
 
   // Class price list comes from the server (single screen base ₹100, multiplex base ₹150).
   const classPrices = show?.class_prices || {};
   const rowClass = {};
   sections.forEach((sec) => sec.rows.forEach((l) => (rowClass[l] = sec.label)));
   // "Bestseller": the most central available seats (middle rows, middle columns) that can still fit the party together.
-  const bestSet = new Set();
-  {
+  const bestSet = useMemo(() => {
+    const bestSet = new Set();
     const mid = (rowLetters.length - 1) / 2;
     const cands = [];
     rowLetters.forEach((letter, ri) => {
@@ -1103,7 +1144,8 @@ export default function Show() {
     });
     cands.sort((a, b) => a.score - b.score);
     cands.slice(0, 6).forEach((c) => c.win.forEach((x) => bestSet.add(x.seat_number)));
-  }
+    return bestSet;
+  }, [rowLetters, rowMap, qty]);
   const selectedTotal = selected.reduce(
     (sum, sn) => sum + Number(classPrices[rowClass[sn.charAt(0)]] ?? show?.price ?? 0),
     0
@@ -1303,33 +1345,7 @@ export default function Show() {
           {/* Seat map: rows are grouped into the seat classes. Zoom scales seat size; it scrolls when larger than the screen. */}
           <div className="seat-zoom" ref={zoomRef} onTouchStart={onPinchStart} onTouchMove={onPinchMove} onTouchEnd={onPinchEnd} onTouchCancel={onPinchEnd}>
           <div className={"seat-map" + (showHeat && heat ? " heat" : "")} style={{ "--z": zoom }}>
-            {sections.map((section) => (
-              <div className="seat-class" key={section.label}>
-                <div className="seat-class-title">{section.label}{classPrices[section.label] != null ? " · ₹" + classPrices[section.label] : ""}</div>
-                {section.rows.map((letter) => (
-                  <div className="seat-row" key={letter}>
-                    <span className="seat-row-label">{letter}</span>
-                    <div className="seat-row-seats">
-                      {rowMap[letter].map((seat, idx) => (
-                        <button
-                          className={
-                            (selected.includes(seat.seat_number) ? "selected" + (flash ? " pulse" : "") : seat.status.toLowerCase() + (bestSet.has(seat.seat_number) && !showHeat ? " best" : "")) +
-                            ((idx + 1) % 5 === 0 && idx < rowMap[letter].length - 1 ? " aisle" : "")
-                          }
-                          title={seat.seat_number}
-                          data-seat={seat.seat_number}
-                          style={showHeat && heat && heat[seat.seat_number] != null ? { "--q": heat[seat.seat_number] } : undefined}
-                          onClick={() => selectSeat(seat)}
-                          key={seat.id}
-                        >
-                          {selected.includes(seat.seat_number) ? "✓" : seat.seat_number.slice(1)}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ))}
+            <SeatGrid sections={sections} classPrices={classPrices} rowMap={rowMap} selected={selected} flash={flash} bestSet={bestSet} showHeat={showHeat} heat={heat} onPick={onPickSeat} />
           </div>
           </div>
 
