@@ -967,3 +967,8 @@ update movies set active=false where lower(title) in ('the paradise','cult') and
 -- shared out among Telugu films, so it is listed as Telugu. Once only (app_flags) so a later admin edit is never undone.
 with f as (insert into app_flags(flag) values('om_telugu_2026_11_23') on conflict do nothing returning 1)
 update movies set language='Telugu' where lower(title)='o.m: operation mole' and exists(select 1 from f);
+
+-- Aadarsha Kutumbam and Scene are removed from the app. Done once, guarded by app_flags. The movies, their bookings and history stay
+-- in the database; they are just no longer active, and their unbooked future shows go to the running movies by the daily balancing.
+with f as (insert into app_flags(flag) values('aadarsha_scene_removed_2026_11_23') on conflict do nothing returning 1)
+update movies set active=false where lower(title) in ('aadarsha kutumbam','adarsha kutumbam','scene') and exists(select 1 from f);

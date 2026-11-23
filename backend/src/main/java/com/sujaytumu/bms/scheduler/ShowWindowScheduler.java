@@ -180,8 +180,8 @@ public class ShowWindowScheduler {
      *    in the data) is split into "lanes" of about 4 shows, each lane one film, so the same film always comes back
      *    about every 3 hours. A film that is in a multiplex therefore has its timings spread over the whole day, and a
      *    film that is not in that multiplex has none.
-     *  - The number of screens a movie gets follows its weight 100 / (5 + days since release) (never below 2): the
-     *    newest release has the most screens, older ones fewer, in order. Screens are taken in a fixed pseudo-random order
+     *  - The number of screens a movie gets follows its weight 100 / (2 + days since release)^1.3 (never below 2): the
+     *    newest release has by far the most screens (about 41 / 24 / 16 / 12 for day 0 / 1 / 2 / 3), older ones fewer, in order. Screens are taken in a fixed pseudo-random order
      *    so the share is exact and every area of the city gets every film.
      * Only unbooked shows are touched: a show with a pending or confirmed booking, a held or booked seat, or starting
      * within 3 hours keeps its film, and the rest of that screen follows it. Nothing is deleted.
@@ -219,7 +219,7 @@ public class ShowWindowScheduler {
                     select distinct d from units
                 ), cm as (
                     select dd.d, m.id,
-                           greatest(2.0, 100.0 / (5 + greatest(0, dd.d - coalesce(m.release_date, dd.d - 60)))) wt,
+                           greatest(2.0, 100.0 / power(2 + greatest(0, dd.d - coalesce(m.release_date, dd.d - 60)), 1.3)) wt,
                            m.release_date
                     from days dd
                     join movies m on m.active = true and m.language = 'Telugu'
