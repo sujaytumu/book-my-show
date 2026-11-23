@@ -962,3 +962,8 @@ where not exists(select 1 from movies where lower(title) in ('o.m: operation mol
 -- inactive, and their unbooked future shows are handed to the running movies by the daily show balancing.
 with f as (insert into app_flags(flag) values('paradise_cult_removed_2026_11_18') on conflict do nothing returning 1)
 update movies set active=false where lower(title) in ('the paradise','cult') and exists(select 1 from f);
+
+-- O.M: Operation Mole releases in Telugu in Hyderabad (Telugu version presented by Naga Vamsi, 20 Nov 2026), and screens are
+-- shared out among Telugu films, so it is listed as Telugu. Once only (app_flags) so a later admin edit is never undone.
+with f as (insert into app_flags(flag) values('om_telugu_2026_11_23') on conflict do nothing returning 1)
+update movies set language='Telugu' where lower(title)='o.m: operation mole' and exists(select 1 from f);
