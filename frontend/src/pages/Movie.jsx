@@ -990,7 +990,7 @@ export default function Movie() {
           <span className="tb-text">
             {Math.max(Number(movie.tickets_last_day) || 0, Number(movie.tickets_last_hour) || 0) > 0 ? (
               <>
-                <b>{(() => { const n = Math.max(Number(movie.tickets_last_day) || 0, Number(movie.tickets_last_hour) || 0); return n >= 10000 ? (n / 1000).toFixed(2).replace(/\.?0+$/, "") + "K" : fmtCount(n); })()}</b> tickets booked in last 24 hours
+                <b>{(() => { const n = Math.max(Number(movie.tickets_last_day) || 0, Number(movie.tickets_last_hour) || 0); return n >= 10000 ? (n / 1000).toFixed(2).replace(/\.?0+$/, "") + "K" : fmtCount(n); })()}</b><span className="tb-long"> tickets booked in last 24 hours</span><span className="tb-short"> tickets booked today</span>
               </>
             ) : (
               <>Bookings are open. Grab your seats!</>

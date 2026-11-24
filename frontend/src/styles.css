@@ -2143,3 +2143,28 @@ html[data-theme=dark] .nt-filters button.on{background:#f84464;border-color:#f84
 /* ===== Polish: visible keyboard focus ===== */
 a:focus-visible,button:focus-visible,[role=button]:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--red);outline-offset:2px;border-radius:8px}
 html[data-theme=dark] a:focus-visible,html[data-theme=dark] button:focus-visible,html[data-theme=dark] [role=button]:focus-visible{outline-color:#ff8fa8}
+
+/* ===== Polish: compact movie page on small phones ===== */
+.movie-page .tb-short{display:none}
+@media (max-width:400px){
+  .movie-page .tb-long{display:none}
+  .movie-page .tb-short{display:inline}
+  .movie-page .trending-bar{height:32px;margin:0 0 16px}
+  .movie-page .tb-tag{min-width:0;padding:0 10px;gap:5px;font-size:11.5px}
+  .movie-page .tb-tag svg{width:14px;height:14px}
+  .movie-page .tb-text{padding:0 8px;font-size:11.5px;min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .movie-page .tb-text b{font-size:11.5px}
+  .movie-page .mv-bar h1{font-size:16px}
+  .movie-page .mv-info .rating-pill b,.movie-page .mv-info .rating-pill .rp-star{font-size:17px}
+  .movie-page .mv-info .rating-pill .rp-votes{font-size:11.5px}
+  .movie-page .mv-meta{font-size:12px}
+  .movie-page .mv-desc,.movie-page .mv-desc .mv-more{font-size:11.5px;line-height:16px}
+  .movie-page .mv-offers h2,.movie-page .cast-block h2{font-size:14px}
+  .movie-page .mv-offer{flex-basis:232px;min-width:232px;height:48px}
+  .movie-page .mv-offer i{flex-basis:44px;width:44px;font-size:20px}
+  .movie-page .mv-offer b{font-size:12px}
+  .movie-page .mv-offer small{font-size:11px}
+  .movie-page .pa-card{margin:10px 0;padding:11px 13px}
+  .movie-page .pa-card p{font-size:12px;margin:4px 0 8px}
+  .movie-page .pa-card b{font-size:14px}
+}
