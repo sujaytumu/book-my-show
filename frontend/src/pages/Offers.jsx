@@ -31,7 +31,7 @@ export default function Offers() {
         </div>
       </div>
       <p className="of-hint">Copy a code, then paste it at the payment step on the seat page.</p>
-      {list === null && <div className="nt-empty"><span>Loading offers…</span></div>}
+      {list === null && [0, 1, 2].map((i) => <div className="sk" key={i} style={{ height: 104, margin: "0 0 12px", borderRadius: 16 }} />)}
       {list && list.length === 0 && (
         <div className="nt-empty">
           <b>No offers right now</b>
