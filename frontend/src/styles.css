@@ -2171,3 +2171,6 @@ html[data-theme=dark] a:focus-visible,html[data-theme=dark] button:focus-visible
 
 /* ===== Polish: never scroll sideways; keep text size stable ===== */
 html,body{max-width:100%;overflow-x:clip;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+
+/* ===== Polish: skip rendering off-screen cards in long lists ===== */
+.cin-card,.nt-item,.of-card{content-visibility:auto;contain-intrinsic-size:auto 110px}
