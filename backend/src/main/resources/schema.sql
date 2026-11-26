@@ -48,6 +48,7 @@ create index if not exists idx_shows_screen_date on shows(screen_id,show_date,st
 create index if not exists idx_bookings_user on bookings(user_id,created_at desc);
 create index if not exists idx_bookings_show on bookings(show_id,status);
 create index if not exists idx_booking_seats_booking on booking_seats(booking_id);
+create index if not exists idx_payments_booking on payments(booking_id);
 create index if not exists idx_screens_theatre on screens(theatre_id);
 create index if not exists idx_theatres_city on theatres(city_id) where active=true;
 create index if not exists idx_waitlist_show on waitlist(show_id) where notified_at is null;
