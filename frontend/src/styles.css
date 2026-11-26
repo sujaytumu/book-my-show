@@ -2168,3 +2168,6 @@ html[data-theme=dark] a:focus-visible,html[data-theme=dark] button:focus-visible
   .movie-page .pa-card p{font-size:12px;margin:4px 0 8px}
   .movie-page .pa-card b{font-size:14px}
 }
+
+/* ===== Polish: never scroll sideways; keep text size stable ===== */
+html,body{max-width:100%;overflow-x:clip;-webkit-text-size-adjust:100%;text-size-adjust:100%}
