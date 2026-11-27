@@ -972,3 +972,15 @@ update movies set language='Telugu' where lower(title)='o.m: operation mole' and
 -- in the database; they are just no longer active, and their unbooked future shows go to the running movies by the daily balancing.
 with f as (insert into app_flags(flag) values('aadarsha_scene_removed_2026_11_23') on conflict do nothing returning 1)
 update movies set active=false where lower(title) in ('aadarsha kutumbam','adarsha kutumbam','scene') and exists(select 1 from f);
+
+-- DNK and Itllu Arjuna are removed from the app. Done once, guarded by app_flags. The movies, their bookings and history stay
+-- in the database; they are just no longer active, and their unbooked future shows go to the running movies by the daily balancing.
+with f as (insert into app_flags(flag) values('dnk_itllu_removed_2026_11_28') on conflict do nothing returning 1)
+update movies set active=false where lower(title) in ('dnk','donga naa koduku','itllu arjuna','itlu arjuna') and exists(select 1 from f);
+
+-- Vrushakarma releases on 5 December 2026. Setting the date lets the existing automation open advance booking 3 days before
+-- (2 December), give it screens from the release date, and move it to Now Showing on the day. Once only (app_flags).
+with f as (insert into app_flags(flag) values('vrushakarma_release_2026_12_05') on conflict do nothing returning 1)
+update movies set release_date = date '2026-12-05',
+                  description = 'Upcoming Telugu film. Releasing 5 December 2026.'
+where lower(title) = 'vrushakarma' and exists(select 1 from f);
